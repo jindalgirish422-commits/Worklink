@@ -32,10 +32,10 @@ export const ResponsibleAiBanner: React.FC<ResponsibleAiBannerProps> = ({
   compact = false,
 }) => {
   return (
-    <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-white/70 shadow-2xs glass-specular-edge p-4 sm:p-4.5 transition-all motion-glass-appear">
+    <div className="rounded-2xl bg-white/95 sm:bg-white/80 backdrop-blur-md sm:backdrop-blur-xl border border-white/70 shadow-2xs glass-specular-edge p-3.5 sm:p-4.5 transition-all motion-glass-appear">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Left: Reassuring Trust Identity */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5 sm:space-x-3">
           <div className="w-8 h-8 rounded-xl bg-[#0071E3]/10 text-[#0071E3] flex items-center justify-center shrink-0">
             <ShieldCheck className="w-4 h-4" />
           </div>

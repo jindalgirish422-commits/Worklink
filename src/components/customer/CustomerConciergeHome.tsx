@@ -290,7 +290,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
         {/* GLASS SURFACE 1: PRIMARY AI JOB INTAKE                       */}
         {/* (One of two high-value floating glass surfaces)              */}
         {/* ============================================================ */}
-        <div className="p-5 sm:p-7 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/70 shadow-lg glass-specular-edge space-y-4 transition-all motion-glass-appear">
+        <div className="p-4 sm:p-7 rounded-2xl sm:rounded-3xl bg-white/95 sm:bg-white/85 backdrop-blur-md sm:backdrop-blur-xl border border-white/70 shadow-lg glass-specular-edge space-y-4 transition-all motion-glass-appear">
           <form onSubmit={handleConciergeSubmit} className="space-y-3">
             <div className="relative">
               <input
@@ -299,16 +299,16 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
                 value={promptInput}
                 onChange={(e) => setPromptInput(e.target.value)}
                 placeholder="Describe what you need in plain words (e.g. My AC is leaking water, fix kitchen drain, replace main breaker...)"
-                className="w-full pl-4 pr-32 sm:pr-40 py-4 sm:py-4.5 rounded-2xl bg-white/95 border border-black/10 text-sm sm:text-base text-[#111111] placeholder:text-[#86868B] focus:outline-none focus:ring-2 focus:ring-[#0071E3] shadow-inner transition-all"
+                className="w-full pl-3.5 sm:pl-4 pr-24 sm:pr-40 py-3.5 sm:py-4.5 rounded-xl sm:rounded-2xl bg-white/95 border border-black/10 text-xs sm:text-base text-[#111111] placeholder:text-[#86868B] focus:outline-none focus:ring-2 focus:ring-[#0071E3] shadow-inner transition-all"
               />
-              <div className="absolute right-2 top-2 bottom-2 flex items-center">
+              <div className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 bottom-1.5 sm:bottom-2 flex items-center">
                 <Button
                   type="submit"
                   variant="primary"
                   size="md"
-                  className="h-full px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm bg-[#111111] hover:bg-black text-white flex items-center space-x-1.5 shadow-sm"
+                  className="h-full px-3.5 sm:px-6 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm bg-[#111111] hover:bg-black text-white flex items-center space-x-1.5 shadow-sm active-press min-h-[38px]"
                 >
-                  <Sparkles className="w-4 h-4 text-[#0071E3]" />
+                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0071E3]" />
                   <span>Match</span>
                 </Button>
               </div>
@@ -467,14 +467,14 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
         {/* GLASS SURFACE 2: PRIMARY RECOMMENDATION CARD                 */}
         {/* (The second of two high-value floating glass surfaces)       */}
         {/* ============================================================ */}
-        <div className="p-6 sm:p-7 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/80 shadow-md glass-specular-edge space-y-5 transition-all motion-glass-appear hover-lift">
+        <div className="p-4 sm:p-7 rounded-2xl sm:rounded-3xl bg-white/95 sm:bg-white/90 backdrop-blur-md sm:backdrop-blur-xl border border-black/8 sm:border-white/80 shadow-md glass-specular-edge space-y-4 sm:space-y-5 transition-all motion-glass-appear hover-lift">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3.5 sm:space-x-4">
               <div className="relative shrink-0">
                 <img
                   src={primaryRecommendation.worker.avatar}
                   alt={primaryRecommendation.worker.name}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover ring-2 ring-black/5 shadow-xs"
+                  className="w-14 h-14 sm:w-20 sm:h-20 rounded-2xl object-cover ring-2 ring-black/5 shadow-xs"
                 />
                 <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#34C759] border-2 border-white flex items-center justify-center">
                   <Check className="w-3 h-3 text-white" />
@@ -483,7 +483,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
 
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-lg sm:text-xl font-extrabold text-[#111111]">
+                  <h3 className="text-base sm:text-xl font-extrabold text-[#111111]">
                     {primaryRecommendation.worker.name}
                   </h3>
                   <Badge variant="accent" size="sm">
@@ -494,7 +494,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
                   </Badge>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 text-xs text-[#6E6E73]">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-[#6E6E73]">
                   <span className="flex items-center text-[#FF9500] font-bold">
                     <Star className="w-3.5 h-3.5 fill-[#FF9500] inline mr-1" />
                     {primaryRecommendation.worker.rating.toFixed(1)} ({primaryRecommendation.worker.reviewCount} reviews)
@@ -535,7 +535,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
           </div>
 
           {/* Explainability Callout (Why Recommended) */}
-          <div className="p-3.5 rounded-2xl bg-white/70 border border-black/5 text-xs text-[#111111] space-y-2">
+          <div className="p-3.5 rounded-xl sm:rounded-2xl bg-[#F8F8FA] sm:bg-white/70 border border-black/5 text-xs text-[#111111] space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#0071E3] block">
                 Why WorkLink Recommended This Professional:
@@ -543,7 +543,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
               <button
                 type="button"
                 onClick={() => setIsTrustModalOpen(true)}
-                className="text-xs font-bold text-[#0071E3] hover:underline flex items-center space-x-1 self-start sm:self-auto"
+                className="text-xs font-bold text-[#0071E3] hover:underline flex items-center space-x-1 self-start sm:self-auto py-0.5"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-[#0071E3]" />
                 <span>Explain Match &amp; Responsible AI</span>
@@ -560,12 +560,12 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
           </div>
 
           {/* Action CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-1">
             <Button
               variant="outline"
               size="md"
               onClick={() => onViewProfileClick(primaryRecommendation)}
-              className="w-full sm:w-auto text-xs font-bold"
+              className="w-full sm:w-auto min-h-[44px] text-xs font-bold justify-center"
             >
               View Full Profile
             </Button>
@@ -573,7 +573,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
               variant="primary"
               size="md"
               onClick={() => onBookClick(primaryRecommendation)}
-              className="w-full sm:w-auto text-xs font-bold bg-[#111111] hover:bg-black text-white px-6 shadow-sm"
+              className="w-full sm:w-auto min-h-[48px] text-xs font-bold bg-[#111111] hover:bg-black text-white px-6 shadow-sm justify-center active-press"
             >
               Book this professional
             </Button>

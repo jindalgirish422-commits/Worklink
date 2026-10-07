@@ -268,8 +268,8 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
         {/* Left: Geometric Radar (Complementary, not overwhelming) */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center p-5 bg-[#FBFBFD] rounded-3xl border border-black/[0.06] shadow-2xs relative overflow-hidden">
           {/* Top Location Bar */}
-          <div className="w-full flex items-center justify-between pb-3 mb-2 border-b border-black/5 text-xs text-[#6E6E73]">
-            <div className="flex items-center space-x-1.5 truncate max-w-[280px]">
+          <div className="w-full flex items-center justify-between pb-3 mb-2 border-b border-black/5 text-xs text-[#6E6E73] gap-2">
+            <div className="flex items-center space-x-1.5 truncate max-w-[170px] xs:max-w-[220px] sm:max-w-[280px]">
               <MapPin className="w-3.5 h-3.5 text-[#FF3B30] shrink-0" />
               <span className="font-semibold text-[#111111] truncate">
                 {location.address.split(',')[0]}

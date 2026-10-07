@@ -585,7 +585,7 @@ export const WorkerDiscoveryView: React.FC<WorkerDiscoveryViewProps> = ({
                     {secondarySearchItems.map((item) => (
                       <div
                         key={item.worker.id}
-                        className="min-w-[290px] sm:min-w-0 snap-start flex-1"
+                        className="min-w-[260px] xs:min-w-[280px] sm:min-w-0 snap-start flex-1"
                       >
                         <SecondaryWorkerCard
                           item={item}

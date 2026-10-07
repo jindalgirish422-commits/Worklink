@@ -63,6 +63,12 @@
     --glass-shadow-strong: 0 16px 40px -8px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.03);
   }
 
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     font-family: var(--font-sans);
     letter-spacing: -0.012em;
@@ -70,6 +76,10 @@
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--color-bg);
     color: var(--color-text-primary);
+  }
+
+  #root {
+    max-width: 100%;
     overflow-x: hidden;
   }
 }
@@ -331,9 +341,25 @@
   }
 }
 
+@keyframes bottomSheetAppear {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 36px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 /* Material Motion Classes */
 .motion-glass-appear {
   animation: glassAppear 0.32s var(--ease-apple) forwards;
+  will-change: opacity, transform;
+}
+
+.motion-bottom-sheet-appear {
+  animation: bottomSheetAppear 0.32s var(--ease-apple) forwards;
   will-change: opacity, transform;
 }
 
@@ -402,6 +428,7 @@
   }
 
   .motion-glass-appear,
+  .motion-bottom-sheet-appear,
   .motion-fade-in,
   .motion-slide-settle,
   .motion-scale-settle,

@@ -95,23 +95,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           : 'bg-white/60 backdrop-blur-md border-b border-black/[0.03] shadow-none'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand & Subtitle */}
           <div
-            className="flex items-center space-x-3 cursor-pointer select-none group shrink-0"
+            className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer select-none group shrink-0"
             onClick={() => onSelectTab('customer_home')}
           >
-            <div className="w-9 h-9 rounded-xl bg-[#111111] text-white flex items-center justify-center font-bold tracking-tight shadow-sm transition-transform duration-200 group-hover:scale-105">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#111111] text-white flex items-center justify-center font-bold tracking-tight shadow-sm transition-transform duration-200 group-hover:scale-105 shrink-0">
               <span className="text-[#0071E3] mr-0.5">W</span>L
             </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-base tracking-tight text-[#111111]">
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <span className="font-bold text-sm sm:text-base tracking-tight text-[#111111]">
                   WorkLink
                 </span>
                 <Badge variant={getRoleBadgeVariant(role)} size="sm">
-                  {role === 'worker' ? 'Worker Pro' : role === 'operator' ? 'Admin' : 'Marketplace'}
+                  {role === 'worker' ? 'Pro' : role === 'operator' ? 'Admin' : 'Market'}
                 </Badge>
               </div>
               <p className="text-[11px] text-[#86868B] font-normal leading-tight hidden lg:block">
@@ -245,7 +245,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Dynamic Location Pill */}
             <button
               onClick={onChangeLocationClick}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs glass-button text-[#111111] transition-all max-w-[150px] sm:max-w-[200px] truncate"
+              className="flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs glass-button text-[#111111] transition-all max-w-[105px] xs:max-w-[150px] sm:max-w-[200px] truncate min-h-[36px]"
               title="Click to shift dynamic 10km service zone"
             >
               <MapPin className="w-3.5 h-3.5 text-[#FF3B30] shrink-0" />
@@ -424,107 +424,126 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Mobile Navigation Bar */}
-        <div className="flex md:hidden overflow-x-auto py-2 space-x-2 border-t border-black/5 text-xs no-scrollbar">
+        {/* Compact Glass Navigation Rail (Mobile Material Design) */}
+        <nav
+          aria-label="Mobile Navigation"
+          className="flex md:hidden items-center space-x-1.5 py-1.5 px-1.5 my-1.5 rounded-2xl bg-white/75 backdrop-blur-md border border-black/5 shadow-2xs overflow-x-auto no-scrollbar text-xs scroll-smooth"
+        >
           <button
             onClick={() => onSelectTab('customer_home')}
-            className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
+            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
               currentTab === 'customer_home'
-                ? 'bg-[#111111] text-white shadow-xs'
-                : 'bg-[#F0F0F2] text-[#6E6E73]'
+                ? 'bg-[#111111] text-white shadow-xs font-semibold'
+                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
             }`}
           >
-            Concierge
+            <Sparkles className="w-3.5 h-3.5 text-[#0071E3]" />
+            <span>Concierge</span>
           </button>
 
           <button
             onClick={() => onSelectTab('landing')}
-            className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
+            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
               currentTab === 'landing'
-                ? 'bg-[#111111] text-white shadow-xs'
-                : 'bg-[#F0F0F2] text-[#6E6E73]'
+                ? 'bg-[#111111] text-white shadow-xs font-semibold'
+                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
             }`}
           >
-            Overview
+            <Home className="w-3.5 h-3.5 text-[#111111]" />
+            <span>Overview</span>
           </button>
 
           {role === 'worker' && (
             <button
               onClick={() => onSelectTab('worker_hub')}
-              className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
+              className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
                 currentTab === 'worker_hub'
-                  ? 'bg-[#111111] text-white shadow-xs'
-                  : 'bg-[#F0F0F2] text-[#6E6E73]'
+                  ? 'bg-[#111111] text-white shadow-xs font-semibold'
+                  : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
               }`}
             >
-              Worker Hub
+              <Briefcase className="w-3.5 h-3.5 text-[#34C759]" />
+              <span>Worker Hub</span>
             </button>
           )}
 
           {role === 'operator' && (
             <button
               onClick={() => onSelectTab('operator_console')}
-              className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
+              className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
                 currentTab === 'operator_console'
-                  ? 'bg-[#111111] text-white shadow-xs'
-                  : 'bg-[#F0F0F2] text-[#6E6E73]'
+                  ? 'bg-[#111111] text-white shadow-xs font-semibold'
+                  : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
               }`}
             >
-              Admin Console
+              <Shield className="w-3.5 h-3.5 text-[#AF52DE]" />
+              <span>Admin Console</span>
             </button>
           )}
 
           <button
             onClick={() => onSelectTab('marketplace')}
-            className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
+            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
               currentTab === 'marketplace'
-                ? 'bg-[#111111] text-white shadow-xs'
-                : 'bg-[#F0F0F2] text-[#6E6E73]'
+                ? 'bg-[#111111] text-white shadow-xs font-semibold'
+                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
             }`}
           >
-            Match
+            <Sparkles className="w-3.5 h-3.5 text-[#0071E3]" />
+            <span>Match</span>
           </button>
+
           <button
             onClick={() => onSelectTab('zone_radar')}
-            className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
+            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
               currentTab === 'zone_radar'
-                ? 'bg-[#111111] text-white shadow-xs'
-                : 'bg-[#F0F0F2] text-[#6E6E73]'
+                ? 'bg-[#111111] text-white shadow-xs font-semibold'
+                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
             }`}
           >
-            10km Radar
+            <Compass className="w-3.5 h-3.5 text-[#5856D6]" />
+            <span>10km Radar</span>
           </button>
+
           <button
             onClick={() => onSelectTab('active_booking')}
-            className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
+            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 relative ${
               currentTab === 'active_booking'
-                ? 'bg-[#111111] text-white shadow-xs'
-                : 'bg-[#F0F0F2] text-[#6E6E73]'
+                ? 'bg-[#111111] text-white shadow-xs font-semibold'
+                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
             }`}
           >
-            Execution
+            <Clock className="w-3.5 h-3.5 text-[#34C759]" />
+            <span>Execution</span>
+            {hasActiveBooking && (
+              <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
+            )}
           </button>
+
           <button
             onClick={() => onSelectTab('simulator')}
-            className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
+            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
               currentTab === 'simulator'
-                ? 'bg-[#111111] text-white shadow-xs'
-                : 'bg-[#F0F0F2] text-[#6E6E73]'
+                ? 'bg-[#111111] text-white shadow-xs font-semibold'
+                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
             }`}
           >
-            Simulator
+            <FlaskConical className="w-3.5 h-3.5 text-[#AF52DE]" />
+            <span>Simulator</span>
           </button>
+
           <button
             onClick={() => onSelectTab('intelligence')}
-            className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
+            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
               currentTab === 'intelligence'
-                ? 'bg-[#111111] text-white shadow-xs'
-                : 'bg-[#F0F0F2] text-[#6E6E73]'
+                ? 'bg-[#111111] text-white shadow-xs font-semibold'
+                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
             }`}
           >
-            Intelligence
+            <BarChart3 className="w-3.5 h-3.5 text-[#FF9500]" />
+            <span>Intelligence</span>
           </button>
-        </div>
+        </nav>
       </div>
     </header>
   );

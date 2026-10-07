@@ -123,18 +123,23 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
       }
       footer={
         step === 'details' ? (
-          <div className="w-full flex items-center justify-between p-1 bg-white/90 backdrop-blur-xl rounded-2xl border border-white/80 glass-specular-edge motion-glass-appear">
-            <div>
-              <span className="text-[10px] font-mono uppercase text-[#86868B] block">
-                Total Estimate
-              </span>
-              <span className="text-2xl font-extrabold text-[#111111] tracking-tight">
-                ₹{priceEstimate.estimatedTotal}
+          <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-2.5 sm:p-2 bg-white/95 sm:bg-white/90 backdrop-blur-md sm:backdrop-blur-xl rounded-2xl border border-black/8 sm:border-white/80 glass-specular-edge motion-glass-appear">
+            <div className="flex items-center justify-between sm:justify-start space-x-3">
+              <div>
+                <span className="text-[10px] font-mono uppercase text-[#86868B] block">
+                  Total Estimate
+                </span>
+                <span className="text-xl sm:text-2xl font-extrabold text-[#111111] tracking-tight">
+                  ₹{priceEstimate.estimatedTotal}
+                </span>
+              </div>
+              <span className="text-[11px] text-[#34C759] font-medium sm:hidden">
+                {travelBand.band === 'core_free' ? '• Free Core Zone' : `• +₹${travelBand.travelCharge} Travel`}
               </span>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="md" onClick={onClose}>
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <Button variant="ghost" size="md" onClick={onClose} className="hidden sm:inline-flex">
                 Cancel
               </Button>
               <Button
@@ -143,7 +148,7 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
                 isLoading={isSubmitting}
                 onClick={handleConfirm}
                 icon={<ArrowRight className="w-4 h-4" />}
-                className="font-bold px-6 shadow-md"
+                className="w-full sm:w-auto font-bold min-h-[48px] py-3.5 px-6 shadow-md justify-center active-press text-sm"
               >
                 Confirm &amp; Request {firstName}
               </Button>

@@ -104,9 +104,9 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
       </div>
 
       {/* ============================================================== */}
-      {/* 2. PRIMARY MATCH: The Single Prominent Glass Surface           */}
+      {/* 2. PRIMARY MATCH: Mobile-Calibrated Glass Recommendation Surface */}
       {/* ============================================================== */}
-      <div className="relative rounded-3xl bg-white/85 backdrop-blur-2xl border border-white/80 shadow-[0_20px_48px_-10px_rgba(0,0,0,0.12)] glass-specular-edge p-6 sm:p-8 lg:p-9 transition-all duration-300 hover:shadow-[0_24px_56px_-8px_rgba(0,0,0,0.15)] motion-glass-appear hover-lift">
+      <div className="relative rounded-2xl sm:rounded-3xl bg-white/95 sm:bg-white/85 backdrop-blur-md sm:backdrop-blur-2xl border border-black/8 sm:border-white/80 shadow-md sm:shadow-[0_20px_48px_-10px_rgba(0,0,0,0.12)] glass-specular-edge p-4 sm:p-8 lg:p-9 transition-all duration-300 hover:shadow-[0_24px_56px_-8px_rgba(0,0,0,0.15)] motion-glass-appear hover-lift">
         {/* Subtle Top Indicator Banner */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-5 mb-6 border-b border-black/6">
           <div className="flex items-center space-x-2">
@@ -211,8 +211,9 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
 
         {/* ============================================================== */}
         {/* 3. "WHY THIS WORKER?" PROMINENT SECTION                        */}
+        {/* (Flattened on mobile to reduce layer stacking & blur load)      */}
         {/* ============================================================== */}
-        <div className="mt-7 pt-6 border-t border-black/6 bg-white/60 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-black/4">
+        <div className="mt-6 pt-5 border-t border-black/6 bg-[#F8F8FA] sm:bg-white/60 sm:backdrop-blur-md rounded-2xl p-4 sm:p-6 border border-black/5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
             <div className="flex items-center space-x-2">
               <h4 className="text-sm sm:text-base font-extrabold text-[#111111] tracking-tight">
@@ -232,7 +233,7 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
                   setIsInternalTrustOpen(true);
                 }
               }}
-              className="text-xs font-bold text-[#0071E3] hover:underline flex items-center space-x-1 self-start sm:self-auto"
+              className="text-xs font-bold text-[#0071E3] hover:underline flex items-center space-x-1 self-start sm:self-auto py-1"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Inspect Responsible AI &amp; Trust Rationale</span>
@@ -256,17 +257,18 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
             </p>
           )}
 
-          {/* Action Row */}
+          {/* Action Row: Floating Action Surface Touch Ergonomics */}
           <div className="mt-5 pt-4 border-t border-black/6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="text-xs text-[#86868B]">
               Direct booking locks this rate and dispatches {primaryFirstName} instantly.
             </span>
 
-            <div className="flex items-center space-x-2.5 shrink-0">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2.5 shrink-0 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="md"
                 onClick={() => onViewProfileClick(primaryMatch)}
+                className="w-full sm:w-auto min-h-[44px] justify-center text-xs font-bold"
               >
                 Inspect Profile
               </Button>
@@ -275,6 +277,7 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
                 size="md"
                 onClick={() => onBookClick(primaryMatch)}
                 icon={<ArrowRight className="w-4 h-4" />}
+                className="w-full sm:w-auto min-h-[48px] justify-center text-xs sm:text-sm font-bold bg-[#111111] text-white shadow-sm active-press"
               >
                 Book {primaryFirstName} — ₹{primaryMatch.worker.estimatedQuote}
               </Button>
@@ -342,7 +345,7 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
               return (
                 <div
                   key={item.worker.id}
-                  className="min-w-[280px] sm:min-w-0 snap-start flex-1 flex flex-col justify-between rounded-2xl bg-white border border-black/8 hover:border-black/18 shadow-2xs hover:shadow-xs transition-all duration-200 p-5 hover-lift"
+                  className="min-w-[260px] xs:min-w-[280px] sm:min-w-0 snap-start flex-1 flex flex-col justify-between rounded-2xl bg-white border border-black/8 hover:border-black/18 shadow-2xs hover:shadow-xs transition-all duration-200 p-4 sm:p-5 hover-lift"
                 >
                   <div>
                     {/* Top Header */}

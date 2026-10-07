@@ -55,7 +55,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
         </div>
       )}
 
-      <div className="p-5 sm:p-6">
+      <div className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           {/* Avatar and Primary Details */}
           <div className="flex items-start space-x-4">
@@ -240,12 +240,13 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between gap-3 mt-5 pt-4 border-t border-black/5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mt-5 pt-4 border-t border-black/5">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => onViewProfileClick(rankedWorker)}
+            className="w-full sm:w-auto min-h-[40px] justify-center"
           >
             View Verified Profile
           </Button>
@@ -256,6 +257,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
             size="md"
             onClick={() => onBookClick(rankedWorker)}
             rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+            className="w-full sm:w-auto min-h-[44px] justify-center font-bold active-press"
           >
             Book {worker.name}
           </Button>

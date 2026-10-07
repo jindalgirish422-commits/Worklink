@@ -99,7 +99,7 @@ export const FeedbackExperience: React.FC<FeedbackExperienceProps> = ({
   };
 
   return (
-    <div className="p-6 sm:p-7 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/80 glass-specular-edge shadow-sm space-y-5 animate-fade-in text-xs">
+    <div className="p-4 sm:p-7 rounded-2xl sm:rounded-3xl bg-white/95 sm:bg-white/90 backdrop-blur-md sm:backdrop-blur-xl border border-white/80 glass-specular-edge shadow-sm space-y-4 sm:space-y-5 animate-fade-in text-xs">
       {/* ============================================================== */}
       {/* 1. HEADER & PROMPT                                             */}
       {/* ============================================================== */}
@@ -212,7 +212,7 @@ export const FeedbackExperience: React.FC<FeedbackExperienceProps> = ({
               variant="primary"
               size="lg"
               onClick={handleSubmit}
-              className="w-full font-bold shadow-sm"
+              className="w-full font-bold shadow-sm min-h-[48px] justify-center active-press"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
               Submit Feedback

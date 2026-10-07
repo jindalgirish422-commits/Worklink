@@ -66,9 +66,9 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
       }
       footer={
         /* ============================================================== */
-        /* SELECTIVE GLASS BOOKING CTA BAR (Visually Dominant)           */
+        /* FLOATING ACTION SURFACE: Selective Glass Booking CTA Bar      */
         /* ============================================================== */
-        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 p-1 sm:p-2 bg-white/90 backdrop-blur-xl rounded-2xl border border-white/80 glass-specular-edge motion-glass-appear">
+        <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-2.5 sm:p-2 bg-white/95 sm:bg-white/90 backdrop-blur-md sm:backdrop-blur-xl rounded-2xl border border-black/8 sm:border-white/80 glass-specular-edge motion-glass-appear">
           <div className="flex items-baseline space-x-3 self-start sm:self-auto">
             <div>
               <span className="text-[10px] font-mono uppercase text-[#86868B] block">
@@ -96,7 +96,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
             <Button
               variant="primary"
               size="lg"
-              className="flex-1 sm:flex-none shadow-md hover:shadow-lg font-bold text-sm sm:text-base py-3 px-6"
+              className="w-full sm:w-auto flex-1 sm:flex-none shadow-md hover:shadow-lg font-bold text-sm sm:text-base min-h-[48px] py-3.5 px-6 justify-center active-press"
               onClick={() => {
                 onClose();
                 onProceedToBooking(rankedWorker);
@@ -109,12 +109,12 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
         </div>
       }
     >
-      <div className="space-y-6 pb-2">
+      <div className="space-y-5 sm:space-y-6 pb-2">
         {/* ============================================================== */}
         {/* 1. HERO: Large Worker Visual & Professional Identity          */}
         {/* ============================================================== */}
-        <div className="p-6 rounded-3xl bg-white border border-black/8 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="flex items-start sm:items-center space-x-5">
+        <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-black/8 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+          <div className="flex items-start sm:items-center space-x-3.5 sm:space-x-5">
             {/* Large Worker Visual */}
             <div className="relative shrink-0">
               <Avatar
