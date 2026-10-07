@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Sparkles,
   Users,
 } from 'lucide-react';
 import {
@@ -19,6 +18,7 @@ import {
 } from './services/matchingEngine';
 import { parseNaturalLanguageJob, createJobRequestFromSlots } from './services/chatbotService';
 import { Navbar } from './components/Navbar';
+import { LandingPage } from './components/LandingPage';
 import { ChatbotIntake } from './components/ChatbotIntake';
 import { ServiceZoneMap } from './components/ServiceZoneMap';
 import { HardFilterAudit } from './components/HardFilterAudit';
@@ -39,10 +39,10 @@ import { useToast } from './components/ui/Toast';
 export const App: React.FC = () => {
   const { showToast } = useToast();
 
-  // Navigation & Location State
+  // Navigation & Location State - default to public landing page
   const [currentTab, setCurrentTab] = useState<
-    'marketplace' | 'zone_radar' | 'active_booking' | 'intelligence' | 'simulator'
-  >('marketplace');
+    'landing' | 'marketplace' | 'zone_radar' | 'active_booking' | 'intelligence' | 'simulator'
+  >('landing');
   const [customerLocation, setCustomerLocation] = useState<CustomerLocation>(DEFAULT_CUSTOMER_LOCATION);
 
   // Workers dataset
@@ -199,30 +199,21 @@ export const App: React.FC = () => {
       <main className="flex-1 w-full py-8">
         <Container size="2xl">
           {/* ============================================================== */}
+          {/* TAB 0: PUBLIC LANDING PAGE (Milestone 2 Launch Experience) */}
+          {/* ============================================================== */}
+          {currentTab === 'landing' && (
+            <LandingPage
+              onFindWorkerClick={() => setCurrentTab('marketplace')}
+              onExploreRadarClick={() => setCurrentTab('zone_radar')}
+              onViewIntelligenceClick={() => setCurrentTab('intelligence')}
+            />
+          )}
+
+          {/* ============================================================== */}
           {/* TAB 1: MARKETPLACE & INTAKE */}
           {/* ============================================================== */}
           {currentTab === 'marketplace' && (
             <div className="space-y-8 animate-fade-in">
-              {/* Hero Section */}
-              <div className="text-center max-w-3xl mx-auto pt-4 pb-8">
-                <div className="inline-flex items-center space-x-2 mb-4">
-                  <Badge variant="accent" size="md">
-                    <Sparkles className="w-3.5 h-3.5 text-[#0071E3] mr-1" />
-                    Explainable Skilled-Labour Intelligence
-                  </Badge>
-                </div>
-
-                <h1 className="text-hero text-[#111111]">
-                  "Right Labour. Right Work. Right Time."
-                </h1>
-
-                <p className="mt-4 text-subheading max-w-2xl mx-auto">
-                  WorkLink is not about finding the nearest worker.
-                  <br className="hidden sm:inline" />
-                  WorkLink is about finding the <strong className="font-semibold text-[#111111]">most suitable available worker</strong>.
-                </p>
-              </div>
-
               {/* Step 1: Natural-Language Chatbot Intake */}
               <ChatbotIntake
                 currentLocation={customerLocation}

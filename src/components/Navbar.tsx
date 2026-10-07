@@ -7,14 +7,15 @@ import {
   Compass,
   BarChart3,
   FlaskConical,
+  Home,
 } from 'lucide-react';
 import { CustomerLocation, MatchingWeights } from '../types';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 
 interface NavbarProps {
-  currentTab: 'marketplace' | 'zone_radar' | 'active_booking' | 'intelligence' | 'simulator';
-  onSelectTab: (tab: 'marketplace' | 'zone_radar' | 'active_booking' | 'intelligence' | 'simulator') => void;
+  currentTab: 'landing' | 'marketplace' | 'zone_radar' | 'active_booking' | 'intelligence' | 'simulator';
+  onSelectTab: (tab: 'landing' | 'marketplace' | 'zone_radar' | 'active_booking' | 'intelligence' | 'simulator') => void;
   location: CustomerLocation;
   onChangeLocationClick: () => void;
   currentWeights: MatchingWeights;
@@ -38,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Brand & Subtitle */}
           <div
             className="flex items-center space-x-3 cursor-pointer select-none group"
-            onClick={() => onSelectTab('marketplace')}
+            onClick={() => onSelectTab('landing')}
           >
             <div className="w-9 h-9 rounded-xl bg-[#111111] text-white flex items-center justify-center font-bold tracking-tight shadow-sm transition-transform duration-200 group-hover:scale-105">
               <span className="text-[#0071E3] mr-0.5">W</span>L
@@ -60,6 +61,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Tabs */}
           <nav className="hidden md:flex items-center space-x-1 p-1 bg-[#F5F5F7] rounded-xl border border-black/5 text-xs font-medium text-[#6E6E73]">
+            <button
+              onClick={() => onSelectTab('landing')}
+              className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
+                currentTab === 'landing'
+                  ? 'bg-[#FFFFFF] text-[#111111] shadow-xs font-semibold'
+                  : 'hover:text-[#111111]'
+              }`}
+            >
+              <Home className="w-3.5 h-3.5 text-[#111111]" />
+              <span>Overview</span>
+            </button>
+
             <button
               onClick={() => onSelectTab('marketplace')}
               className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
@@ -93,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <Clock className="w-3.5 h-3.5 text-[#34C759]" />
-              <span>Execution &amp; Invoice</span>
+              <span>Execution</span>
               {hasActiveBooking && (
                 <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
               )}
@@ -108,7 +121,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <FlaskConical className="w-3.5 h-3.5 text-[#AF52DE]" />
-              <span>Appendix G Simulator</span>
+              <span>Simulator</span>
             </button>
 
             <button
@@ -120,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <BarChart3 className="w-3.5 h-3.5 text-[#FF9500]" />
-              <span>Workforce Intelligence</span>
+              <span>Intelligence</span>
             </button>
           </nav>
 
@@ -149,6 +162,16 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Mobile Navigation Bar */}
         <div className="flex md:hidden overflow-x-auto py-2 space-x-2 border-t border-black/5 text-xs no-scrollbar">
           <button
+            onClick={() => onSelectTab('landing')}
+            className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
+              currentTab === 'landing'
+                ? 'bg-[#111111] text-white shadow-xs'
+                : 'bg-[#F0F0F2] text-[#6E6E73]'
+            }`}
+          >
+            Overview
+          </button>
+          <button
             onClick={() => onSelectTab('marketplace')}
             className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
               currentTab === 'marketplace'
@@ -156,7 +179,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 : 'bg-[#F0F0F2] text-[#6E6E73]'
             }`}
           >
-            Intake &amp; Match
+            Match
           </button>
           <button
             onClick={() => onSelectTab('zone_radar')}
