@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   DollarSign,
   Info,
+  FileText,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Booking, AdditionalWorkItem, BookingStatus } from '../types';
@@ -63,7 +64,9 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   }
 
   // Timer state
-  const [seconds, setSeconds] = useState(booking.elapsedSeconds || (booking.status === 'in_progress' ? 3600 : 0));
+  const [seconds, setSeconds] = useState(
+    booking.workingDurationSeconds || booking.elapsedSeconds || (booking.status === 'in_progress' ? 1800 : 0)
+  );
   const [timerRunning, setTimerRunning] = useState(booking.status === 'in_progress');
 
   // Reschedule & Cancel State
@@ -81,11 +84,15 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   const [cancelReason, setCancelReason] = useState<string>('Change of plans');
 
   // Available add-ons
-  const [availableAddons, setAvailableAddons] = useState<AdditionalWorkItem[]>([
-    { id: 'add-1', name: 'Inverter Run Capacitor (45µF)', cost: 450, approved: true },
-    { id: 'add-2', name: 'High-Pressure Gas Leakage Testing', cost: 350, approved: false },
-    { id: 'add-3', name: 'Copper Line Brazing & Valve Joint', cost: 300, approved: false },
-  ]);
+  const [availableAddons, setAvailableAddons] = useState<AdditionalWorkItem[]>(
+    booking.additionalWorkItems && booking.additionalWorkItems.length > 0
+      ? booking.additionalWorkItems
+      : [
+          { id: 'add-1', name: 'Inverter Run Capacitor (45µF)', cost: 450, approved: true },
+          { id: 'add-2', name: 'High-Pressure Gas Leakage Testing', cost: 350, approved: false },
+          { id: 'add-3', name: 'Copper Line Brazing & Valve Joint', cost: 300, approved: false },
+        ]
+  );
 
   // Feedback form state
   const [rating, setRating] = useState(5);
@@ -99,16 +106,28 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   );
   const [isPaid, setIsPaid] = useState(booking.status === 'paid' || booking.status === 'rated');
 
+  // Sync state if booking updates externally
+  useEffect(() => {
+    if (booking.status === 'in_progress') {
+      setTimerRunning(true);
+    } else {
+      setTimerRunning(false);
+    }
+    if (booking.additionalWorkItems && booking.additionalWorkItems.length > 0) {
+      setAvailableAddons(booking.additionalWorkItems);
+    }
+  }, [booking.status, booking.additionalWorkItems]);
+
   // Live timer interval
   useEffect(() => {
     let interval: any = null;
-    if (timerRunning) {
+    if (timerRunning && booking.status === 'in_progress') {
       interval = setInterval(() => {
         setSeconds((prev) => prev + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [timerRunning]);
+  }, [timerRunning, booking.status]);
 
   const actualHoursWorked = Math.max(0.5, parseFloat((seconds / 3600).toFixed(2)));
 
@@ -127,55 +146,88 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   };
 
   const handleToggleTimer = () => {
-    const nextState = !timerRunning;
-    setTimerRunning(nextState);
-    showToast({
-      type: 'info',
-      title: nextState ? 'Timer Started' : 'Timer Paused',
-      message: nextState
-        ? 'Recording real-time labour execution.'
-        : `Paused at ${formatTime(seconds)}.`,
-    });
+    if (booking.status === 'in_progress') {
+      // Pause
+      handleAdvanceStatus('paused', 'Customer requested pause');
+    } else if (booking.status === 'paused') {
+      // Resume
+      handleAdvanceStatus('in_progress');
+    } else {
+      const nextState = !timerRunning;
+      setTimerRunning(nextState);
+    }
   };
 
   const handleToggleAddon = (id: string) => {
-    setAvailableAddons((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const toggled = !item.approved;
-          showToast({
-            type: 'info',
-            title: toggled ? 'Spares Approved' : 'Spares Removed',
-            message: `${item.name} (${item.cost > 0 ? `₹${item.cost}` : ''})`,
-          });
-          return { ...item, approved: toggled };
-        }
-        return item;
-      })
-    );
+    const updated = availableAddons.map((item) => {
+      if (item.id === id) {
+        const toggled = !item.approved;
+        showToast({
+          type: 'info',
+          title: toggled ? 'Spares Approved by Customer' : 'Spares Excluded',
+          message: `${item.name} (${item.cost > 0 ? `₹${item.cost}` : ''})`,
+        });
+        return { ...item, approved: toggled };
+      }
+      return item;
+    });
+
+    setAvailableAddons(updated);
+    onUpdateBooking({
+      ...booking,
+      additionalWorkItems: updated,
+    });
   };
 
-  const handleAdvanceStatus = (nextStatus: BookingStatus) => {
+  const handleAdvanceStatus = (nextStatus: BookingStatus, customReason?: string) => {
+    let startedAt = booking.startedAt;
+    let endedAt = booking.endedAt;
+    let pausedAt = booking.pausedAt;
+    let pauseReason = booking.pauseReason;
+    let workerStatusMessage = booking.workerStatusMessage;
+
     if (nextStatus === 'in_progress') {
       setTimerRunning(true);
+      if (!startedAt) {
+        startedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+      workerStatusMessage = 'Active Onsite';
       showToast({
         type: 'info',
         title: 'Service In Progress',
         message: `${booking.worker.name} started the job. Working-hour timer is active.`,
       });
+    } else if (nextStatus === 'paused') {
+      setTimerRunning(false);
+      pausedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      pauseReason = customReason || 'Procuring spare parts';
+      workerStatusMessage = `Paused (${pauseReason})`;
+      showToast({
+        type: 'warning',
+        title: 'Service Paused',
+        message: `Clock stopped at ${pausedAt} (${pauseReason}). Time is non-billable.`,
+      });
     } else if (nextStatus === 'completed') {
       setTimerRunning(false);
+      endedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      workerStatusMessage = 'Service Completed';
       showToast({
         type: 'success',
         title: 'Service Completed',
-        message: 'Final invoice generated with recorded timer hours.',
+        message: 'Final invoice generated with recorded working hours.',
       });
     }
 
     const updated: Booking = {
       ...booking,
       status: nextStatus,
+      startedAt,
+      endedAt,
+      pausedAt,
+      pauseReason,
+      workerStatusMessage,
       elapsedSeconds: seconds,
+      workingDurationSeconds: seconds,
       actualHours: actualHoursWorked,
       additionalWorkItems: availableAddons.filter((a) => a.approved),
       finalTotal: finalPriceCalc.finalTotal,
@@ -410,16 +462,16 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
               <h2 className="text-lg sm:text-xl font-bold text-[#111111] tracking-tight">
                 {booking.status === 'requested' || booking.status === 'accepted'
                   ? 'Upcoming Service Booking'
-                  : 'Live Job Execution &amp; Working-Hour Tracking'}
+                  : 'Live Service Execution &amp; Working-Hour Tracking'}
               </h2>
             </div>
             <p className="text-xs text-[#6E6E73] mt-0.5">
-              WorkLink Pipeline: Requested &rarr; Worker Acceptance &rarr; Service In Progress &rarr; Completed &rarr; Rated
+              WorkLink Pipeline: Requested &rarr; Accepted &rarr; Service In Progress &rarr; Completed &rarr; Rated
             </p>
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="text-xs text-[#86868B] font-medium">Status:</span>
+            <span className="text-xs text-[#86868B] font-medium">Job Status:</span>
             <Badge
               variant={
                 booking.status === 'requested'
@@ -428,21 +480,29 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
                   ? 'default'
                   : booking.status === 'in_progress'
                   ? 'success'
+                  : booking.status === 'paused'
+                  ? 'accent'
                   : 'neutral'
               }
               size="md"
             >
+              {booking.status === 'in_progress' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#34C759] animate-pulse inline-block mr-1.5" />
+              )}
               {booking.status.replace('_', ' ').toUpperCase()}
             </Badge>
           </div>
         </div>
 
-        {/* Stepper Steps (6 Milestone 11 States) */}
+        {/* Stepper Steps (6 Milestone 11 & 12 States) */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-5">
           {[
             { key: 'requested', label: '1. Requested' },
             { key: 'accepted', label: '2. Accepted' },
-            { key: 'in_progress', label: '3. In Progress' },
+            {
+              key: 'in_progress',
+              label: booking.status === 'paused' ? '3. In Progress (Paused)' : '3. In Progress',
+            },
             { key: 'completed', label: '4. Completed' },
             { key: 'rated', label: '5. Rated' },
           ].map((step, idx) => {
@@ -454,7 +514,9 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
                 key={step.key}
                 className={`p-3 rounded-2xl border text-xs font-semibold flex items-center justify-between transition-all ${
                   isCurrent
-                    ? 'bg-[rgba(0,113,227,0.06)] border-[#0071E3]/40 text-[#0071E3] shadow-xs'
+                    ? booking.status === 'paused'
+                      ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-xs'
+                      : 'bg-[rgba(0,113,227,0.06)] border-[#0071E3]/40 text-[#0071E3] shadow-xs'
                     : isDone
                     ? 'bg-[rgba(52,199,89,0.08)] border-[rgba(52,199,89,0.22)] text-[#1B8738]'
                     : 'bg-[#FBFBFD] border-black/5 text-[#86868B]'
@@ -652,332 +714,456 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
       )}
 
       {/* ===================================================================== */}
-      {/* ACTIVE EXECUTION VIEW (When status is IN_PROGRESS or COMPLETED)       */}
+      {/* ACTIVE EXECUTION & FINALIZATION VIEW (IN_PROGRESS, PAUSED, COMPLETED)  */}
       {/* ===================================================================== */}
-      {(booking.status === 'in_progress' || booking.status === 'completed') && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left: Worker Dispatch & Timer */}
-          <div className="lg:col-span-7 space-y-6">
-            {/* Worker Card */}
-            <div className="card-premium p-6 bg-[#FFFFFF]">
-              <div className="flex items-center justify-between pb-4 border-b border-black/5">
-                <div className="flex items-center space-x-3.5">
-                  <Avatar
-                    src={booking.worker.avatar}
-                    alt={booking.worker.name}
-                    size="lg"
-                    isVerified={booking.worker.isVerified}
-                  />
-                  <div>
-                    <h3 className="text-base font-bold text-[#111111]">{booking.worker.name}</h3>
-                    <p className="text-xs text-[#6E6E73] font-medium">
-                      {booking.worker.trade} • License: {booking.worker.licenseNumber}
-                    </p>
-                    <div className="flex items-center space-x-2 mt-1 text-xs text-[#86868B]">
-                      <span className="font-semibold text-[#111111]">★ {booking.worker.rating.toFixed(1)}</span>
-                      <span>•</span>
-                      <span>{booking.worker.phone}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <Badge variant="success" size="sm">
-                    In Service
-                  </Badge>
-                  <span className="text-xs text-[#86868B] block mt-1">
-                    {booking.worker.distanceKm.toFixed(1)} km away
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Working-Hour Timer */}
-            <div className="card-premium p-6 md:p-8 bg-[#111111] text-white">
-              <div className="flex items-center justify-between pb-4 border-b border-white/10">
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5 text-[#0071E3] animate-pulse" />
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-white">
-                    Live Working-Hour Timer
-                  </h3>
-                </div>
-                <span className="text-xs text-[#86868B] font-mono">
-                  Rate: ₹{booking.worker.hourlyRate}/hr
+      {(booking.status === 'in_progress' || booking.status === 'paused' || booking.status === 'completed') && (
+        <div className="space-y-6">
+          {/* ================================================================ */}
+          {/* LIVE STATUS SURFACE (Using Selective Glass)                      */}
+          {/* ================================================================ */}
+          <div className="p-6 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/80 glass-specular-edge shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#86868B]">
+                  Live Onsite Service Execution
                 </span>
-              </div>
-
-              {/* Time Readout */}
-              <div className="my-6 text-center">
-                <div className="font-mono text-5xl sm:text-6xl font-extrabold tracking-tight text-white">
-                  {formatTime(seconds)}
-                </div>
-                <p className="text-xs text-[#86868B] mt-2 font-medium">
-                  Actual Working Time: <span className="text-[#0071E3] font-bold">{actualHoursWorked} Hours</span>
-                </p>
-                <p className="text-[11px] text-[#6E6E73] mt-1">
-                  Live Labour Cost: ₹{Math.round(actualHoursWorked * booking.worker.hourlyRate)}
-                </p>
-              </div>
-
-              {/* Timer Controls */}
-              <div className="flex items-center justify-center space-x-3 pt-2">
-                <Button
-                  variant={timerRunning ? 'warning' : 'accent'}
-                  size="md"
-                  onClick={handleToggleTimer}
-                  leftIcon={timerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                <Badge
+                  variant={
+                    booking.status === 'in_progress'
+                      ? 'success'
+                      : booking.status === 'paused'
+                      ? 'accent'
+                      : 'default'
+                  }
+                  size="sm"
                 >
-                  {timerRunning ? 'Pause Timer' : seconds === 0 ? 'Start Timer' : 'Resume Timer'}
-                </Button>
-
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setSeconds((s) => s + 900)}
-                  title="Add 15 minutes for simulation"
-                >
-                  +15 mins
-                </Button>
-
-                {booking.status !== 'completed' && (
-                  <Button
-                    variant="primary"
-                    size="md"
-                    onClick={() => handleAdvanceStatus('completed')}
-                  >
-                    Finish Service
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Approved Additional Work & Spares */}
-            <div className="card-premium p-6 bg-[#FFFFFF]">
-              <div className="flex items-center justify-between pb-3 border-b border-black/5">
-                <div className="flex items-center space-x-2">
-                  <Wrench className="w-4 h-4 text-[#0071E3]" />
-                  <h3 className="text-sm font-bold text-[#111111] tracking-tight">
-                    Approved Additional Work &amp; Spares
-                  </h3>
-                </div>
-                <Badge variant="accent" size="sm">
-                  Customer Verified
+                  {booking.status === 'in_progress' && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#34C759] animate-pulse inline-block mr-1.5" />
+                  )}
+                  {booking.status.replace('_', ' ').toUpperCase()}
                 </Badge>
               </div>
 
-              <p className="text-xs text-[#6E6E73] my-2">
-                Additional labour or spare parts must be explicitly verified and approved before inclusion in the final billing amount.
-              </p>
+              <h3 className="text-xl font-extrabold text-[#111111] tracking-tight">
+                {booking.workerStatusMessage ||
+                  (booking.status === 'in_progress'
+                    ? `${booking.worker.name} is actively working onsite.`
+                    : booking.status === 'paused'
+                    ? 'Service temporarily paused by professional.'
+                    : `Service finalized by ${booking.worker.name}.`)}
+              </h3>
 
-              <div className="space-y-2 mt-3">
-                {availableAddons.map((addon) => (
-                  <div
-                    key={addon.id}
-                    onClick={() => handleToggleAddon(addon.id)}
-                    className={`p-3 rounded-xl border flex items-center justify-between text-xs cursor-pointer transition-all ${
-                      addon.approved
-                        ? 'bg-[rgba(0,113,227,0.06)] border-[#0071E3]/30 text-[#111111] font-semibold'
-                        : 'bg-[#FBFBFD] border-black/5 text-[#6E6E73]'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2.5">
-                      <input
-                        type="checkbox"
-                        checked={addon.approved}
-                        onChange={() => {}}
-                        className="rounded accent-[#0071E3]"
-                      />
-                      <span>{addon.name}</span>
-                    </div>
-                    <span className="font-bold text-[#111111]">₹{addon.cost}</span>
-                  </div>
-                ))}
+              <div className="flex flex-wrap items-center gap-3 text-xs text-[#6E6E73] pt-1">
+                <span>
+                  Start Time: <strong className="text-[#111111]">{booking.startedAt || '10:00 AM'}</strong>
+                </span>
+                <span>•</span>
+                <span>
+                  End Time:{' '}
+                  <strong className="text-[#111111]">
+                    {booking.endedAt || (booking.status === 'in_progress' ? 'Running' : booking.status === 'paused' ? 'Paused' : '—')}
+                  </strong>
+                </span>
+                <span>•</span>
+                <span className="text-[#0071E3] font-medium">
+                  {booking.worker.distanceKm.toFixed(1)} km away (10 km Zone)
+                </span>
               </div>
+            </div>
+
+            {/* Readout */}
+            <div className="text-left md:text-right shrink-0">
+              <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider block">
+                Working Duration
+              </span>
+              <span className="font-mono text-3xl sm:text-4xl font-extrabold text-[#111111] tracking-tight">
+                {formatTime(seconds)}
+              </span>
+              <span className="text-xs text-[#34C759] font-medium block mt-0.5">
+                {actualHoursWorked} hrs recorded
+              </span>
             </div>
           </div>
 
-          {/* Right: Transparent Billing & Feedback */}
-          <div className="lg:col-span-5 space-y-6">
-            {/* Post-Service Final Invoice */}
-            <div className="card-premium p-6 bg-[#FFFFFF]">
-              <div className="flex items-center space-x-2 pb-4 border-b border-black/5">
-                <Receipt className="w-4 h-4 text-[#34C759]" />
-                <h3 className="text-sm font-bold text-[#111111] tracking-tight">
-                  Transparent Final Billing Breakdown
-                </h3>
-              </div>
-
-              <div className="space-y-2.5 py-4 text-xs border-b border-black/5">
-                <div className="flex justify-between text-[#111111]">
-                  <span>Actual Labour ({actualHoursWorked} hrs @ ₹{booking.worker.hourlyRate}/hr)</span>
-                  <span className="font-semibold">₹{finalPriceCalc.actualLabour}</span>
+          {/* Paused Alert Banner (When PAUSED) */}
+          {booking.status === 'paused' && (
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-center justify-between gap-3 animate-fade-in">
+              <div className="flex items-center space-x-2.5">
+                <Pause className="w-4 h-4 text-amber-600 shrink-0" />
+                <div>
+                  <span className="font-bold block">
+                    Service Clock Paused at {booking.pausedAt || '10:45 AM'} ({booking.pauseReason || 'Procuring spare parts'})
+                  </span>
+                  <span className="text-[11px] text-amber-800">
+                    Paused time is strictly non-billable. Labour charges resume once the worker restarts the clock.
+                  </span>
                 </div>
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => handleAdvanceStatus('in_progress')}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0"
+              >
+                Resume Service
+              </Button>
+            </div>
+          )}
 
-                <div className="flex justify-between text-[#111111]">
-                  <div>
-                    <span>Travel Expense ({booking.worker.distanceKm.toFixed(1)} km)</span>
-                    <span className="text-[10px] text-[#86868B] block">
-                      {booking.worker.distanceKm <= 5 ? 'Free within 5 km zone' : 'Configurable slab > 5 km'}
+          {/* Main Execution Split View (Solid Surfaces for Dense Information) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left: Worker Dispatch, Timer & Technician Notes */}
+            <div className="lg:col-span-7 space-y-6">
+              {/* Worker Card */}
+              <div className="card-premium p-6 bg-[#FFFFFF]">
+                <div className="flex items-center justify-between pb-4 border-b border-black/5">
+                  <div className="flex items-center space-x-3.5">
+                    <Avatar
+                      src={booking.worker.avatar}
+                      alt={booking.worker.name}
+                      size="lg"
+                      isVerified={booking.worker.isVerified}
+                    />
+                    <div>
+                      <h3 className="text-base font-bold text-[#111111]">{booking.worker.name}</h3>
+                      <p className="text-xs text-[#6E6E73] font-medium">
+                        {booking.worker.trade} • License: {booking.worker.licenseNumber}
+                      </p>
+                      <div className="flex items-center space-x-2 mt-1 text-xs text-[#86868B]">
+                        <span className="font-semibold text-[#111111]">★ {booking.worker.rating.toFixed(1)}</span>
+                        <span>•</span>
+                        <span>{booking.worker.phone}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <Badge variant={booking.status === 'completed' ? 'default' : 'success'} size="sm">
+                      {booking.status === 'completed' ? 'Finalized' : 'Onsite'}
+                    </Badge>
+                    <span className="text-xs text-[#86868B] block mt-1">
+                      {booking.worker.distanceKm.toFixed(1)} km away
                     </span>
                   </div>
-                  <span className="font-semibold">
-                    {finalPriceCalc.travelCharge === 0 ? (
-                      <span className="text-[#1B8738]">FREE</span>
-                    ) : (
-                      `₹${finalPriceCalc.travelCharge}`
+                </div>
+
+                {/* Simulation controls for customer */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-4">
+                  <span className="text-[11px] text-[#86868B]">
+                    Status: <strong className="text-[#111111]">{booking.status.toUpperCase()}</strong>
+                  </span>
+
+                  <div className="flex items-center space-x-2">
+                    {booking.status === 'in_progress' && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleAdvanceStatus('paused', 'Awaiting parts')}
+                          className="text-xs font-semibold text-amber-700 hover:bg-amber-50"
+                        >
+                          <Pause className="w-3.5 h-3.5 mr-1" />
+                          Pause Clock
+                        </Button>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleAdvanceStatus('completed')}
+                          className="text-xs font-bold"
+                        >
+                          Complete Service
+                        </Button>
+                      </>
                     )}
-                  </span>
-                </div>
 
-                <div className="flex justify-between text-[#111111]">
-                  <span>Approved Spares &amp; Additional Work</span>
-                  <span className="font-semibold">₹{finalPriceCalc.additionalWorkTotal}</span>
-                </div>
-
-                <div className="flex justify-between text-[#111111]">
-                  <span>WorkLink Platform Fee (8%)</span>
-                  <span className="font-semibold">₹{finalPriceCalc.platformFee}</span>
-                </div>
-
-                <div className="flex justify-between text-[#1B8738]">
-                  <span>Promotional Discount</span>
-                  <span className="font-semibold">-₹{finalPriceCalc.discount}</span>
-                </div>
-              </div>
-
-              {/* Final Total Amount */}
-              <div className="pt-3 pb-5 flex items-baseline justify-between">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#86868B] block">
-                    Final Payable Amount
-                  </span>
-                  <span className="text-[11px] text-[#86868B]">All taxes included</span>
-                </div>
-                <span className="text-3xl font-extrabold text-[#111111]">
-                  ₹{finalPriceCalc.finalTotal}
-                </span>
-              </div>
-
-              {/* Payment Options */}
-              {!isPaid ? (
-                <div className="pt-2 border-t border-black/5">
-                  <span className="text-xs font-bold text-[#111111] block mb-2">
-                    Select Payment Method:
-                  </span>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => handleProcessPayment('UPI')}
-                    >
-                      Pay UPI
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleProcessPayment('Card')}
-                    >
-                      Card
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleProcessPayment('Cash on Delivery')}
-                    >
-                      Cash
-                    </Button>
+                    {booking.status === 'paused' && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleAdvanceStatus('in_progress')}
+                        className="text-xs font-bold bg-[#0071E3]"
+                      >
+                        <Play className="w-3.5 h-3.5 mr-1" />
+                        Resume Clock
+                      </Button>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div className="p-3 bg-[rgba(52,199,89,0.08)] border border-[rgba(52,199,89,0.2)] rounded-2xl flex items-center space-x-2 text-xs text-[#1B8738] font-semibold">
-                  <CheckCircle2 className="w-4 h-4 text-[#34C759] shrink-0" />
-                  <span>Payment settled via {booking.paymentMethod || 'UPI'}. Receipt #{booking.paymentReference || 'PAY-8921'}</span>
+              </div>
+
+              {/* Technician Field Notes Card (Solid Surface) */}
+              <div className="card-premium p-6 bg-[#FFFFFF] space-y-3">
+                <div className="flex items-center justify-between pb-3 border-b border-black/5">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="w-4 h-4 text-[#34C759]" />
+                    <h3 className="text-sm font-bold text-[#111111] tracking-tight">
+                      Technician Field Notes &amp; Observations
+                    </h3>
+                  </div>
+                  <Badge variant="accent" size="sm">
+                    Live Field Sync
+                  </Badge>
                 </div>
-              )}
+
+                <div className="p-3.5 rounded-xl bg-[#FBFBFD] border border-black/5 text-xs text-[#6E6E73] leading-relaxed">
+                  {booking.notes ? (
+                    <p className="font-mono text-[#111111]">{booking.notes}</p>
+                  ) : (
+                    <p className="italic text-[#86868B]">
+                      {booking.worker.name} is diagnosing equipment onsite. Professional field observations will appear here in real time.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Approved Additional Work & Spares */}
+              <div className="card-premium p-6 bg-[#FFFFFF]">
+                <div className="flex items-center justify-between pb-3 border-b border-black/5">
+                  <div className="flex items-center space-x-2">
+                    <Wrench className="w-4 h-4 text-[#0071E3]" />
+                    <h3 className="text-sm font-bold text-[#111111] tracking-tight">
+                      Approved Additional Work &amp; Spares
+                    </h3>
+                  </div>
+                  <Badge variant="accent" size="sm">
+                    Customer Verified
+                  </Badge>
+                </div>
+
+                <p className="text-xs text-[#6E6E73] my-2">
+                  Additional labour or spare parts must be explicitly verified and approved before inclusion in the final billing amount.
+                </p>
+
+                <div className="space-y-2 mt-3">
+                  {availableAddons.map((addon) => (
+                    <div
+                      key={addon.id}
+                      onClick={() => handleToggleAddon(addon.id)}
+                      className={`p-3 rounded-xl border flex items-center justify-between text-xs cursor-pointer transition-all ${
+                        addon.approved
+                          ? 'bg-[rgba(0,113,227,0.06)] border-[#0071E3]/30 text-[#111111] font-semibold'
+                          : 'bg-[#FBFBFD] border-black/5 text-[#6E6E73]'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2.5">
+                        <input
+                          type="checkbox"
+                          checked={addon.approved}
+                          onChange={() => {}}
+                          className="rounded accent-[#0071E3]"
+                        />
+                        <span>{addon.name}</span>
+                      </div>
+                      <span className="font-bold text-[#111111]">₹{addon.cost}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* Post-Service Feedback & Rating Form */}
-            {isPaid && (
-              <div className="card-premium p-6 bg-[#FFFFFF] animate-fade-in space-y-4">
-                <div className="flex items-center space-x-2 pb-3 border-b border-black/5">
-                  <Sparkles className="w-4 h-4 text-[#FF9500]" />
+            {/* Right: Transparent Billing & Finalization Status */}
+            <div className="lg:col-span-5 space-y-6">
+              {/* Post-Service Final Invoice / Finalization Status */}
+              <div className="card-premium p-6 bg-[#FFFFFF]">
+                <div className="flex items-center space-x-2 pb-4 border-b border-black/5">
+                  <Receipt className="w-4 h-4 text-[#34C759]" />
                   <h3 className="text-sm font-bold text-[#111111] tracking-tight">
-                    Rate Your Experience with {booking.worker.name}
+                    {booking.status === 'completed'
+                      ? 'Finalization Status &amp; Invoice Breakdown'
+                      : 'Live Billing Breakdown'}
                   </h3>
                 </div>
 
-                {/* Star Picker */}
-                <div className="flex items-center justify-center space-x-2 py-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setRating(star)}
-                      className="p-1 hover:scale-110 transition-transform"
-                    >
-                      <Star
-                        className={`w-7 h-7 ${
-                          star <= rating
-                            ? 'fill-[#FF9500] text-[#FF9500]'
-                            : 'text-[#86868B]'
-                        }`}
-                      />
-                    </button>
-                  ))}
+                {/* Finalization Metadata when Completed */}
+                {booking.status === 'completed' && (
+                  <div className="p-3 my-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-1">
+                    <div className="flex justify-between font-bold">
+                      <span>Service Finalized:</span>
+                      <span>{booking.endedAt || 'Today'}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] text-emerald-800">
+                      <span>Billable Working Duration:</span>
+                      <span>{actualHoursWorked} Hours ({formatTime(seconds)})</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2.5 py-4 text-xs border-b border-black/5">
+                  <div className="flex justify-between text-[#111111]">
+                    <span>Actual Labour ({actualHoursWorked} hrs @ ₹{booking.worker.hourlyRate}/hr)</span>
+                    <span className="font-semibold">₹{finalPriceCalc.actualLabour}</span>
+                  </div>
+
+                  <div className="flex justify-between text-[#111111]">
+                    <div>
+                      <span>Travel Expense ({booking.worker.distanceKm.toFixed(1)} km)</span>
+                      <span className="text-[10px] text-[#86868B] block">
+                        {booking.worker.distanceKm <= 5 ? 'Free within 5 km zone' : 'Configurable slab > 5 km'}
+                      </span>
+                    </div>
+                    <span className="font-semibold">
+                      {finalPriceCalc.travelCharge === 0 ? (
+                        <span className="text-[#1B8738]">FREE</span>
+                      ) : (
+                        `₹${finalPriceCalc.travelCharge}`
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between text-[#111111]">
+                    <span>Approved Spares &amp; Additional Work</span>
+                    <span className="font-semibold">₹{finalPriceCalc.additionalWorkTotal}</span>
+                  </div>
+
+                  <div className="flex justify-between text-[#111111]">
+                    <span>WorkLink Platform Fee (8%)</span>
+                    <span className="font-semibold">₹{finalPriceCalc.platformFee}</span>
+                  </div>
+
+                  <div className="flex justify-between text-[#1B8738]">
+                    <span>Promotional Discount</span>
+                    <span className="font-semibold">-₹{finalPriceCalc.discount}</span>
+                  </div>
                 </div>
 
-                {/* Quick Positive Tags */}
-                <div className="flex flex-wrap gap-1.5 justify-center">
-                  {[
-                    'Punctual & Polite',
-                    'Accurate Diagnostics',
-                    'Clean Worksite',
-                    'Fair Pricing',
-                    'Fast Resolution',
-                  ].map((tag) => (
-                    <button
-                      key={tag}
-                      onClick={() =>
-                        setSelectedTags((prev) =>
-                          prev.includes(tag)
-                            ? prev.filter((t) => t !== tag)
-                            : [...prev, tag]
-                        )
-                      }
-                      className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
-                        selectedTags.includes(tag)
-                          ? 'bg-[#111111] text-white shadow-xs'
-                          : 'bg-[#F5F5F7] text-[#6E6E73] hover:text-[#111111]'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
+                {/* Final Total Amount */}
+                <div className="pt-3 pb-5 flex items-baseline justify-between">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#86868B] block">
+                      {booking.status === 'completed' ? 'Final Payable Amount' : 'Estimated Current Amount'}
+                    </span>
+                    <span className="text-[11px] text-[#86868B]">All taxes included</span>
+                  </div>
+                  <span className="text-3xl font-extrabold text-[#111111]">
+                    ₹{finalPriceCalc.finalTotal}
+                  </span>
                 </div>
 
-                {/* Comment Field */}
-                <div>
-                  <label className="block text-xs font-semibold text-[#111111] mb-1">
-                    Your Review
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={feedbackComment}
-                    onChange={(e) => setFeedbackComment(e.target.value)}
-                    className="w-full p-3 rounded-xl border border-black/10 bg-[#FBFBFD] text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
-                    placeholder="Share helpful feedback..."
-                  />
-                </div>
-
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={handleSubmitFeedback}
-                  className="w-full font-bold"
-                >
-                  Submit Rating &amp; Finish
-                </Button>
+                {/* Payment Options (When completed) */}
+                {booking.status === 'completed' && (
+                  <>
+                    {!isPaid ? (
+                      <div className="pt-2 border-t border-black/5">
+                        <span className="text-xs font-bold text-[#111111] block mb-2">
+                          Select Payment Method:
+                        </span>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleProcessPayment('UPI')}
+                          >
+                            Pay UPI
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleProcessPayment('Card')}
+                          >
+                            Card
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleProcessPayment('Cash on Delivery')}
+                          >
+                            Cash
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-[rgba(52,199,89,0.08)] border border-[rgba(52,199,89,0.2)] rounded-2xl flex items-center space-x-2 text-xs text-[#1B8738] font-semibold">
+                        <CheckCircle2 className="w-4 h-4 text-[#34C759] shrink-0" />
+                        <span>Payment settled via {booking.paymentMethod || 'UPI'}. Receipt #{booking.paymentReference || 'PAY-8921'}</span>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-            )}
+
+              {/* Post-Service Feedback & Rating Form */}
+              {booking.status === 'completed' && isPaid && (
+                <div className="card-premium p-6 bg-[#FFFFFF] animate-fade-in space-y-4">
+                  <div className="flex items-center space-x-2 pb-3 border-b border-black/5">
+                    <Sparkles className="w-4 h-4 text-[#FF9500]" />
+                    <h3 className="text-sm font-bold text-[#111111] tracking-tight">
+                      Rate Your Experience with {booking.worker.name}
+                    </h3>
+                  </div>
+
+                  {/* Star Picker */}
+                  <div className="flex items-center justify-center space-x-2 py-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setRating(star)}
+                        className="p-1 hover:scale-110 transition-transform"
+                      >
+                        <Star
+                          className={`w-7 h-7 ${
+                            star <= rating
+                              ? 'fill-[#FF9500] text-[#FF9500]'
+                              : 'text-[#86868B]'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Quick Positive Tags */}
+                  <div className="flex flex-wrap gap-1.5 justify-center">
+                    {[
+                      'Punctual & Polite',
+                      'Accurate Diagnostics',
+                      'Clean Worksite',
+                      'Fair Pricing',
+                      'Fast Resolution',
+                    ].map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() =>
+                          setSelectedTags((prev) =>
+                            prev.includes(tag)
+                              ? prev.filter((t) => t !== tag)
+                              : [...prev, tag]
+                          )
+                        }
+                        className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
+                          selectedTags.includes(tag)
+                            ? 'bg-[#111111] text-white shadow-xs'
+                            : 'bg-[#F5F5F7] text-[#6E6E73] hover:text-[#111111]'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Comment Field */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#111111] mb-1">
+                      Your Review
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={feedbackComment}
+                      onChange={(e) => setFeedbackComment(e.target.value)}
+                      className="w-full p-3 rounded-xl border border-black/10 bg-[#FBFBFD] text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
+                      placeholder="Share helpful feedback..."
+                    />
+                  </div>
+
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={handleSubmitFeedback}
+                    className="w-full font-bold"
+                  >
+                    Submit Rating &amp; Finish
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

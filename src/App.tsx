@@ -263,6 +263,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
               onAcceptBooking={handleAcceptBooking}
               onRejectBooking={handleRejectBooking}
               onAdvanceBookingStatus={handleAdvanceBookingStatus}
+              onUpdateBooking={handleUpdateBooking}
             />
           )}
 

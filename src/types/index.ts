@@ -160,6 +160,8 @@ export interface AdditionalWorkItem {
   name: string;
   cost: number;
   approved: boolean;
+  addedBy?: 'worker' | 'customer';
+  notes?: string;
 }
 
 export type BookingStatus =
@@ -182,6 +184,14 @@ export interface Booking {
   scheduledDate?: string;
   scheduledTimeSlot?: string;
   startTime?: number;
+  startedAt?: string;
+  endTime?: number;
+  endedAt?: string;
+  workingDurationSeconds?: number;
+  pausedAt?: string;
+  pauseReason?: string;
+  workerStatusMessage?: string;
+  notes?: string;
   elapsedSeconds: number;
   isTimerRunning: boolean;
   estimatedHours: number;

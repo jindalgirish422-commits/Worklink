@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Briefcase,
   ShieldCheck,
@@ -20,9 +20,16 @@ import {
   Info,
   Wrench,
   Navigation,
+  Play,
+  Pause,
+  FileText,
+  Plus,
+  Trash2,
+  HelpCircle,
+  RotateCcw,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { Worker, AvailabilityStatus, Booking, BookingStatus } from '../../types';
+import { Worker, AvailabilityStatus, Booking, BookingStatus, AdditionalWorkItem } from '../../types';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
@@ -35,6 +42,7 @@ export interface WorkerDashboardProps {
   onAcceptBooking?: (bookingId: string) => void;
   onRejectBooking?: (bookingId: string, reason?: string) => void;
   onAdvanceBookingStatus?: (bookingId: string, nextStatus: BookingStatus) => void;
+  onUpdateBooking?: (updated: Booking) => void;
 }
 
 export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
@@ -44,6 +52,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   onAcceptBooking,
   onRejectBooking,
   onAdvanceBookingStatus,
+  onUpdateBooking,
 }) => {
   const { currentUser } = useAuth();
   const { showToast } = useToast();
@@ -62,6 +71,63 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [declineReason, setDeclineReason] = useState<string>('');
   const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
+
+  // Milestone 12: Service Execution State
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(
+    activeBooking?.workingDurationSeconds || activeBooking?.elapsedSeconds || (activeBooking?.status === 'in_progress' ? 1800 : 0)
+  );
+  const [isTimerActive, setIsTimerActive] = useState<boolean>(activeBooking?.status === 'in_progress');
+  const [showPauseModal, setShowPauseModal] = useState<boolean>(false);
+  const [pauseReasonInput, setPauseReasonInput] = useState<string>('Procuring spare parts');
+  const [workerNotes, setWorkerNotes] = useState<string>(activeBooking?.notes || '');
+  const [newSpareName, setNewSpareName] = useState<string>('');
+  const [newSpareCost, setNewSpareCost] = useState<string>('');
+  const [showAddSpareForm, setShowAddSpareForm] = useState<boolean>(false);
+
+  // Sync state if activeBooking updates from external props
+  useEffect(() => {
+    if (activeBooking) {
+      if (activeBooking.notes && activeBooking.notes !== workerNotes) {
+        setWorkerNotes(activeBooking.notes);
+      }
+      if (activeBooking.status === 'in_progress') {
+        setIsTimerActive(true);
+      } else {
+        setIsTimerActive(false);
+      }
+    }
+  }, [activeBooking?.status, activeBooking?.notes]);
+
+  // Live timer interval when job is in_progress
+  useEffect(() => {
+    let interval: any = null;
+    if (isTimerActive && activeBooking?.status === 'in_progress') {
+      interval = setInterval(() => {
+        setElapsedSeconds((prev) => {
+          const next = prev + 1;
+          // Periodically save elapsed seconds
+          if (next % 10 === 0 && activeBooking && onUpdateBooking) {
+            onUpdateBooking({
+              ...activeBooking,
+              elapsedSeconds: next,
+              workingDurationSeconds: next,
+            });
+          }
+          return next;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerActive, activeBooking?.status]);
+
+  const formatTime = (totalSec: number) => {
+    const hrs = Math.floor(totalSec / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const actualHoursWorked = Math.max(0.5, parseFloat((elapsedSeconds / 3600).toFixed(2)));
 
   const handleStatusChange = (newStatus: AvailabilityStatus) => {
     setAvailability(newStatus);
@@ -101,6 +167,192 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
       type: 'warning',
       title: 'Job Request Declined',
       message: `Job #${activeBooking.id.slice(0, 8)} declined. Re-routing to another pro in the 10 km pool.`,
+    });
+  };
+
+  // =========================================================================
+  // MILESTONE 12: WORKER SERVICE EXECUTION ACTIONS
+  // =========================================================================
+
+  // 1. START JOB
+  const handleStartJob = () => {
+    if (!activeBooking) return;
+    const now = Date.now();
+    const startedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setIsTimerActive(true);
+
+    const updated: Booking = {
+      ...activeBooking,
+      status: 'in_progress',
+      startTime: now,
+      startedAt,
+      isTimerRunning: true,
+      workerStatusMessage: 'Active Onsite',
+    };
+
+    if (onUpdateBooking) {
+      onUpdateBooking(updated);
+    } else if (onAdvanceBookingStatus) {
+      onAdvanceBookingStatus(activeBooking.id, 'in_progress');
+    }
+
+    showToast({
+      type: 'info',
+      title: 'Job Started',
+      message: `Service clock started at ${startedAt}. Working duration active.`,
+    });
+  };
+
+  // 2. PAUSE JOB
+  const handleConfirmPause = () => {
+    if (!activeBooking) return;
+    const pausedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const reason = pauseReasonInput.trim() || 'Procuring spare parts';
+    setIsTimerActive(false);
+    setShowPauseModal(false);
+
+    const updated: Booking = {
+      ...activeBooking,
+      status: 'paused',
+      isTimerRunning: false,
+      pausedAt,
+      pauseReason: reason,
+      workerStatusMessage: `Paused (${reason})`,
+      elapsedSeconds,
+      workingDurationSeconds: elapsedSeconds,
+    };
+
+    if (onUpdateBooking) {
+      onUpdateBooking(updated);
+    } else if (onAdvanceBookingStatus) {
+      onAdvanceBookingStatus(activeBooking.id, 'paused');
+    }
+
+    showToast({
+      type: 'warning',
+      title: 'Job Paused',
+      message: `Clock stopped at ${pausedAt} (${reason}). Paused time is non-billable.`,
+    });
+  };
+
+  // 3. RESUME JOB
+  const handleResumeJob = () => {
+    if (!activeBooking) return;
+    setIsTimerActive(true);
+
+    const updated: Booking = {
+      ...activeBooking,
+      status: 'in_progress',
+      isTimerRunning: true,
+      workerStatusMessage: 'Active Onsite',
+    };
+
+    if (onUpdateBooking) {
+      onUpdateBooking(updated);
+    } else if (onAdvanceBookingStatus) {
+      onAdvanceBookingStatus(activeBooking.id, 'in_progress');
+    }
+
+    showToast({
+      type: 'info',
+      title: 'Job Resumed',
+      message: 'Working clock resumed. Recording billable labour duration.',
+    });
+  };
+
+  // 4. COMPLETE JOB
+  const handleCompleteJob = () => {
+    if (!activeBooking) return;
+    const now = Date.now();
+    const endedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setIsTimerActive(false);
+
+    const hours = Math.max(0.5, parseFloat((elapsedSeconds / 3600).toFixed(2)));
+    const baseLabour = Math.round(hours * currentWorker.hourlyRate);
+    const sparesTotal = (activeBooking.additionalWorkItems || [])
+      .filter((item) => item.approved)
+      .reduce((sum, item) => sum + item.cost, 0);
+    const subtotal = baseLabour + activeBooking.travelCharge + sparesTotal;
+    const platformFee = Math.round(subtotal * 0.08);
+    const discount = 50;
+    const finalTotal = Math.max(0, subtotal + platformFee - discount);
+
+    const updated: Booking = {
+      ...activeBooking,
+      status: 'completed',
+      isTimerRunning: false,
+      endTime: now,
+      endedAt,
+      elapsedSeconds,
+      workingDurationSeconds: elapsedSeconds,
+      actualHours: hours,
+      baseLabourFee: baseLabour,
+      platformFee,
+      discount,
+      finalTotal,
+      workerStatusMessage: 'Service Completed',
+      notes: workerNotes,
+    };
+
+    if (onUpdateBooking) {
+      onUpdateBooking(updated);
+    } else if (onAdvanceBookingStatus) {
+      onAdvanceBookingStatus(activeBooking.id, 'completed');
+    }
+
+    showToast({
+      type: 'success',
+      title: 'Job Completed',
+      message: `Finished at ${endedAt}. Recorded ${hours} hrs (${formatTime(elapsedSeconds)}). Invoice finalized.`,
+    });
+  };
+
+  // 5. UPDATE TECHNICIAN FIELD NOTES
+  const handleSaveNotes = (newNotes: string) => {
+    setWorkerNotes(newNotes);
+    if (!activeBooking) return;
+    const updated: Booking = { ...activeBooking, notes: newNotes };
+    if (onUpdateBooking) {
+      onUpdateBooking(updated);
+    }
+  };
+
+  // 6. TOGGLE ADDITIONAL WORK ITEM
+  const handleToggleAdditionalItem = (id: string) => {
+    if (!activeBooking) return;
+    const currentItems = activeBooking.additionalWorkItems || [];
+    const updatedItems = currentItems.map((item) =>
+      item.id === id ? { ...item, approved: !item.approved } : item
+    );
+    const updated: Booking = { ...activeBooking, additionalWorkItems: updatedItems };
+    if (onUpdateBooking) {
+      onUpdateBooking(updated);
+    }
+  };
+
+  // 7. ADD NEW ADDITIONAL WORK ITEM
+  const handleAddNewSpare = () => {
+    if (!activeBooking || !newSpareName.trim()) return;
+    const cost = parseFloat(newSpareCost) || 0;
+    const newItem: AdditionalWorkItem = {
+      id: `add-${Date.now()}`,
+      name: newSpareName.trim(),
+      cost,
+      approved: true,
+      addedBy: 'worker',
+    };
+    const updatedItems = [...(activeBooking.additionalWorkItems || []), newItem];
+    const updated: Booking = { ...activeBooking, additionalWorkItems: updatedItems };
+    if (onUpdateBooking) {
+      onUpdateBooking(updated);
+    }
+    setNewSpareName('');
+    setNewSpareCost('');
+    setShowAddSpareForm(false);
+    showToast({
+      type: 'info',
+      title: 'Spares / Work Added',
+      message: `${newItem.name} (₹${cost}) added. Synced with customer invoice.`,
     });
   };
 
@@ -270,6 +522,53 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
         </Modal>
       )}
 
+      {/* Pause Confirmation Modal */}
+      {showPauseModal && (
+        <Modal
+          isOpen={showPauseModal}
+          onClose={() => setShowPauseModal(false)}
+          title="Pause Service Execution?"
+          subtitle="Stop the working duration clock while stepping away or collecting parts."
+          maxWidth="sm"
+          footer={
+            <div className="flex items-center justify-end space-x-2 w-full">
+              <Button variant="ghost" size="sm" onClick={() => setShowPauseModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="warning" size="sm" onClick={handleConfirmPause}>
+                Confirm Pause
+              </Button>
+            </div>
+          }
+        >
+          <div className="space-y-4 py-2 text-xs">
+            <p className="text-[#6E6E73]">
+              Paused duration is strictly non-billable to the customer. Select the reason for pausing:
+            </p>
+            <div className="space-y-2">
+              {[
+                'Procuring spare parts (Capacitor/Gas)',
+                'Awaiting customer access / site clearance',
+                'Technical consultation / diagnostic review',
+                'Temporary break / safety check',
+              ].map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => setPauseReasonInput(reason)}
+                  className={`w-full p-2.5 rounded-xl border text-left text-xs font-medium transition-all ${
+                    pauseReasonInput === reason
+                      ? 'bg-amber-500/10 border-amber-500 text-amber-900 font-bold'
+                      : 'bg-white border-black/10 text-[#6E6E73] hover:text-[#111111]'
+                  }`}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Header Profile Card */}
       <div className="p-6 rounded-3xl bg-white border border-black/5 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -386,9 +685,9 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
           }`}
         >
           <Briefcase className="w-3.5 h-3.5" />
-          <span>Active Dispatch &amp; Live Job</span>
-          {activeBooking && activeBooking.status === 'requested' && (
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping ml-1" />
+          <span>Active Dispatch &amp; Onsite Service</span>
+          {activeBooking && (activeBooking.status === 'in_progress' || activeBooking.status === 'requested') && (
+            <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse ml-1" />
           )}
         </button>
 
@@ -410,168 +709,331 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
         </button>
       </div>
 
-      {/* TAB 1: ACTIVE DISPATCH VIEW */}
+      {/* TAB 1: ACTIVE DISPATCH & ONSITE SERVICE CONTROLLER (Milestone 12 Core) */}
       {activeTab === 'dispatch' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
-            <div className="p-5 rounded-2xl bg-white border border-black/5 shadow-xs">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-black/5">
-                <div className="flex items-center space-x-2">
-                  <Briefcase className="w-4 h-4 text-[#0071E3]" />
-                  <h3 className="text-sm font-bold text-[#111111]">Active Dispatch Status</h3>
-                </div>
-                <Badge
-                  variant={
-                    !activeBooking
-                      ? 'neutral'
-                      : activeBooking.status === 'requested'
-                      ? 'accent'
-                      : activeBooking.status === 'accepted'
-                      ? 'default'
-                      : activeBooking.status === 'in_progress'
-                      ? 'success'
-                      : 'neutral'
-                  }
-                  size="sm"
-                >
-                  {!activeBooking
-                    ? 'Ready for Dispatch'
-                    : activeBooking.status.replace('_', ' ').toUpperCase()}
-                </Badge>
-              </div>
-
-              {activeBooking ? (
-                <div className="p-4 rounded-2xl bg-[#0071E3]/5 border border-[#0071E3]/20 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="text-xs font-semibold text-[#0071E3] uppercase tracking-wider block">
-                        Booking #{activeBooking.id.slice(0, 8)}
+        <div className="space-y-6">
+          {/* ============================================================== */}
+          {/* ONSITE SERVICE CONTROLLER (Worker standing at customer home)  */}
+          {/* ============================================================== */}
+          {activeBooking && ['accepted', 'in_progress', 'paused', 'completed'].includes(activeBooking.status) && (
+            <div className="space-y-4 animate-fade-in">
+              {/* Floating / Sticky Glass Status & Action Strip */}
+              <div className="p-4 sm:p-5 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/80 glass-specular-edge shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-black/5 gap-3">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#86868B]">
+                        Onsite Service Controller
                       </span>
-                      <h4 className="text-base font-bold text-[#111111] mt-0.5">
-                        {activeBooking.job.serviceCategory}
-                      </h4>
-                      <p className="text-xs text-[#6E6E73] mt-1">
-                        {activeBooking.job.rawPrompt}
-                      </p>
-                    </div>
-                    <Badge variant="accent">
-                      {activeBooking.status.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                  </div>
-
-                  <div className="pt-2 flex flex-wrap items-center justify-between text-xs text-[#111111] gap-2 border-t border-black/5">
-                    <span className="flex items-center space-x-1">
-                      <Calendar className="w-3.5 h-3.5 text-[#5856D6]" />
-                      <span>{activeBooking.scheduledDate || 'Today'} ({activeBooking.scheduledTimeSlot || 'Immediate'})</span>
-                    </span>
-                    <span className="font-bold text-[#111111]">
-                      Estimated Total: ₹{activeBooking.estimatedTotal}
-                    </span>
-                  </div>
-
-                  {/* Contextual Actions based on status */}
-                  <div className="pt-2 flex items-center justify-end space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsJobDetailsOpen(true)}
-                      className="text-xs"
-                    >
-                      Job Details
-                    </Button>
-
-                    {activeBooking.status === 'requested' && (
-                      <Button
-                        variant="primary"
+                      <Badge
+                        variant={
+                          activeBooking.status === 'in_progress'
+                            ? 'success'
+                            : activeBooking.status === 'paused'
+                            ? 'accent'
+                            : activeBooking.status === 'completed'
+                            ? 'default'
+                            : 'neutral'
+                        }
                         size="sm"
-                        onClick={handleAccept}
-                        className="bg-[#34C759] hover:bg-[#2EB150] text-white font-bold"
                       >
-                        Accept Request
-                      </Button>
-                    )}
-
-                    {activeBooking.status === 'accepted' && (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => onAdvanceBookingStatus?.(activeBooking.id, 'in_progress')}
-                        className="bg-[#0071E3] hover:bg-[#0077ED] text-white font-bold"
-                      >
-                        Start Job / Mark In Progress
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="py-8 text-center text-xs text-[#86868B]">
-                  <Clock className="w-8 h-8 text-[#86868B]/40 mx-auto mb-2" />
-                  <p className="font-medium text-[#111111]">No active dispatches currently en-route.</p>
-                  <p className="mt-1">
-                    You are marked as <strong className="text-[#34C759]">available</strong>. Incoming customer job requests will alert you immediately.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Capabilities & Skills Card */}
-            <div className="p-5 rounded-2xl bg-white border border-black/5 shadow-xs space-y-3">
-              <h3 className="text-sm font-bold text-[#111111] flex items-center space-x-2">
-                <Award className="w-4 h-4 text-[#5856D6]" />
-                <span>Verified Trade Capabilities &amp; Toolkits</span>
-              </h3>
-
-              <div className="flex flex-wrap gap-1.5">
-                {currentWorker.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-2.5 py-1 rounded-xl bg-[#F5F5F7] border border-black/5 text-xs font-medium text-[#111111]"
-                  >
-                    ✓ {skill}
-                  </span>
-                ))}
-              </div>
-
-              <div className="pt-2 text-xs text-[#6E6E73] space-y-1">
-                <p>
-                  <strong className="text-[#111111]">Tools Equipped:</strong>{' '}
-                  {currentWorker.toolsEquipped.join(', ')}
-                </p>
-                <p>
-                  <strong className="text-[#111111]">Background Check:</strong>{' '}
-                  {currentWorker.backgroundCheckPassed ? 'Verified by WorkLink Trust & Safety' : 'Pending'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Reviews & Reputation */}
-          <div className="space-y-4">
-            <div className="p-5 rounded-2xl bg-white border border-black/5 shadow-xs space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-black/5">
-                <h3 className="text-sm font-bold text-[#111111] flex items-center space-x-2">
-                  <Star className="w-4 h-4 text-[#FF9500] fill-[#FF9500]" />
-                  <span>Customer Feedback</span>
-                </h3>
-                <span className="text-xs font-semibold text-[#111111]">
-                  {currentWorker.rating} / 5.0
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {currentWorker.recentReviews.map((rev) => (
-                  <div key={rev.id} className="p-3 rounded-xl bg-[#F5F5F7] space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-[#111111]">{rev.userName}</span>
-                      <span className="text-[#FF9500] font-bold">★ {rev.rating}</span>
+                        {activeBooking.status === 'in_progress' && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#34C759] animate-pulse inline-block mr-1.5" />
+                        )}
+                        {activeBooking.status.replace('_', ' ').toUpperCase()}
+                      </Badge>
                     </div>
-                    <p className="text-xs text-[#6E6E73] leading-relaxed italic">
-                      &ldquo;{rev.comment}&rdquo;
+
+                    <h3 className="text-lg font-extrabold text-[#111111] mt-0.5 tracking-tight">
+                      {activeBooking.job.serviceCategory}
+                    </h3>
+                    <p className="text-xs text-[#6E6E73]">
+                      Customer: Indiranagar 100ft Rd • Worker Status:{' '}
+                      <strong className="text-[#111111]">
+                        {activeBooking.workerStatusMessage ||
+                          (activeBooking.status === 'in_progress'
+                            ? 'Active Onsite'
+                            : activeBooking.status === 'paused'
+                            ? 'Paused'
+                            : 'Ready')}
+                      </strong>
                     </p>
-                    <span className="text-[10px] text-[#86868B] block">{rev.date}</span>
                   </div>
-                ))}
+
+                  {/* Working Duration Timer Display */}
+                  <div className="text-left sm:text-right">
+                    <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider block">
+                      Working Duration
+                    </span>
+                    <span className="font-mono text-3xl sm:text-4xl font-extrabold text-[#111111] tracking-tight">
+                      {formatTime(elapsedSeconds)}
+                    </span>
+                    <span className="text-[11px] text-[#6E6E73] block mt-0.5">
+                      {actualHoursWorked} hrs @ ₹{currentWorker.hourlyRate}/hr
+                    </span>
+                  </div>
+                </div>
+
+                {/* Primary High-Clarity Tactile Action Targets */}
+                <div className="pt-1">
+                  {/* State 1: ACCEPTED -> Start Job */}
+                  {activeBooking.status === 'accepted' && (
+                    <button
+                      onClick={handleStartJob}
+                      className="w-full min-h-[52px] py-3.5 px-6 rounded-2xl bg-[#34C759] hover:bg-[#2EB150] active:scale-[0.98] text-white font-extrabold text-base shadow-sm transition-transform flex items-center justify-center space-x-2"
+                    >
+                      <Play className="w-5 h-5 fill-white" />
+                      <span>Start Job (Commence Working Clock)</span>
+                    </button>
+                  )}
+
+                  {/* State 2: IN_PROGRESS -> Pause or Complete */}
+                  {activeBooking.status === 'in_progress' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        onClick={() => setShowPauseModal(true)}
+                        className="min-h-[52px] py-3.5 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white font-bold text-sm shadow-xs transition-transform flex items-center justify-center space-x-2"
+                      >
+                        <Pause className="w-4 h-4 fill-white" />
+                        <span>Pause Job (Temporary Clock Stop)</span>
+                      </button>
+
+                      <button
+                        onClick={handleCompleteJob}
+                        className="min-h-[52px] py-3.5 px-4 rounded-2xl bg-[#111111] hover:bg-black active:scale-[0.98] text-white font-bold text-sm shadow-xs transition-transform flex items-center justify-center space-x-2"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-[#34C759]" />
+                        <span>Complete Job (Finalize Service)</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* State 3: PAUSED -> Resume or Complete */}
+                  {activeBooking.status === 'paused' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        onClick={handleResumeJob}
+                        className="min-h-[52px] py-3.5 px-4 rounded-2xl bg-[#0071E3] hover:bg-[#0077ED] active:scale-[0.98] text-white font-bold text-sm shadow-xs transition-transform flex items-center justify-center space-x-2"
+                      >
+                        <Play className="w-4 h-4 fill-white" />
+                        <span>Resume Job (Restart Working Clock)</span>
+                      </button>
+
+                      <button
+                        onClick={handleCompleteJob}
+                        className="min-h-[52px] py-3.5 px-4 rounded-2xl bg-[#111111] hover:bg-black active:scale-[0.98] text-white font-bold text-sm shadow-xs transition-transform flex items-center justify-center space-x-2"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-[#34C759]" />
+                        <span>Complete Job (Finalize Service)</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* State 4: COMPLETED -> Finalized */}
+                  {activeBooking.status === 'completed' && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-800 font-semibold">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Job Finalized at {activeBooking.endedAt}. Ready for customer settlement.</span>
+                      </div>
+                      <Badge variant="success" size="sm">
+                        TOTAL: ₹{activeBooking.finalTotal}
+                      </Badge>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* ============================================================ */}
+              {/* SOLID SURFACES FOR DENSE INFORMATION                         */}
+              {/* ============================================================ */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Solid Card 1: Time Tracking Log */}
+                <div className="p-5 rounded-2xl bg-white border border-black/8 shadow-2xs space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-black/5">
+                    <span className="font-bold text-[#111111] flex items-center space-x-1.5">
+                      <Clock className="w-4 h-4 text-[#0071E3]" />
+                      <span>Execution Time Log</span>
+                    </span>
+                    <span className="font-mono text-[#86868B] text-[11px]">
+                      Rate: ₹{currentWorker.hourlyRate}/h
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-[#6E6E73]">Start Time:</span>
+                      <strong className="text-[#111111]">{activeBooking.startedAt || 'Pending Start'}</strong>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-[#6E6E73]">End Time:</span>
+                      <strong className="text-[#111111]">
+                        {activeBooking.endedAt ||
+                          (activeBooking.status === 'in_progress'
+                            ? 'Currently Running'
+                            : activeBooking.status === 'paused'
+                            ? 'Temporarily Paused'
+                            : '—')}
+                      </strong>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-[#6E6E73]">Working Duration:</span>
+                      <strong className="text-[#0071E3] font-mono font-bold">
+                        {formatTime(elapsedSeconds)} ({actualHoursWorked} hrs)
+                      </strong>
+                    </div>
+
+                    {activeBooking.pausedAt && (
+                      <div className="p-2 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 space-y-0.5">
+                        <span className="font-bold block">Paused at: {activeBooking.pausedAt}</span>
+                        <span>Reason: {activeBooking.pauseReason}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Solid Card 2: Additional Work & Spares */}
+                <div className="p-5 rounded-2xl bg-white border border-black/8 shadow-2xs space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-black/5">
+                    <span className="font-bold text-[#111111] flex items-center space-x-1.5">
+                      <Wrench className="w-4 h-4 text-[#5856D6]" />
+                      <span>Additional Work &amp; Spares</span>
+                    </span>
+                    <button
+                      onClick={() => setShowAddSpareForm((prev) => !prev)}
+                      className="text-[#0071E3] font-bold text-xs flex items-center space-x-0.5 hover:underline"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add</span>
+                    </button>
+                  </div>
+
+                  {/* Add spare inline form */}
+                  {showAddSpareForm && (
+                    <div className="p-2.5 rounded-xl bg-[#F5F5F7] border border-black/5 space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Item name (e.g. Run Capacitor 45uF)"
+                        value={newSpareName}
+                        onChange={(e) => setNewSpareName(e.target.value)}
+                        className="w-full p-2 rounded-lg bg-white border border-black/10 text-xs"
+                      />
+                      <div className="flex space-x-2">
+                        <input
+                          type="number"
+                          placeholder="Cost (₹)"
+                          value={newSpareCost}
+                          onChange={(e) => setNewSpareCost(e.target.value)}
+                          className="w-1/2 p-2 rounded-lg bg-white border border-black/10 text-xs"
+                        />
+                        <Button variant="primary" size="sm" onClick={handleAddNewSpare} className="w-1/2">
+                          Save Spare
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {(activeBooking.additionalWorkItems || [
+                      { id: 'add-1', name: 'Inverter Run Capacitor (45µF)', cost: 450, approved: true },
+                      { id: 'add-2', name: 'High-Pressure Gas Leakage Testing', cost: 350, approved: false },
+                    ]).map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => handleToggleAdditionalItem(item.id)}
+                        className={`p-2 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                          item.approved
+                            ? 'bg-[#0071E3]/5 border-[#0071E3]/30 font-medium text-[#111111]'
+                            : 'bg-[#FBFBFD] border-black/5 text-[#6E6E73]'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={item.approved}
+                            onChange={() => {}}
+                            className="rounded accent-[#0071E3]"
+                          />
+                          <span className="truncate max-w-[130px]">{item.name}</span>
+                        </div>
+                        <span className="font-bold">₹{item.cost}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Solid Card 3: Technician Field Notes */}
+                <div className="p-5 rounded-2xl bg-white border border-black/8 shadow-2xs space-y-3 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-black/5">
+                    <span className="font-bold text-[#111111] flex items-center space-x-1.5">
+                      <FileText className="w-4 h-4 text-[#34C759]" />
+                      <span>Technician Field Notes</span>
+                    </span>
+                    <span className="text-[10px] text-[#86868B]">Auto-synced</span>
+                  </div>
+
+                  {/* Preset chips for fast phone input */}
+                  <div className="flex flex-wrap gap-1">
+                    {[
+                      'Replaced 45µF capacitor',
+                      'Coils cleaned',
+                      'Gas pressure 65 PSI',
+                      'Amp draw 4.2A normal',
+                    ].map((chip) => (
+                      <button
+                        key={chip}
+                        onClick={() => {
+                          const updated = workerNotes ? `${workerNotes}. ${chip}` : chip;
+                          handleSaveNotes(updated);
+                        }}
+                        className="px-2 py-0.5 rounded-lg bg-[#F5F5F7] border border-black/5 text-[10px] text-[#6E6E73] hover:text-[#111111] hover:bg-black/5 transition-all"
+                      >
+                        + {chip}
+                      </button>
+                    ))}
+                  </div>
+
+                  <textarea
+                    rows={3}
+                    value={workerNotes}
+                    onChange={(e) => handleSaveNotes(e.target.value)}
+                    placeholder="Enter technician observations or actions taken onsite..."
+                    className="w-full p-2.5 rounded-xl border border-black/10 bg-[#FBFBFD] text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Capabilities & Skills Card */}
+          <div className="p-5 rounded-2xl bg-white border border-black/5 shadow-xs space-y-3">
+            <h3 className="text-sm font-bold text-[#111111] flex items-center space-x-2">
+              <Award className="w-4 h-4 text-[#5856D6]" />
+              <span>Verified Trade Capabilities &amp; Toolkits</span>
+            </h3>
+
+            <div className="flex flex-wrap gap-1.5">
+              {currentWorker.skills.map((skill) => (
+                <span
+                  key={skill}
+                  className="px-2.5 py-1 rounded-xl bg-[#F5F5F7] border border-black/5 text-xs font-medium text-[#111111]"
+                >
+                  ✓ {skill}
+                </span>
+              ))}
+            </div>
+
+            <div className="pt-2 text-xs text-[#6E6E73] space-y-1">
+              <p>
+                <strong className="text-[#111111]">Tools Equipped:</strong>{' '}
+                {currentWorker.toolsEquipped.join(', ')}
+              </p>
+              <p>
+                <strong className="text-[#111111]">Background Check:</strong>{' '}
+                {currentWorker.backgroundCheckPassed ? 'Verified by WorkLink Trust & Safety' : 'Pending'}
+              </p>
             </div>
           </div>
         </div>
@@ -733,7 +1195,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
       )}
 
       {/* ============================================================== */}
-      {/* 3. JOB DETAILS MODAL (Milestone 11 Core Worker Requirement)     */}
+      {/* 3. JOB DETAILS MODAL                                           */}
       {/* ============================================================== */}
       {activeBooking && (
         <Modal
