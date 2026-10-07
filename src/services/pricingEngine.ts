@@ -109,8 +109,13 @@ export function calculateFinalPrice(
   actualHours: number,
   distanceKm: number,
   additionalWorkItems: Array<{ name: string; cost: number; approved: boolean }> = [],
-  tariff: TariffConfig = DEFAULT_TARIFF
+  tariffOrDiscount: TariffConfig | number = DEFAULT_TARIFF
 ): FinalPriceCalculation {
+  const tariff: TariffConfig =
+    typeof tariffOrDiscount === 'number'
+      ? { ...DEFAULT_TARIFF, standardDiscountFixed: tariffOrDiscount }
+      : tariffOrDiscount;
+
   const actualLabour = Math.round(hourlyRate * actualHours);
   const { travelCharge } = calculateTravelCharge(distanceKm, tariff);
   const safeTravel = Math.max(0, travelCharge);

@@ -20,6 +20,11 @@ export type WorkerApprovalStatus = 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' 
 
 export type AvailabilityStatus = 'immediate' | 'today' | 'tomorrow' | 'busy';
 
+export type LocationCoordinates = {
+  lat: number;
+  lng: number;
+};
+
 export interface CustomerLocation {
   address: string;
   lat: number;
@@ -303,6 +308,15 @@ export interface UserPersonalizationProfile {
   repeatWorkersBooked: string[];
   avgRatingGiven: number;
   hasCancellations: boolean;
+  preferredMaxBudget?: number;
+  preferredTimeSlot?: string;
+  cancelledWorkerIds?: string[];
+  previousBookings?: Array<{
+    workerId: string;
+    trade: string;
+    serviceName: string;
+    completedAt?: string;
+  }>;
 }
 
 export * from './auth';

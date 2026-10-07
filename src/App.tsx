@@ -38,7 +38,9 @@ import { AuthModal } from './components/auth/AuthModal';
 import { LocationPermissionModal } from './components/auth/LocationPermissionModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
+import { Briefcase, Shield } from 'lucide-react';
 import { Container } from './components/ui/Container';
+import { Button } from './components/ui/Button';
 import { useToast } from './components/ui/Toast';
 import { ErrorState } from './components/ui/ErrorState';
 
@@ -93,6 +95,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
   const {
     currentUser,
     role,
+    switchRole,
     isAuthModalOpen,
     closeAuthModal,
     authModalMode,
@@ -306,7 +309,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
 
   const handleFindWorkerClick = () => {
     setCurrentTab('customer_home');
-    if (!currentUser?.locationPermissionGranted) {
+    if (!currentUser?.customerProfile?.locationPermissionGranted) {
       openLocationModal();
     }
   };
@@ -398,7 +401,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
                     variant="primary"
                     size="sm"
                     onClick={() => {
-                      useAuth().switchRole('worker');
+                      switchRole('worker');
                     }}
                   >
                     Switch to Worker (Demo)
@@ -441,7 +444,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
                     variant="primary"
                     size="sm"
                     onClick={() => {
-                      useAuth().switchRole('operator');
+                      switchRole('operator');
                     }}
                   >
                     Sign in as Operator (Demo)

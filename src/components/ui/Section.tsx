@@ -1,6 +1,6 @@
 import React from 'react';
 
-export interface SectionProps extends React.HTMLAttributes<HTMLElement> {
+export interface SectionProps extends Omit<React.HTMLAttributes<HTMLElement>, 'title'> {
   badge?: React.ReactNode;
   title?: React.ReactNode;
   description?: React.ReactNode;

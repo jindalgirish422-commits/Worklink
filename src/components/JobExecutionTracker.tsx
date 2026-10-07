@@ -312,7 +312,7 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
         workerTrade: booking.worker.trade,
         customerName: 'Customer',
         customerAddress: booking.job.location.address,
-        serviceCategory: booking.job.category,
+        serviceCategory: booking.job.serviceCategory || (booking.job as any).category || 'Service',
         timestamp,
         paymentMethod: method,
         paymentStatus: 'paid',
@@ -343,7 +343,7 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
         timestamp,
         receiptNumber,
         workerName: booking.worker.name,
-        serviceCategory: booking.job.category,
+        serviceCategory: booking.job.serviceCategory || (booking.job as any).category || 'Service',
       };
 
       setSelectedReceipt(receipt);
@@ -385,7 +385,7 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
         workerTrade: booking.worker.trade,
         customerName: 'Customer',
         customerAddress: booking.job.location.address,
-        serviceCategory: booking.job.category,
+        serviceCategory: booking.job.serviceCategory || (booking.job as any).category || 'Service',
         timestamp: booking.paidAt || new Date().toLocaleString(),
         paymentMethod: booking.paymentMethod || 'UPI',
         paymentStatus: booking.paymentStatus || 'paid',
@@ -1301,7 +1301,7 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
               )}
 
               {/* Milestone 14: Premium Feedback Experience (Subtle Glass Treatment) */}
-              {(booking.status === 'completed' || booking.status === 'rated') && (isPaid || booking.paymentStatus === 'paid') && (
+              {booking.status === 'completed' && (isPaid || booking.paymentStatus === 'paid') && (
                 <FeedbackExperience
                   booking={booking}
                   onSubmitFeedback={(feedbackPayload) => {
@@ -1318,7 +1318,7 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
                       message: `Thank you! Feedback recorded in WorkLink learning loop. Worker rating updated to ${feedbackPayload.rating}★.`,
                     });
                   }}
-                  isAlreadySubmitted={booking.status === 'rated'}
+                  isAlreadySubmitted={false}
                 />
               )}
             </div>
@@ -1487,7 +1487,7 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
                   timestamp: booking.paidAt || 'Today, 11:30 AM',
                   receiptNumber: booking.receiptNumber || 'RCP-20261008-8821',
                   workerName: booking.worker.name,
-                  serviceCategory: booking.job.category,
+                  serviceCategory: booking.job.serviceCategory || (booking.job as any).category || 'Service',
                 },
               ]
         }

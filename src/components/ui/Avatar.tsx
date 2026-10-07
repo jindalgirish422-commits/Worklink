@@ -4,7 +4,7 @@ import { ShieldCheck } from 'lucide-react';
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   src?: string;
   alt: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   isVerified?: boolean;
 }
 
@@ -24,6 +24,7 @@ export const Avatar: React.FC<AvatarProps> = ({
     md: 'w-11 h-11 text-sm rounded-xl',
     lg: 'w-14 h-14 text-base rounded-2xl',
     xl: 'w-20 h-20 text-lg rounded-2xl',
+    '2xl': 'w-24 h-24 text-xl rounded-3xl',
   };
 
   const badgeDimensions = {
@@ -32,6 +33,7 @@ export const Avatar: React.FC<AvatarProps> = ({
     md: 'w-4 h-4 -bottom-1 -right-1',
     lg: 'w-4.5 h-4.5 -bottom-1 -right-1',
     xl: 'w-5 h-5 -bottom-1.5 -right-1.5',
+    '2xl': 'w-6 h-6 -bottom-1.5 -right-1.5',
   };
 
   const getInitials = (name: string) => {

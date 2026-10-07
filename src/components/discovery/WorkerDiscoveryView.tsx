@@ -19,7 +19,7 @@ import {
   Award,
   DollarSign,
 } from 'lucide-react';
-import { Worker, RankedWorker, JobRequest, LocationCoordinates, Booking } from '../../types';
+import { Worker, RankedWorker, JobRequest, CustomerLocation, Booking } from '../../types';
 import {
   DiscoveryFilters,
   DEFAULT_DISCOVERY_FILTERS,
@@ -48,7 +48,7 @@ interface WorkerDiscoveryViewProps {
   allWorkersRanked: RankedWorker[];
   rankedEligible: RankedWorker[];
   activeJob: JobRequest;
-  customerLocation: LocationCoordinates;
+  customerLocation: CustomerLocation;
   onBookClick: (worker: RankedWorker) => void;
   onViewProfileClick: (worker: RankedWorker) => void;
   onJobCreated: (job: JobRequest) => void;
@@ -160,13 +160,31 @@ export const WorkerDiscoveryView: React.FC<WorkerDiscoveryViewProps> = ({
       worker: item.worker,
       rank: item.engineRank ?? 99,
       totalScore: item.engineMatchScore ?? 70,
+      eligibility: {
+        workerId: item.worker.id,
+        worker: item.worker,
+        isEligible: true,
+        checks: [
+          { ruleName: 'Within 10 km Zone', passed: item.worker.distanceKm <= 10, detail: `${item.worker.distanceKm.toFixed(1)} km` },
+        ],
+      },
       components: {
-        skillFit: 0.75,
-        experienceTier: Math.min(1.0, item.worker.experienceYears / 10),
-        availability: item.worker.availabilityStatus === 'immediate' ? 1.0 : 0.7,
-        qualityReputation: item.worker.rating / 5,
-        locationProximity: Math.max(0, 1 - item.worker.distanceKm / 10),
-        budgetAlignment: 0.8,
+        skillScore: 75,
+        experienceScore: Math.min(100, item.worker.experienceYears * 10),
+        availabilityScore: item.worker.availabilityStatus === 'immediate' ? 100 : 70,
+        qualityScore: Math.round(item.worker.rating * 20),
+        distanceScore: Math.max(0, Math.round((1 - item.worker.distanceKm / 10) * 100)),
+        priceScore: 80,
+        personalizationScore: 70,
+      },
+      weightedBreakdown: {
+        skill: 25,
+        experience: 15,
+        availability: 20,
+        quality: 15,
+        distance: 15,
+        price: 10,
+        personalization: 0,
       },
       reasons: [`Discovered via WorkLink Marketplace Search (${item.matchedCriteria.join(', ')})`],
       tradeOffSummary: 'Directory candidate identified through search filters.',

@@ -130,8 +130,8 @@ export const HackathonDemoView: React.FC<HackathonDemoViewProps> = ({
     const slots = parseNaturalLanguageJob(prompt, DEFAULT_CUSTOMER_LOCATION);
     return {
       ...createJobRequestFromSlots(prompt, slots, DEFAULT_CUSTOMER_LOCATION),
-      urgency: 'immediate',
-      preferredTime: 'immediate',
+      urgency: 'emergency',
+      requestedTime: 'immediate',
     };
   }, []);
 
@@ -239,8 +239,8 @@ export const HackathonDemoView: React.FC<HackathonDemoViewProps> = ({
       1.75, // 1h 45m actual working time
       bestMatch.worker.distanceKm,
       [
-        { id: 'sp-1', description: 'R-32 Refrigerant Top-up (300g)', cost: 350, approvedByCustomer: true, addedAt: '10:45 AM' },
-        { id: 'sp-2', description: 'Anti-Vibration Rubber Dampers', cost: 150, approvedByCustomer: true, addedAt: '11:10 AM' },
+        { name: 'R-32 Refrigerant Top-up (300g)', cost: 350, approved: true },
+        { name: 'Anti-Vibration Rubber Dampers', cost: 150, approved: true },
       ],
       50 // standard promotional discount
     );
@@ -631,7 +631,7 @@ export const HackathonDemoView: React.FC<HackathonDemoViewProps> = ({
                 </span>
                 <span className="px-3 py-1.5 rounded-xl bg-purple-500/10 text-purple-700 font-bold flex items-center space-x-1 border border-purple-500/20">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>Schedule: {currentScenarioJob.preferredTime || 'Tomorrow Morning'}</span>
+                  <span>Schedule: {currentScenarioJob.requestedTime || currentScenarioJob.requestedDate || 'Tomorrow Morning'}</span>
                 </span>
                 <span className="px-3 py-1.5 rounded-xl bg-[#34C759]/10 text-[#34C759] font-bold flex items-center space-x-1 border border-[#34C759]/20">
                   <MapPin className="w-3.5 h-3.5" />

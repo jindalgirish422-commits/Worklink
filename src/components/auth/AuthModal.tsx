@@ -49,7 +49,7 @@ const TRADE_OPTIONS: TradeCategory[] = [
   'Mason / General Technician',
 ];
 
-const SKILL_CATALOG: Record<TradeCategory, string[]> = {
+const SKILL_CATALOG: Partial<Record<TradeCategory, string[]>> = {
   'AC Technician': ['Inverter Compressor', 'Gas Refill', 'Leak Detection', 'Coil Cleaning', 'PCB Board Repair'],
   'Plumber': ['PPR Pipe Welding', 'Pressure Booster', 'Drain Snake', 'Fixture Installation', 'Concealed Leak Detection'],
   'Electrician': ['MCB Tripping Diagnostic', 'Phase Balancing', 'Rewiring', 'Inverter Battery Backup', 'Appliance Earthing'],

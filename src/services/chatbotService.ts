@@ -73,6 +73,7 @@ export function parseNaturalLanguageJob(
   const requiredSkills: string[] = classification.requiredSkills;
   const requiredExperienceYears = classification.requiredExperienceYears;
   const detectedIssue = classification.detectedIssueSummary;
+  let urgency: 'emergency' | 'high' | 'normal' | 'scheduled' = 'normal';
   let requestedDate = 'Today';
   let requestedTime = 'Flexible Today';
 

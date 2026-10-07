@@ -295,13 +295,20 @@ export function buildWorkerTrustProfile(
     },
   ];
 
-  const hardConstraintsAudit = eligibility?.checks || [
-    { name: '10 km Geographic Boundary', passed: worker.distanceKm <= 10.0, detail: `${worker.distanceKm.toFixed(1)} km ≤ 10.0 km max limit` },
-    { name: 'Trade Category Match', passed: true, detail: `Worker trade ${worker.trade} covers ${activeJob.serviceCategory}` },
-    { name: 'Active Working Availability', passed: worker.availabilityStatus !== 'busy', detail: `Status is ${worker.availabilityStatus}` },
-    { name: 'Verified Pro Background', passed: worker.isVerified, detail: 'National ID and criminal background check cleared' },
-    { name: 'Essential Tooling Equipped', passed: (worker.toolsEquipped || []).length > 0, detail: `${(worker.toolsEquipped || []).length} professional tools onboard` },
-  ];
+  const hardConstraintsAudit = eligibility?.checks
+    ? eligibility.checks.map((c) => ({
+        name: (c as any).name || c.ruleName,
+        ruleName: c.ruleName,
+        passed: c.passed,
+        detail: c.detail,
+      }))
+    : [
+        { name: '10 km Geographic Boundary', ruleName: '10 km Geographic Boundary', passed: worker.distanceKm <= 10.0, detail: `${worker.distanceKm.toFixed(1)} km ≤ 10.0 km max limit` },
+        { name: 'Trade Category Match', ruleName: 'Trade Category Match', passed: true, detail: `Worker trade ${worker.trade} covers ${activeJob.serviceCategory}` },
+        { name: 'Active Working Availability', ruleName: 'Active Working Availability', passed: worker.availabilityStatus !== 'busy', detail: `Status is ${worker.availabilityStatus}` },
+        { name: 'Verified Pro Background', ruleName: 'Verified Pro Background', passed: worker.isVerified, detail: 'National ID and criminal background check cleared' },
+        { name: 'Essential Tooling Equipped', ruleName: 'Essential Tooling Equipped', passed: (worker.toolsEquipped || []).length > 0, detail: `${(worker.toolsEquipped || []).length} professional tools onboard` },
+      ];
 
   return {
     workerId: worker.id,

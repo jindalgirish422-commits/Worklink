@@ -6,6 +6,7 @@ import {
   Worker,
   CustomerLocation,
   AvailabilityStatus,
+  TradeCategory,
 } from '../types';
 import { DEFAULT_CUSTOMER_LOCATION } from '../data/mockWorkers';
 
@@ -330,7 +331,11 @@ export const assertOperatorPermission = (user: User | null): void => {
  */
 export const createOperatorWorker = (
   operatorUser: User | null,
-  workerData: Omit<Worker, 'id' | 'rating' | 'reviewCount' | 'completedJobs' | 'completionRate' | 'recentReviews'> & {
+  workerData: Partial<Omit<Worker, 'id' | 'rating' | 'reviewCount' | 'completedJobs' | 'completionRate' | 'recentReviews'>> & {
+    name: string;
+    trade: TradeCategory;
+    skills: string[];
+    licenseNumber: string;
     id?: string;
     autoApprove?: boolean;
   }

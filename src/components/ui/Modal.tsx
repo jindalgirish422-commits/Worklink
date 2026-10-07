@@ -9,6 +9,7 @@ export interface ModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -18,8 +19,10 @@ export const Modal: React.FC<ModalProps> = ({
   subtitle,
   children,
   footer,
-  maxWidth = 'lg',
+  maxWidth,
+  size,
 }) => {
+  const effectiveSize = (size || maxWidth || 'lg') as 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -56,7 +59,7 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        className={`relative w-full ${maxWidthStyles[maxWidth]} bg-white/95 backdrop-blur-md sm:backdrop-blur-xl border-t sm:border border-white/90 rounded-t-3xl sm:rounded-3xl shadow-[0_20px_48px_-10px_rgba(0,0,0,0.16),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden mt-auto sm:my-auto z-10 motion-bottom-sheet-appear sm:motion-glass-appear flex flex-col max-h-[92vh] sm:max-h-[90vh] glass-specular-edge`}
+        className={`relative w-full ${maxWidthStyles[effectiveSize] || 'max-w-xl'} bg-white/95 backdrop-blur-md sm:backdrop-blur-xl border-t sm:border border-white/90 rounded-t-3xl sm:rounded-3xl shadow-[0_20px_48px_-10px_rgba(0,0,0,0.16),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden mt-auto sm:my-auto z-10 motion-bottom-sheet-appear sm:motion-glass-appear flex flex-col max-h-[92vh] sm:max-h-[90vh] glass-specular-edge`}
       >
         {/* Mobile Bottom Sheet Grab Handle */}
         <div className="w-10 h-1 bg-black/15 rounded-full mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />

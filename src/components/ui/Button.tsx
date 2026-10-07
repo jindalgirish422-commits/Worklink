@@ -1,11 +1,13 @@
 import React from 'react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'accent' | 'outline' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'accent' | 'outline' | 'ghost' | 'danger' | 'warning';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  icon?: React.ReactNode;
+  fullWidth?: boolean;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -17,6 +19,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       isLoading = false,
       leftIcon,
       rightIcon,
+      icon,
+      fullWidth = false,
       disabled,
       className = '',
       ...props
@@ -48,13 +52,18 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         'bg-transparent hover:bg-black/[0.04] text-[#111111]',
       danger:
         'bg-[#FF3B30] hover:bg-[#E0352A] text-white shadow-sm',
+      warning:
+        'bg-[#FF9500] hover:bg-[#E08500] text-white shadow-sm',
     };
+
+    const effectiveLeftIcon = leftIcon;
+    const effectiveRightIcon = rightIcon || icon;
 
     return (
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
+        className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
         {...props}
       >
         {isLoading ? (
@@ -80,9 +89,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           </svg>
         ) : (
           <>
-            {leftIcon && <span className="shrink-0">{leftIcon}</span>}
+            {effectiveLeftIcon && <span className="shrink-0">{effectiveLeftIcon}</span>}
             <span>{children}</span>
-            {rightIcon && <span className="shrink-0">{rightIcon}</span>}
+            {effectiveRightIcon && <span className="shrink-0">{effectiveRightIcon}</span>}
           </>
         )}
       </button>
