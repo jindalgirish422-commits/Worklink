@@ -99,8 +99,9 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
 
   // Primary recommended worker (highest score from rankedEligible or allWorkersRanked)
   const primaryRecommendation: RankedWorker =
-    rankedEligible[0] || allWorkersRanked[0] || {
+    rankedEligible[0] || allWorkersRanked[0] || ({
       worker: workers[2] || workers[0],
+      totalScore: 94,
       matchScore: 94,
       scoreBreakdown: {
         skillScore: 95,
@@ -111,6 +112,11 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
         priceScore: 90,
         personalizationScore: 96,
       },
+      reasons: [
+        'Top 1% rated AC Technician in Indiranagar',
+        'Available for immediate dispatch (<45m)',
+        '7+ years experience with inverter compressors',
+      ],
       matchReasons: [
         'Top 1% rated AC Technician in Indiranagar',
         'Available for immediate dispatch (<45m)',
@@ -119,7 +125,16 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
       distanceKm: 3.2,
       estimatedPrice: 750,
       isPrimaryMatch: true,
-    };
+    } as any);
+
+  // Safe normalized properties supporting both canonical RankedWorker and fallback mock schemas
+  const primaryScore = Math.round(primaryRecommendation.totalScore ?? (primaryRecommendation as any).matchScore ?? 94);
+  const primaryReasons: string[] = primaryRecommendation.reasons || (primaryRecommendation as any).matchReasons || [
+    'Top qualified candidate within 10 km',
+    'Verified background check and trade credentials',
+    'Transparent hourly pricing with zero surge',
+  ];
+  const primaryDistance = primaryRecommendation.worker?.distanceKm ?? (primaryRecommendation as any).distanceKm ?? 3.2;
 
   // Secondary recommendations (workers 2 and 3)
   const secondaryRecommendations = (rankedEligible.length > 1 ? rankedEligible.slice(1, 4) : allWorkersRanked.slice(1, 4));
@@ -248,6 +263,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
       if (raw) {
         onBookClick({
           worker: raw,
+          totalScore: 92,
           matchScore: 92,
           scoreBreakdown: {
             skillScore: 90,
@@ -258,11 +274,12 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
             priceScore: 90,
             personalizationScore: 95,
           },
+          reasons: ['Previously booked and rated 5 stars by you'],
           matchReasons: ['Previously booked and rated 5 stars by you'],
           distanceKm: raw.distanceKm,
           estimatedPrice: raw.estimatedQuote,
           isPrimaryMatch: false,
-        });
+        } as any);
       }
     }
   };
@@ -417,11 +434,11 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
             />
             <div className="truncate">
               <span className="font-bold text-[#111111]">{primaryRecommendation.worker.name}</span>
-              <span className="text-[#86868B] ml-1.5">• {primaryRecommendation.matchScore}% Match</span>
+              <span className="text-[#86868B] ml-1.5">• {primaryScore}% Match</span>
             </div>
           </div>
           <p className="text-xs text-[#6E6E73] truncate">
-            {primaryRecommendation.matchReasons[0] || 'Top qualified candidate within 10 km'}
+            {primaryReasons[0] || 'Top qualified candidate within 10 km'}
           </p>
         </div>
 
@@ -537,7 +554,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
                   <span>•</span>
                   <span className="flex items-center text-[#0071E3] font-medium">
                     <Navigation className="w-3 h-3 inline mr-1" />
-                    {primaryRecommendation.distanceKm.toFixed(1)} km away
+                    {primaryDistance.toFixed(1)} km away
                   </span>
                   <span>•</span>
                   <span>{primaryRecommendation.worker.experienceYears} yrs experience</span>
@@ -554,7 +571,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
             <div className="flex lg:flex-col items-center lg:items-end justify-between border-t lg:border-t-0 pt-3 lg:pt-0 border-black/5 gap-2">
               <div className="flex items-baseline space-x-1.5">
                 <span className="text-3xl sm:text-4xl font-extrabold text-[#111111]">
-                  {primaryRecommendation.matchScore}%
+                  {primaryScore}%
                 </span>
                 <span className="text-xs font-bold text-[#0071E3] uppercase tracking-wider">
                   Match
@@ -585,7 +602,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
               </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {primaryRecommendation.matchReasons.map((reason, idx) => (
+              {primaryReasons.map((reason, idx) => (
                 <div key={idx} className="flex items-start space-x-2 text-[#6E6E73]">
                   <Check className="w-3.5 h-3.5 text-[#34C759] shrink-0 mt-0.5" />
                   <span className="text-xs">{reason}</span>
@@ -666,8 +683,8 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
 
                 <div className="flex items-center justify-between text-xs text-[#6E6E73] pt-1 border-t border-black/5">
                   <span className="text-[#FF9500] font-bold">★ {rw.worker.rating.toFixed(1)}</span>
-                  <span>{rw.distanceKm.toFixed(1)} km</span>
-                  <span className="font-bold text-[#0071E3]">{rw.matchScore}% Match</span>
+                  <span>{((rw as any).worker?.distanceKm ?? (rw as any).distanceKm ?? 3.0).toFixed(1)} km</span>
+                  <span className="font-bold text-[#0071E3]">{Math.round((rw as any).totalScore ?? (rw as any).matchScore ?? 85)}% Match</span>
                 </div>
 
                 <div className="flex items-center space-x-2 pt-1">

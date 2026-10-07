@@ -40,6 +40,48 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 import { Container } from './components/ui/Container';
 import { useToast } from './components/ui/Toast';
+import { ErrorState } from './components/ui/ErrorState';
+
+interface TabErrorBoundaryProps {
+  children: React.ReactNode;
+  onReset?: () => void;
+}
+
+interface TabErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class TabErrorBoundary extends React.Component<TabErrorBoundaryProps, TabErrorBoundaryState> {
+  constructor(props: TabErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): TabErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.warn('WorkLink tab caught error in boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <ErrorState
+          title="View Render Notice"
+          message={this.state.error?.message || 'A transient issue occurred while rendering this section.'}
+          onRetry={() => {
+            this.setState({ hasError: false, error: null });
+            if (this.props.onReset) this.props.onReset();
+          }}
+        />
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface AppContentProps {
   workers: Worker[];
@@ -303,26 +345,27 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
       {/* Main Container */}
       <main className="flex-1 w-full py-8">
         <Container size="2xl">
-          {/* ============================================================== */}
-          {/* TAB: CUSTOMER HOME — SERVICE CONCIERGE (Milestone 16) */}
-          {/* ============================================================== */}
-          {currentTab === 'customer_home' && (
-            <CustomerConciergeHome
-              workers={workers}
-              rankedEligible={rankedEligible}
-              allWorkersRanked={allWorkersRanked}
-              activeJob={activeJob}
-              customerLocation={customerLocation}
-              userProfile={userProfile}
-              activeBooking={activeBooking}
-              onBookClick={(rw) => setSelectedBookingWorker(rw)}
-              onViewProfileClick={(rw) => setSelectedProfileWorker(rw)}
-              onJobCreated={handleJobCreated}
-              onNavigateToTab={(tab) => setCurrentTab(tab)}
-              recentBookings={recentBookings}
-              onOpenWeightsModal={() => setIsWeightsModalOpen(true)}
-            />
-          )}
+          <TabErrorBoundary onReset={() => setCurrentTab('landing')}>
+            {/* ============================================================== */}
+            {/* TAB: CUSTOMER HOME — SERVICE CONCIERGE (Milestone 16) */}
+            {/* ============================================================== */}
+            {currentTab === 'customer_home' && (
+              <CustomerConciergeHome
+                workers={workers}
+                rankedEligible={rankedEligible}
+                allWorkersRanked={allWorkersRanked}
+                activeJob={activeJob}
+                customerLocation={customerLocation}
+                userProfile={userProfile}
+                activeBooking={activeBooking}
+                onBookClick={(rw) => setSelectedBookingWorker(rw)}
+                onViewProfileClick={(rw) => setSelectedProfileWorker(rw)}
+                onJobCreated={handleJobCreated}
+                onNavigateToTab={(tab) => setCurrentTab(tab)}
+                recentBookings={recentBookings}
+                onOpenWeightsModal={() => setIsWeightsModalOpen(true)}
+              />
+            )}
 
           {/* ============================================================== */}
           {/* TAB 0: PUBLIC LANDING PAGE (Launch Experience) */}
@@ -445,7 +488,8 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
           {/* TAB 7: WORKFORCE INTELLIGENCE & RESEARCH */}
           {/* ============================================================== */}
           {currentTab === 'intelligence' && <WorkforceIntelligenceView />}
-        </Container>
+        </TabErrorBoundary>
+      </Container>
       </main>
 
       {/* Footer */}
