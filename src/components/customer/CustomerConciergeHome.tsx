@@ -290,7 +290,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
         {/* GLASS SURFACE 1: PRIMARY AI JOB INTAKE                       */}
         {/* (One of two high-value floating glass surfaces)              */}
         {/* ============================================================ */}
-        <div className="p-5 sm:p-7 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/70 shadow-lg glass-specular-edge space-y-4 transition-all">
+        <div className="p-5 sm:p-7 rounded-3xl bg-white/85 backdrop-blur-xl border border-white/70 shadow-lg glass-specular-edge space-y-4 transition-all motion-glass-appear">
           <form onSubmit={handleConciergeSubmit} className="space-y-3">
             <div className="relative">
               <input
@@ -324,7 +324,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
                   key={idx}
                   type="button"
                   onClick={() => handleChipSelect(item.prompt)}
-                  className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white border border-black/8 hover:border-black/20 text-[#111111] font-medium shrink-0 transition-all shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+                  className="px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white border border-black/8 hover:border-black/20 text-[#111111] font-medium shrink-0 transition-all shadow-2xs hover-lift active-press"
                 >
                   {item.label}
                 </button>
@@ -363,7 +363,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
       {/* ============================================================== */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Goal 1: What can I do? */}
-        <div className="p-5 rounded-3xl bg-white border border-black/6 shadow-xs space-y-3">
+        <div className="p-5 rounded-3xl bg-white border border-black/6 shadow-xs space-y-3 hover-lift">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#0071E3]/10 text-[#0071E3] flex items-center justify-center font-bold text-xs">
               01
@@ -385,7 +385,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
         </div>
 
         {/* Goal 2: What is WorkLink recommending? */}
-        <div className="p-5 rounded-3xl bg-white border border-black/6 shadow-xs space-y-3">
+        <div className="p-5 rounded-3xl bg-white border border-black/6 shadow-xs space-y-3 hover-lift">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#5856D6]/10 text-[#5856D6] flex items-center justify-center font-bold text-xs">
               02
@@ -409,7 +409,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
         </div>
 
         {/* Goal 3: What is happening with my current service? */}
-        <div className="p-5 rounded-3xl bg-white border border-black/6 shadow-xs space-y-3">
+        <div className="p-5 rounded-3xl bg-white border border-black/6 shadow-xs space-y-3 hover-lift">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#34C759]/10 text-[#34C759] flex items-center justify-center font-bold text-xs">
               03
@@ -467,7 +467,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
         {/* GLASS SURFACE 2: PRIMARY RECOMMENDATION CARD                 */}
         {/* (The second of two high-value floating glass surfaces)       */}
         {/* ============================================================ */}
-        <div className="p-6 sm:p-7 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/80 shadow-md glass-specular-edge space-y-5 transition-all">
+        <div className="p-6 sm:p-7 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/80 shadow-md glass-specular-edge space-y-5 transition-all motion-glass-appear hover-lift">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
               <div className="relative shrink-0">
@@ -615,7 +615,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
             {secondaryRecommendations.map((rw) => (
               <div
                 key={rw.worker.id}
-                className="p-4 rounded-2xl bg-white border border-black/6 shadow-xs space-y-3 hover:border-black/15 transition-all"
+                className="p-4 rounded-2xl bg-white border border-black/6 shadow-xs space-y-3 hover:border-black/15 transition-all hover-lift"
               >
                 <div className="flex items-center space-x-3">
                   <img

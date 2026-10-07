@@ -68,7 +68,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
         /* ============================================================== */
         /* SELECTIVE GLASS BOOKING CTA BAR (Visually Dominant)           */
         /* ============================================================== */
-        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 p-1 sm:p-2 bg-white/90 backdrop-blur-xl rounded-2xl border border-white/80 glass-specular-edge">
+        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4 p-1 sm:p-2 bg-white/90 backdrop-blur-xl rounded-2xl border border-white/80 glass-specular-edge motion-glass-appear">
           <div className="flex items-baseline space-x-3 self-start sm:self-auto">
             <div>
               <span className="text-[10px] font-mono uppercase text-[#86868B] block">
@@ -169,7 +169,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
           </div>
 
           {/* Selective Glass Availability Pill */}
-          <div className="p-3.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs glass-specular-edge shrink-0 self-stretch sm:self-auto flex sm:flex-col justify-between items-center sm:items-end text-right">
+          <div className="p-3.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/80 shadow-2xs glass-specular-edge shrink-0 self-stretch sm:self-auto flex sm:flex-col justify-between items-center sm:items-end text-right motion-glass-appear">
             <div>
               <span className="text-[10px] uppercase font-mono text-[#86868B] block">
                 Live Status
@@ -197,7 +197,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
         {/* 2. WHY RECOMMENDED (Selective Glass Material Surface)          */}
         {/* ============================================================== */}
         {isFromRecommendation && (
-          <div className="p-5 sm:p-6 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-2xs glass-specular-edge space-y-3">
+          <div className="p-5 sm:p-6 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-2xs glass-specular-edge space-y-3 motion-glass-appear">
             <div className="flex items-center justify-between pb-3 border-b border-black/5">
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-4 h-4 text-[#0071E3]" />

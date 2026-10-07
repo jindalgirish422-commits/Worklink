@@ -89,10 +89,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header
-      className={`sticky top-0 z-40 transition-all duration-300 ${
+      className={`sticky top-0 z-40 navbar-scroll-transition motion-reduce:transition-none ${
         isScrolled
-          ? 'glass-surface-strong border-b border-black/[0.08] shadow-sm'
-          : 'bg-[#FFFFFF]/75 backdrop-blur-md border-b border-black/[0.04]'
+          ? 'bg-white/90 backdrop-blur-xl border-b border-black/[0.08] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.06)] glass-specular-edge'
+          : 'bg-white/60 backdrop-blur-md border-b border-black/[0.03] shadow-none'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

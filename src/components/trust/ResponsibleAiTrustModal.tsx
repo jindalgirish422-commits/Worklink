@@ -128,7 +128,7 @@ export const ResponsibleAiTrustModal: React.FC<ResponsibleAiTrustModalProps> = (
         {/* ============================================================== */}
         {/* PHILOSOPHY CALLOUT (SUBTLE GLASS SURFACE)                       */}
         {/* ============================================================== */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/70 shadow-sm glass-specular-edge space-y-2">
+        <div className="p-4 sm:p-5 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/70 shadow-sm glass-specular-edge space-y-2 motion-glass-appear">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="inline-flex items-center space-x-2">
               <span className="px-2.5 py-1 rounded-full bg-[#111111] text-white text-[11px] font-bold tracking-wide flex items-center space-x-1.5 shadow-2xs">
@@ -220,7 +220,7 @@ export const ResponsibleAiTrustModal: React.FC<ResponsibleAiTrustModalProps> = (
         {/* TAB 1: EXPLAINABILITY (Why WorkLink recommended this pro)       */}
         {/* ============================================================== */}
         {activeTab === 'explainability' && (
-          <div className="space-y-5 animate-fade-in">
+          <div className="space-y-5 motion-glass-appear">
             {/* Header info */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-black/6">
               <div className="flex items-center space-x-3.5">
@@ -330,7 +330,7 @@ export const ResponsibleAiTrustModal: React.FC<ResponsibleAiTrustModalProps> = (
         {/* TAB 2: USER CONTROL (Human Decides Actions)                     */}
         {/* ============================================================== */}
         {activeTab === 'user_control' && (
-          <div className="space-y-5 animate-fade-in">
+          <div className="space-y-5 motion-glass-appear">
             <div className="p-4 rounded-2xl bg-[#0071E3]/5 border border-[#0071E3]/15 space-y-1.5">
               <h3 className="text-sm font-bold text-[#0071E3] flex items-center space-x-1.5">
                 <UserCheck className="w-4 h-4 text-[#0071E3]" />
@@ -507,7 +507,7 @@ export const ResponsibleAiTrustModal: React.FC<ResponsibleAiTrustModalProps> = (
         {/* TAB 3: FAIRNESS (5 Biases Mitigated)                            */}
         {/* ============================================================== */}
         {activeTab === 'fairness' && (
-          <div className="space-y-5 animate-fade-in">
+          <div className="space-y-5 motion-glass-appear">
             <div className="p-4 rounded-2xl bg-[#FF9500]/5 border border-[#FF9500]/20 space-y-1">
               <h3 className="text-sm font-bold text-[#FF9500] flex items-center space-x-1.5">
                 <Scale className="w-4 h-4 text-[#FF9500]" />
@@ -609,7 +609,7 @@ export const ResponsibleAiTrustModal: React.FC<ResponsibleAiTrustModalProps> = (
         {/* TAB 4: PERSONALITY GUARDRAIL (Strict SDS Dataset Rule)          */}
         {/* ============================================================== */}
         {activeTab === 'personality' && (
-          <div className="space-y-5 animate-fade-in">
+          <div className="space-y-5 motion-glass-appear">
             {/* The Strict Rule Banner */}
             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#FF2D55]/10 to-[#5856D6]/10 border border-[#FF2D55]/20 space-y-2">
               <div className="flex items-center space-x-2 text-[#FF2D55]">
@@ -693,7 +693,7 @@ export const ResponsibleAiTrustModal: React.FC<ResponsibleAiTrustModalProps> = (
         {/* TAB 5: PRIVACY & SECURITY                                       */}
         {/* ============================================================== */}
         {activeTab === 'privacy' && (
-          <div className="space-y-4 animate-fade-in">
+          <div className="space-y-4 motion-glass-appear">
             <div className="p-4 rounded-2xl bg-[#5856D6]/5 border border-[#5856D6]/20 space-y-1">
               <h3 className="text-sm font-bold text-[#5856D6] flex items-center space-x-1.5">
                 <Lock className="w-4 h-4 text-[#5856D6]" />

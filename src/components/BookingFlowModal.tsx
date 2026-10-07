@@ -123,7 +123,7 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
       }
       footer={
         step === 'details' ? (
-          <div className="w-full flex items-center justify-between p-1 bg-white/90 backdrop-blur-xl rounded-2xl border border-white/80 glass-specular-edge">
+          <div className="w-full flex items-center justify-between p-1 bg-white/90 backdrop-blur-xl rounded-2xl border border-white/80 glass-specular-edge motion-glass-appear">
             <div>
               <span className="text-[10px] font-mono uppercase text-[#86868B] block">
                 Total Estimate
@@ -258,7 +258,7 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
                     key={slot}
                     type="button"
                     onClick={() => setSelectedTimeSlot(slot)}
-                    className={`p-2.5 rounded-xl text-center border text-xs font-semibold transition-all ${
+                    className={`p-2.5 rounded-xl text-center border text-xs font-semibold transition-all hover-lift active-press ${
                       selectedTimeSlot === slot
                         ? 'bg-[#111111] text-white border-[#111111]'
                         : 'bg-white text-[#6E6E73] hover:text-[#111111] border-black/8'
@@ -295,7 +295,7 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
         </div>
       ) : (
         /* Confirmed State Transition */
-        <div className="py-12 px-6 text-center space-y-4 animate-fade-in">
+        <div className="py-12 px-6 text-center space-y-4 motion-glass-appear">
           <div className="w-16 h-16 rounded-full bg-[#34C759]/15 text-[#34C759] flex items-center justify-center mx-auto shadow-xs">
             <CheckCircle2 className="w-8 h-8" />
           </div>

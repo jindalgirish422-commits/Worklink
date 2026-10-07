@@ -16,7 +16,7 @@ export const FeedbackLearningLoopView: React.FC<FeedbackLearningLoopViewProps> =
   onBookAgain,
 }) => {
   return (
-    <div className="card-premium p-6 md:p-8 bg-[#FFFFFF] mb-8 animate-fade-in">
+    <div className="card-premium p-6 md:p-8 bg-[#FFFFFF] mb-8 motion-glass-appear">
       <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-black/5 gap-4">
         <div>
           <div className="flex items-center space-x-2.5">
@@ -60,7 +60,7 @@ export const FeedbackLearningLoopView: React.FC<FeedbackLearningLoopViewProps> =
           ].map((item, idx) => (
             <div
               key={idx}
-              className={`p-3 rounded-2xl border shadow-xs transition-all ${
+              className={`p-3 rounded-2xl border shadow-xs transition-all hover-lift ${
                 idx >= 4
                   ? 'bg-white border-[#0071E3]/20 text-[#111111]'
                   : 'bg-white border-black/5 text-[#111111]'

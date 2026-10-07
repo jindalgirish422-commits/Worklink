@@ -30,7 +30,7 @@ export const TransparentPriceSummary: React.FC<TransparentPriceSummaryProps> = (
   isSimulated = true,
 }) => {
   return (
-    <div className="p-6 md:p-7 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/80 glass-specular-edge shadow-sm space-y-5 animate-fade-in text-xs">
+    <div className="p-6 md:p-7 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/80 glass-specular-edge shadow-sm space-y-5 motion-glass-appear hover-lift text-xs">
       {/* Header with Clear Labeling: ESTIMATED vs FINAL */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-black/5 gap-2">
         <div className="flex items-center space-x-2.5">

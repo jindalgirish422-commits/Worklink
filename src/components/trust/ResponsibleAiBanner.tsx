@@ -32,7 +32,7 @@ export const ResponsibleAiBanner: React.FC<ResponsibleAiBannerProps> = ({
   compact = false,
 }) => {
   return (
-    <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-white/70 shadow-2xs glass-specular-edge p-4 sm:p-4.5 transition-all">
+    <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-white/70 shadow-2xs glass-specular-edge p-4 sm:p-4.5 transition-all motion-glass-appear">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Left: Reassuring Trust Identity */}
         <div className="flex items-center space-x-3">
@@ -60,7 +60,7 @@ export const ResponsibleAiBanner: React.FC<ResponsibleAiBannerProps> = ({
           <button
             type="button"
             onClick={onOpenTrustModal}
-            className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#F5F5F7] border border-black/8 text-[11px] font-bold text-[#0071E3] flex items-center space-x-1 shadow-2xs transition-all"
+            className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#F5F5F7] border border-black/8 text-[11px] font-bold text-[#0071E3] flex items-center space-x-1 shadow-2xs transition-all hover-lift active-press"
           >
             <Sparkles className="w-3 h-3" />
             <span>Why Recommended?</span>
@@ -70,7 +70,7 @@ export const ResponsibleAiBanner: React.FC<ResponsibleAiBannerProps> = ({
             <button
               type="button"
               onClick={onChangePreferences}
-              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#F5F5F7] border border-black/8 text-[11px] font-medium text-[#111111] flex items-center space-x-1 shadow-2xs transition-all"
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#F5F5F7] border border-black/8 text-[11px] font-medium text-[#111111] flex items-center space-x-1 shadow-2xs transition-all hover-lift active-press"
             >
               <Sliders className="w-3 h-3 text-[#5856D6]" />
               <span>Preferences</span>
@@ -81,7 +81,7 @@ export const ResponsibleAiBanner: React.FC<ResponsibleAiBannerProps> = ({
             <button
               type="button"
               onClick={onChangeRequirements}
-              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#F5F5F7] border border-black/8 text-[11px] font-medium text-[#111111] flex items-center space-x-1 shadow-2xs transition-all"
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#F5F5F7] border border-black/8 text-[11px] font-medium text-[#111111] flex items-center space-x-1 shadow-2xs transition-all hover-lift active-press"
             >
               <RotateCcw className="w-3 h-3 text-[#FF9500]" />
               <span>Requirements</span>
@@ -92,7 +92,7 @@ export const ResponsibleAiBanner: React.FC<ResponsibleAiBannerProps> = ({
             <button
               type="button"
               onClick={onViewAlternatives}
-              className="px-2.5 py-1.5 rounded-xl bg-[#111111] hover:bg-black text-white text-[11px] font-semibold flex items-center space-x-1 shadow-2xs transition-all"
+              className="px-2.5 py-1.5 rounded-xl bg-[#111111] hover:bg-black text-white text-[11px] font-semibold flex items-center space-x-1 shadow-2xs transition-all hover-lift active-press"
             >
               <span>Alternatives</span>
               <ChevronRight className="w-3 h-3" />

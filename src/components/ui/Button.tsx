@@ -25,7 +25,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     // Base styles: calm, refined, Apple-inspired pill/rounded corners
     const baseStyles =
-      'inline-flex items-center justify-center font-medium transition-all duration-200 select-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] focus-visible:ring-offset-2';
+      'inline-flex items-center justify-center font-medium select-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none hover-lift active-press motion-reduce:transition-none motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] focus-visible:ring-offset-2';
 
     // Size variants
     const sizeStyles = {

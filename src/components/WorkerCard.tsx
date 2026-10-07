@@ -38,7 +38,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
 
   return (
     <div
-      className={`relative overflow-hidden transition-all duration-300 rounded-3xl ${
+      className={`relative overflow-hidden transition-all duration-300 rounded-3xl hover-lift ${
         isTopRecommendation
           ? 'bg-[#FFFFFF] border-2 border-[#0071E3]/30 shadow-card-hover glass-specular-edge'
           : 'card-premium bg-[#FFFFFF] border border-black/8 shadow-xs'

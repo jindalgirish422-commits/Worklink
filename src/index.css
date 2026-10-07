@@ -283,7 +283,23 @@
   background: rgba(0, 0, 0, 0.28);
 }
 
+/* ============================================================== */
+/* MILESTONE 20: PREMIUM MATERIAL MOTION SYSTEM                   */
+/* Subtle, calm, fluid animations without bounce, spin, or glow   */
+/* ============================================================== */
+
 /* Keyframe Animations */
+@keyframes glassAppear {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -293,10 +309,10 @@
   }
 }
 
-@keyframes slideUp {
+@keyframes slideSettle {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -304,10 +320,10 @@
   }
 }
 
-@keyframes scaleIn {
+@keyframes scaleSettle {
   from {
     opacity: 0;
-    transform: scale(0.97);
+    transform: scale(0.985);
   }
   to {
     opacity: 1;
@@ -315,19 +331,66 @@
   }
 }
 
+/* Material Motion Classes */
+.motion-glass-appear {
+  animation: glassAppear 0.32s var(--ease-apple) forwards;
+  will-change: opacity, transform;
+}
+
+.motion-fade-in {
+  animation: fadeIn 0.24s var(--ease-apple) forwards;
+}
+
+.motion-slide-settle {
+  animation: slideSettle 0.28s var(--ease-apple) forwards;
+}
+
+.motion-scale-settle {
+  animation: scaleSettle 0.26s var(--ease-apple) forwards;
+}
+
+/* Hover Lift: subtle 1-2px vertical lift and shadow elevation without bounce */
+.hover-lift {
+  transition: transform 0.22s var(--ease-apple),
+              box-shadow 0.22s var(--ease-apple),
+              border-color 0.22s var(--ease-apple);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Active State Press: tactile micro-compression */
+.active-press {
+  transition: transform 0.12s var(--ease-apple);
+}
+
+.active-press:active {
+  transform: scale(0.985);
+}
+
+/* Navigation Scroll Transition: smooth material gradient shift */
+.navbar-scroll-transition {
+  transition: background-color 0.3s var(--ease-apple),
+              border-color 0.3s var(--ease-apple),
+              box-shadow 0.3s var(--ease-apple),
+              backdrop-filter 0.3s var(--ease-apple),
+              -webkit-backdrop-filter 0.3s var(--ease-apple);
+}
+
 .animate-fade-in {
-  animation: fadeIn 0.3s var(--ease-apple) forwards;
+  animation: fadeIn 0.28s var(--ease-apple) forwards;
 }
 
 .animate-slide-up {
-  animation: slideUp 0.35s var(--ease-apple) forwards;
+  animation: slideSettle 0.3s var(--ease-apple) forwards;
 }
 
 .animate-scale-in {
-  animation: scaleIn 0.28s var(--ease-apple) forwards;
+  animation: scaleSettle 0.26s var(--ease-apple) forwards;
 }
 
-/* Accessibility: prefers-reduced-motion */
+/* Accessibility: prefers-reduced-motion strict compliance */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -336,5 +399,25 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .motion-glass-appear,
+  .motion-fade-in,
+  .motion-slide-settle,
+  .motion-scale-settle,
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-scale-in,
+  .animate-float-subtle {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .hover-lift:hover,
+  .active-press:active,
+  .glass-button:hover,
+  .glass-button:active {
+    transform: none !important;
   }
 }

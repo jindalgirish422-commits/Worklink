@@ -106,7 +106,7 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
       {/* ============================================================== */}
       {/* 2. PRIMARY MATCH: The Single Prominent Glass Surface           */}
       {/* ============================================================== */}
-      <div className="relative rounded-3xl bg-white/85 backdrop-blur-2xl border border-white/80 shadow-[0_20px_48px_-10px_rgba(0,0,0,0.12)] glass-specular-edge p-6 sm:p-8 lg:p-9 transition-all duration-300 hover:shadow-[0_24px_56px_-8px_rgba(0,0,0,0.15)]">
+      <div className="relative rounded-3xl bg-white/85 backdrop-blur-2xl border border-white/80 shadow-[0_20px_48px_-10px_rgba(0,0,0,0.12)] glass-specular-edge p-6 sm:p-8 lg:p-9 transition-all duration-300 hover:shadow-[0_24px_56px_-8px_rgba(0,0,0,0.15)] motion-glass-appear hover-lift">
         {/* Subtle Top Indicator Banner */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-5 mb-6 border-b border-black/6">
           <div className="flex items-center space-x-2">
@@ -342,7 +342,7 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
               return (
                 <div
                   key={item.worker.id}
-                  className="min-w-[280px] sm:min-w-0 snap-start flex-1 flex flex-col justify-between rounded-2xl bg-white border border-black/8 hover:border-black/18 shadow-2xs hover:shadow-xs transition-all duration-200 p-5"
+                  className="min-w-[280px] sm:min-w-0 snap-start flex-1 flex flex-col justify-between rounded-2xl bg-white border border-black/8 hover:border-black/18 shadow-2xs hover:shadow-xs transition-all duration-200 p-5 hover-lift"
                 >
                   <div>
                     {/* Top Header */}
