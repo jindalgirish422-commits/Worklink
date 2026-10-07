@@ -40,6 +40,8 @@ import { WorkerCard } from '../WorkerCard';
 import { ChatbotIntake } from '../ChatbotIntake';
 import { HardFilterAudit } from '../HardFilterAudit';
 import { SignatureRecommendationView } from '../recommendations/SignatureRecommendationView';
+import { PersonalizedRecommendationsSection } from '../recommendations/PersonalizedRecommendationsSection';
+import { UserPersonalizationProfile } from '../../types';
 
 interface WorkerDiscoveryViewProps {
   workers: Worker[];
@@ -51,6 +53,7 @@ interface WorkerDiscoveryViewProps {
   onViewProfileClick: (worker: RankedWorker) => void;
   onJobCreated: (job: JobRequest) => void;
   onResetLocation?: () => void;
+  userProfile?: UserPersonalizationProfile;
 }
 
 type DiscoveryTab = 'recommendations' | 'explore';
@@ -86,6 +89,7 @@ export const WorkerDiscoveryView: React.FC<WorkerDiscoveryViewProps> = ({
   onViewProfileClick,
   onJobCreated,
   onResetLocation,
+  userProfile,
 }) => {
   // Navigation & mode state
   const [activeTab, setActiveTab] = useState<DiscoveryTab>('recommendations');
@@ -335,14 +339,36 @@ export const WorkerDiscoveryView: React.FC<WorkerDiscoveryViewProps> = ({
             </div>
           </div>
 
-          {/* Candidates Presentation: Signature AI Recommendation Experience */}
+          {/* Candidates Presentation: Signature AI Recommendation Experience & Personalization */}
           {rankedEligible.length > 0 ? (
-            <SignatureRecommendationView
-              rankedEligible={rankedEligible}
-              activeJob={activeJob}
-              onBookClick={onBookClick}
-              onViewProfileClick={onViewProfileClick}
-            />
+            <>
+              <SignatureRecommendationView
+                rankedEligible={rankedEligible}
+                activeJob={activeJob}
+                onBookClick={onBookClick}
+                onViewProfileClick={onViewProfileClick}
+              />
+
+              {/* Milestone 9: Non-Intrusive Personalized Recommendations */}
+              <PersonalizedRecommendationsSection
+                workers={workers}
+                userProfile={
+                  userProfile || {
+                    previousSearches: ['AC Repair', 'Plumber Sink Leak'],
+                    previousBookingsCount: 3,
+                    frequentlyUsedTrades: ['AC Technician', 'Plumber'],
+                    preferredDistanceMaxKm: 5.0,
+                    priceSensitivity: 'medium',
+                    repeatWorkersBooked: ['W3'],
+                    avgRatingGiven: 4.8,
+                    hasCancellations: false,
+                  }
+                }
+                activeJob={activeJob}
+                onBookClick={onBookClick}
+                onViewProfileClick={onViewProfileClick}
+              />
+            </>
           ) : (
             <EmptyState
               icon={<Compass className="w-8 h-8 text-[#86868B]" />}

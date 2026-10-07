@@ -249,6 +249,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
               rankedEligible={rankedEligible}
               activeJob={activeJob}
               customerLocation={customerLocation}
+              userProfile={userProfile}
               onBookClick={(rw) => setSelectedBookingWorker(rw)}
               onViewProfileClick={(rw) => setSelectedProfileWorker(rw)}
               onJobCreated={handleJobCreated}
