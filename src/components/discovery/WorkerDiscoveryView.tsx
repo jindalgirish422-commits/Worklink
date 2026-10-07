@@ -39,6 +39,7 @@ import { EmptyState } from '../ui/EmptyState';
 import { WorkerCard } from '../WorkerCard';
 import { ChatbotIntake } from '../ChatbotIntake';
 import { HardFilterAudit } from '../HardFilterAudit';
+import { SignatureRecommendationView } from '../recommendations/SignatureRecommendationView';
 
 interface WorkerDiscoveryViewProps {
   workers: Worker[];
@@ -312,23 +313,11 @@ export const WorkerDiscoveryView: React.FC<WorkerDiscoveryViewProps> = ({
           {/* Hard Constraint Filter Audit */}
           <HardFilterAudit allRanked={allWorkersRanked} activeJob={activeJob} />
 
-          {/* Recommendation Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-black/5 gap-3">
-            <div>
-              <div className="flex items-center space-x-2">
-                <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#111111]">
-                  Explainable Multi-Factor Recommendations
-                </h2>
-                <Badge variant="default" size="sm">
-                  {rankedEligible.length} Verified Candidates
-                </Badge>
-              </div>
-              <p className="text-xs text-[#6E6E73] mt-0.5">
-                Ranked via Skill Fit + Experience Tier + Slot Availability + Quality + 10km Proximity + Budget
-              </p>
-            </div>
-
-            {/* Quick Trade Filter Chips */}
+          {/* Quick Trade Filter Chips */}
+          <div className="flex items-center justify-between pb-3 border-b border-black/5 gap-3">
+            <span className="text-xs font-semibold text-[#86868B] uppercase tracking-wider shrink-0 hidden sm:inline">
+              Filter by Trade:
+            </span>
             <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-1">
               {TRADE_CATEGORIES.map((trade) => (
                 <button
@@ -346,66 +335,14 @@ export const WorkerDiscoveryView: React.FC<WorkerDiscoveryViewProps> = ({
             </div>
           </div>
 
-          {/* Candidates Presentation */}
+          {/* Candidates Presentation: Signature AI Recommendation Experience */}
           {rankedEligible.length > 0 ? (
-            <div className="space-y-6">
-              {/* Primary Worker: Rank #1 Top Recommendation */}
-              {primaryRecommendation && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono uppercase tracking-wider text-[#0071E3] font-bold flex items-center space-x-1">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Primary Recommended Provider (Rank #1)</span>
-                    </span>
-                    <span className="text-xs text-[#86868B]">Best Match for Current Job Intake</span>
-                  </div>
-
-                  <WorkerCard
-                    rankedWorker={primaryRecommendation}
-                    job={activeJob}
-                    isTopRecommendation={true}
-                    onBookClick={onBookClick}
-                    onViewProfileClick={onViewProfileClick}
-                  />
-                </div>
-              )}
-
-              {/* Secondary Workers: Simpler surfaces */}
-              {secondaryRecommendations.length > 0 && (
-                <div className="space-y-3 pt-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-[#111111] uppercase tracking-wide">
-                      Alternative Qualified Candidates ({secondaryRecommendations.length})
-                    </h3>
-                    <span className="text-xs text-[#6E6E73] hidden sm:inline">
-                      Swipe horizontally or inspect profile
-                    </span>
-                  </div>
-
-                  {/* Mobile: Horizontal Recommendation Carousel / Desktop: Clean Grid */}
-                  <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory pb-3 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
-                    {secondaryRecommendations.map((item) => (
-                      <div
-                        key={item.worker.id}
-                        className="min-w-[290px] sm:min-w-0 snap-start flex-1"
-                      >
-                        <SecondaryWorkerCard
-                          item={{
-                            worker: item.worker,
-                            isEngineRecommendation: true,
-                            engineRank: item.rank,
-                            engineMatchScore: item.totalScore,
-                            matchedCriteria: ['service'],
-                          }}
-                          onBookClick={() => onBookClick(item)}
-                          onViewProfileClick={() => onViewProfileClick(item)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <SignatureRecommendationView
+              rankedEligible={rankedEligible}
+              activeJob={activeJob}
+              onBookClick={onBookClick}
+              onViewProfileClick={onViewProfileClick}
+            />
           ) : (
             <EmptyState
               icon={<Compass className="w-8 h-8 text-[#86868B]" />}
