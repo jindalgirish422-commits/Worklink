@@ -54,6 +54,7 @@ export interface CustomerConciergeHomeProps {
   onNavigateToTab: (tab: any) => void;
   recentBookings?: Booking[];
   onOpenWeightsModal?: () => void;
+  // Optional navigation target to simulator (Hackathon Demo Mode)
 }
 
 export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({

@@ -1,8 +1,9 @@
 import { JobRequest, TradeCategory, CustomerLocation } from '../types';
+import { classifyServiceRequest, ClassificationResult } from './taxonomyService';
 
 export interface ExtractedSlots {
-  service: string; // e.g. "AC Repair"
-  serviceCategory: TradeCategory;
+  service: string; // e.g. "AC Repair", "Electrical Wiring", "Plumbing"
+  serviceCategory: TradeCategory; // Canonical trade e.g. "AC Technician", "Plumber", "Electrician"
   requiredSkills: string[];
   requiredExperienceYears: number;
   urgency: 'emergency' | 'high' | 'normal' | 'scheduled';
@@ -57,6 +58,7 @@ export const SAMPLE_PROMPTS = [
 
 /**
  * Parses natural language user input into structured job attributes
+ * using the centralized context-aware classification taxonomy.
  */
 export function parseNaturalLanguageJob(
   text: string,
@@ -64,101 +66,13 @@ export function parseNaturalLanguageJob(
 ): ExtractedSlots {
   const lower = text.toLowerCase();
 
-  // 1. Service Category & Specific Service Name
-  let service = 'AC Repair';
-  let serviceCategory: TradeCategory = 'AC Technician';
-  let requiredSkills: string[] = ['Inverter Compressor', 'Gas Leak Detection'];
-  let requiredExperienceYears = 3;
-  let detectedIssue = 'AC Not Cooling Malfunction';
-
-  if (
-    lower.includes('plumb') ||
-    lower.includes('pipe') ||
-    lower.includes('leak') ||
-    lower.includes('tap') ||
-    lower.includes('sink') ||
-    lower.includes('drain') ||
-    lower.includes('clog')
-  ) {
-    service = 'Pipe Leak & Plumbing';
-    serviceCategory = 'Plumber';
-    requiredSkills = ['PPR Pipe Welding', 'Pressure Booster', 'Concealed Leak Detection'];
-    requiredExperienceYears = 3;
-    detectedIssue = 'Plumbing Pipe / Drainage Leak';
-  } else if (
-    lower.includes('electr') ||
-    lower.includes('mcb') ||
-    lower.includes('spark') ||
-    lower.includes('wire') ||
-    lower.includes('short circuit') ||
-    lower.includes('switchboard')
-  ) {
-    service = 'Electrical Fault Repair';
-    serviceCategory = 'Electrician';
-    requiredSkills = ['MCB Tripping Diagnostic', 'Phase Balancing', 'Rewiring'];
-    requiredExperienceYears = 3;
-    detectedIssue = 'Electrical Short Circuit / Wiring Fault';
-  } else if (
-    lower.includes('carpent') ||
-    lower.includes('door') ||
-    lower.includes('wood') ||
-    lower.includes('hinge') ||
-    lower.includes('jam') ||
-    lower.includes('cabinet')
-  ) {
-    service = 'Carpentry & Woodwork';
-    serviceCategory = 'Carpenter';
-    requiredSkills = ['Modular Cabinet Fitting', 'Hinge Alignment', 'Lock Mortising'];
-    requiredExperienceYears = 4;
-    detectedIssue = 'Swollen / Jammed Door Planing & Alignment';
-  } else if (
-    lower.includes('paint') ||
-    lower.includes('damp') ||
-    lower.includes('seepage') ||
-    lower.includes('wall') ||
-    lower.includes('waterproof')
-  ) {
-    service = 'Painting & Damp Proofing';
-    serviceCategory = 'Painter';
-    requiredSkills = ['Waterproofing Primer', 'Interior Emulsion', 'Damp Proofing'];
-    requiredExperienceYears = 3;
-    detectedIssue = 'Wall Dampness Seepage & Surface Coating';
-  } else if (
-    lower.includes('washing machine') ||
-    lower.includes('fridge') ||
-    lower.includes('refrigerator') ||
-    lower.includes('microwave') ||
-    lower.includes('appliance') ||
-    lower.includes('geyser')
-  ) {
-    service = 'Home Appliance Repair';
-    serviceCategory = 'Appliance Repair';
-    requiredSkills = ['Washing Machine Drum', 'Refrigerator Thermostat', 'Appliance Electronics'];
-    requiredExperienceYears = 4;
-    detectedIssue = 'Home Appliance Mechanical / Electronic Fault';
-  } else if (
-    lower.includes('clean') ||
-    lower.includes('sofa') ||
-    lower.includes('deep clean') ||
-    lower.includes('sanitize') ||
-    lower.includes('bathroom')
-  ) {
-    service = 'Deep Cleaning Service';
-    serviceCategory = 'Cleaning Professional';
-    requiredSkills = ['Deep Kitchen Sanitization', 'Sofa Upholstery Shampoo', 'Bathroom Descaling'];
-    requiredExperienceYears = 2;
-    detectedIssue = 'Deep Home Sanitization & Cleaning';
-  } else {
-    // Default: AC Repair
-    service = 'AC Repair';
-    serviceCategory = 'AC Technician';
-    requiredSkills = ['Inverter Compressor', 'Gas Leak Detection', 'Coil Cleaning'];
-    requiredExperienceYears = 3;
-    detectedIssue = 'AC Not Cooling / Refrigerant & Compressor Issue';
-  }
-
-  // 2. Urgency & Time / Date Extraction
-  let urgency: 'emergency' | 'high' | 'normal' | 'scheduled' = 'normal';
+  // 1. Context-Aware and Object-First Classification (Milestone 26)
+  const classification: ClassificationResult = classifyServiceRequest(text);
+  const service = classification.serviceName;
+  const serviceCategory: TradeCategory = classification.serviceCategory;
+  const requiredSkills: string[] = classification.requiredSkills;
+  const requiredExperienceYears = classification.requiredExperienceYears;
+  const detectedIssue = classification.detectedIssueSummary;
   let requestedDate = 'Today';
   let requestedTime = 'Flexible Today';
 

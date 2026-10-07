@@ -379,33 +379,90 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
           )}
 
           {/* ============================================================== */}
-          {/* TAB 1: WORKER HUB (Worker Role View) */}
+          {/* TAB 1: WORKER HUB (Worker Role View with Route Guard) */}
           {/* ============================================================== */}
           {currentTab === 'worker_hub' && (
-            <WorkerDashboard
-              workers={workers}
-              onUpdateWorkerStatus={handleUpdateWorkerStatus}
-              activeBooking={activeBooking}
-              onAcceptBooking={handleAcceptBooking}
-              onRejectBooking={handleRejectBooking}
-              onAdvanceBookingStatus={handleAdvanceBookingStatus}
-              onUpdateBooking={handleUpdateBooking}
-            />
+            role !== 'worker' ? (
+              <div className="card-premium p-8 max-w-xl mx-auto text-center space-y-4 animate-fade-in bg-white">
+                <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center mx-auto">
+                  <Briefcase className="w-7 h-7 text-amber-700" />
+                </div>
+                <h2 className="text-xl font-extrabold text-[#111111]">
+                  Worker Dashboard Access Restricted
+                </h2>
+                <p className="text-xs text-[#6E6E73] leading-relaxed">
+                  You are currently signed in as a <strong>{role.toUpperCase()}</strong>. Only registered skilled professionals can access incoming job requests and dispatch logs.
+                </p>
+                <div className="flex items-center justify-center space-x-3 pt-2">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      useAuth().switchRole('worker');
+                    }}
+                  >
+                    Switch to Worker (Demo)
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setCurrentTab('customer_home')}>
+                    Return Home
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <WorkerDashboard
+                workers={workers}
+                onUpdateWorkerStatus={handleUpdateWorkerStatus}
+                activeBooking={activeBooking}
+                onAcceptBooking={handleAcceptBooking}
+                onRejectBooking={handleRejectBooking}
+                onAdvanceBookingStatus={handleAdvanceBookingStatus}
+                onUpdateBooking={handleUpdateBooking}
+              />
+            )
           )}
 
           {/* ============================================================== */}
-          {/* TAB 2: OPERATOR CONSOLE (Admin/Operator Role View) */}
+          {/* TAB 2: OPERATOR CONSOLE (Admin/Operator View with Strict Guard) */}
           {/* ============================================================== */}
           {currentTab === 'operator_console' && (
-            <OperatorConsole
-              workers={workers}
-              onOpenWeightsModal={() => setIsWeightsModalOpen(true)}
-              onNavigateToIntelligence={() => setCurrentTab('intelligence')}
-              onNavigateToRadar={() => setCurrentTab('zone_radar')}
-              currentWeights={currentWeights}
-              activeBooking={activeBooking}
-              recentBookings={recentBookings}
-            />
+            role !== 'operator' ? (
+              <div className="card-premium p-8 max-w-xl mx-auto text-center space-y-4 animate-fade-in bg-white">
+                <div className="w-14 h-14 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center mx-auto">
+                  <Shield className="w-7 h-7 text-purple-700" />
+                </div>
+                <h2 className="text-xl font-extrabold text-[#111111]">
+                  Platform Operator Authorization Required
+                </h2>
+                <p className="text-xs text-[#6E6E73] leading-relaxed">
+                  Access to worker approval, compliance vetting, and platform dispatch controls is restricted to authorized operators. Customers and workers cannot review or approve worker profiles.
+                </p>
+                <div className="flex items-center justify-center space-x-3 pt-2">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      useAuth().switchRole('operator');
+                    }}
+                  >
+                    Sign in as Operator (Demo)
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setCurrentTab('customer_home')}>
+                    Return Home
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <OperatorConsole
+                workers={workers}
+                onUpdateWorkers={setWorkers}
+                onOpenWeightsModal={() => setIsWeightsModalOpen(true)}
+                onNavigateToIntelligence={() => setCurrentTab('intelligence')}
+                onNavigateToRadar={() => setCurrentTab('zone_radar')}
+                currentWeights={currentWeights}
+                activeBooking={activeBooking}
+                recentBookings={recentBookings}
+              />
+            )
           )}
 
           {/* ============================================================== */}

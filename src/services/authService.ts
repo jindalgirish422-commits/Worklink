@@ -270,7 +270,7 @@ export const registerWorker = async (
     workerProfile,
   };
 
-  // Create marketplace worker representation
+  // Create marketplace worker representation with initial PENDING_APPROVAL status (Milestone 26)
   const newWorker: Worker = {
     id: workerId,
     name: data.name.trim(),
@@ -280,11 +280,12 @@ export const registerWorker = async (
     hourlyRate: data.hourlyRate,
     estimatedQuote: data.estimatedQuote || Math.round(data.hourlyRate * 1.3),
     rating: 5.0,
-    reviewCount: 1,
+    reviewCount: 0,
     completedJobs: 0,
     completionRate: 1.0,
     responseTimeMinutes: 15,
-    isVerified: true,
+    isVerified: false,
+    approvalStatus: 'PENDING_APPROVAL',
     licenseNumber: data.licenseNumber.trim(),
     backgroundCheckPassed: true,
     phone: data.phone.trim(),
@@ -295,16 +296,8 @@ export const registerWorker = async (
     availabilityStatus: data.availabilityStatus,
     nextAvailableSlot: data.availabilityStatus === 'immediate' ? 'Within 30 mins' : 'Tomorrow 09:00 AM',
     toolsEquipped: ['Standard Toolset', 'Digital Multimeter', 'Safety Equipment'],
-    recentReviews: [
-      {
-        id: `rev_${Date.now()}`,
-        userName: 'WorkLink Verification Team',
-        rating: 5.0,
-        comment: 'Credentials, government identification, and trade background verified.',
-        date: 'Today',
-        tradeTag: data.trade,
-      },
-    ],
+    recentReviews: [],
+    submittedAt: new Date().toISOString(),
   };
 
   const updatedUsers = [...users, newUser];
@@ -312,6 +305,172 @@ export const registerWorker = async (
   saveSession(newUser);
 
   return { user: newUser, newWorker };
+};
+
+// -------------------------------------------------------------
+// OPERATOR AUTHORIZATION & GOVERNANCE APIS (Milestone 26)
+// -------------------------------------------------------------
+
+export const isOperatorAuthorized = (user: User | null): boolean => {
+  return Boolean(user && user.role === 'operator');
+};
+
+export const isWorkerAuthorized = (user: User | null): boolean => {
+  return Boolean(user && user.role === 'worker');
+};
+
+export const assertOperatorPermission = (user: User | null): void => {
+  if (!isOperatorAuthorized(user)) {
+    throw new Error('Access Denied: Platform operator authorization required to perform this action.');
+  }
+};
+
+/**
+ * Operator Worker Creation Endpoint
+ */
+export const createOperatorWorker = (
+  operatorUser: User | null,
+  workerData: Omit<Worker, 'id' | 'rating' | 'reviewCount' | 'completedJobs' | 'completionRate' | 'recentReviews'> & {
+    id?: string;
+    autoApprove?: boolean;
+  }
+): Worker => {
+  assertOperatorPermission(operatorUser);
+
+  if (!workerData.name || workerData.name.trim().length < 2) {
+    throw new Error('Worker legal or display name is required.');
+  }
+  if (!workerData.trade) {
+    throw new Error('Valid trade category is required.');
+  }
+  if (!workerData.skills || workerData.skills.length === 0) {
+    throw new Error('At least one verified skill must be assigned.');
+  }
+  if (!workerData.licenseNumber || !workerData.licenseNumber.trim()) {
+    throw new Error('Trade license or government verification ID is required.');
+  }
+
+  const workerId = workerData.id || `W${Date.now().toString().slice(-4)}`;
+  const isApproved = workerData.autoApprove !== false;
+
+  const newWorker: Worker = {
+    id: workerId,
+    name: workerData.name.trim(),
+    trade: workerData.trade,
+    skills: workerData.skills,
+    experienceYears: Number(workerData.experienceYears) || 3,
+    hourlyRate: Number(workerData.hourlyRate) || 350,
+    estimatedQuote: Number(workerData.estimatedQuote) || Math.round((Number(workerData.hourlyRate) || 350) * 1.5),
+    rating: 5.0,
+    reviewCount: 1,
+    completedJobs: 0,
+    completionRate: 1.0,
+    responseTimeMinutes: Number(workerData.responseTimeMinutes) || 20,
+    isVerified: isApproved,
+    approvalStatus: isApproved ? 'APPROVED' : 'PENDING_APPROVAL',
+    licenseNumber: workerData.licenseNumber.trim(),
+    backgroundCheckPassed: true,
+    phone: workerData.phone || '+91 98110 00000',
+    avatar:
+      workerData.avatar ||
+      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=256&q=80',
+    bio:
+      workerData.bio ||
+      `${workerData.experienceYears || 3}+ years verified experience in ${workerData.trade}.`,
+    coordinates: workerData.coordinates || { lat: 28.545, lng: 77.204 },
+    distanceKm: workerData.distanceKm || 3.0,
+    availabilityStatus: workerData.availabilityStatus || 'immediate',
+    nextAvailableSlot:
+      workerData.availabilityStatus === 'immediate' ? 'Immediate (Within 30 mins)' : 'Tomorrow 09:00 AM',
+    toolsEquipped: workerData.toolsEquipped || ['Standard Professional Toolset'],
+    recentReviews: [
+      {
+        id: `rev_${Date.now()}`,
+        userName: 'WorkLink Operator Vetting',
+        rating: 5.0,
+        comment: `Onboarded and verified by Operator ${operatorUser?.name || 'Admin'}.`,
+        date: 'Today',
+        tradeTag: workerData.trade,
+      },
+    ],
+    submittedAt: new Date().toISOString(),
+    approvedBy: isApproved ? operatorUser?.name : undefined,
+    approvedAt: isApproved ? new Date().toISOString() : undefined,
+  };
+
+  return newWorker;
+};
+
+/**
+ * Approve Worker
+ */
+export const approveWorkerRecord = (
+  operatorUser: User | null,
+  workerId: string,
+  workers: Worker[]
+): Worker[] => {
+  assertOperatorPermission(operatorUser);
+  return workers.map((w) => {
+    if (w.id === workerId) {
+      return {
+        ...w,
+        approvalStatus: 'APPROVED' as const,
+        isVerified: true,
+        approvedBy: operatorUser?.name || 'Anita Roy',
+        approvedAt: new Date().toISOString(),
+      };
+    }
+    return w;
+  });
+};
+
+/**
+ * Reject Worker with reason
+ */
+export const rejectWorkerRecord = (
+  operatorUser: User | null,
+  workerId: string,
+  reason: string,
+  workers: Worker[]
+): Worker[] => {
+  assertOperatorPermission(operatorUser);
+  return workers.map((w) => {
+    if (w.id === workerId) {
+      return {
+        ...w,
+        approvalStatus: 'REJECTED' as const,
+        isVerified: false,
+        rejectedBy: operatorUser?.name || 'Anita Roy',
+        rejectedAt: new Date().toISOString(),
+        rejectionReason: reason || 'Document verification incomplete or failed background check criteria.',
+      };
+    }
+    return w;
+  });
+};
+
+/**
+ * Suspend Worker
+ */
+export const suspendWorkerRecord = (
+  operatorUser: User | null,
+  workerId: string,
+  reason: string,
+  workers: Worker[]
+): Worker[] => {
+  assertOperatorPermission(operatorUser);
+  return workers.map((w) => {
+    if (w.id === workerId) {
+      return {
+        ...w,
+        approvalStatus: 'SUSPENDED' as const,
+        suspendedBy: operatorUser?.name || 'Anita Roy',
+        suspendedAt: new Date().toISOString(),
+        rejectionReason: reason || 'Compliance violation or high cancellation rate.',
+      };
+    }
+    return w;
+  });
 };
 
 // Switch role seamlessly (ideal for evaluator demoing)
@@ -348,3 +507,4 @@ export const updateLocationPermission = (
 export const logoutSession = (): void => {
   saveSession(null);
 };
+

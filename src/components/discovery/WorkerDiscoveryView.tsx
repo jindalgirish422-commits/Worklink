@@ -78,8 +78,13 @@ const TRADE_CATEGORIES = [
   'Electrician',
   'Carpenter',
   'Painter',
+  'Mechanic',
   'Appliance Repair',
   'Cleaning Professional',
+  'Mason / General Technician',
+  'Locksmith',
+  'Networking Specialist',
+  'Gardener / Landscaper',
 ];
 
 export const WorkerDiscoveryView: React.FC<WorkerDiscoveryViewProps> = ({

@@ -68,7 +68,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
         /* ============================================================== */
         /* FLOATING ACTION SURFACE: Selective Glass Booking CTA Bar      */
         /* ============================================================== */
-        <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-2.5 sm:p-2 bg-white/95 sm:bg-white/90 backdrop-blur-md sm:backdrop-blur-xl rounded-2xl border border-black/8 sm:border-white/80 glass-specular-edge motion-glass-appear">
+        <div className="w-full flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-2.5 sm:p-2 bg-white/90 backdrop-blur-xl rounded-2xl border border-black/8 sm:border-white/80 glass-specular-edge motion-glass-appear">
           <div className="flex items-baseline space-x-3 self-start sm:self-auto">
             <div>
               <span className="text-[10px] font-mono uppercase text-[#86868B] block">

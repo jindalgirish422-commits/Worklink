@@ -7,7 +7,16 @@ export type TradeCategory =
   | 'Mechanic'
   | 'Appliance Repair'
   | 'Cleaning Professional'
-  | 'Mason / General Technician';
+  | 'Mason / General Technician'
+  | 'Locksmith'
+  | 'Electronics Specialist'
+  | 'Networking Specialist'
+  | 'Gas Appliance Specialist'
+  | 'Glass & Aluminium Specialist'
+  | 'Gardener / Landscaper'
+  | 'Furniture Assembly Specialist';
+
+export type WorkerApprovalStatus = 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'SUSPENDED';
 
 export type AvailabilityStatus = 'immediate' | 'today' | 'tomorrow' | 'busy';
 
@@ -41,6 +50,7 @@ export interface Worker {
   completionRate: number; // e.g. 0.98 = 98%
   responseTimeMinutes: number;
   isVerified: boolean;
+  approvalStatus?: WorkerApprovalStatus;
   licenseNumber: string;
   backgroundCheckPassed: boolean;
   phone: string;
@@ -57,6 +67,15 @@ export interface Worker {
   recentReviews: WorkerReview[];
   notes?: string;
   isBenchmarkWorker?: boolean; // From Appendix G
+  // Auditability & Governance Fields (Milestone 26)
+  submittedAt?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
+  suspendedBy?: string;
+  suspendedAt?: string;
 }
 
 export interface JobRequest {

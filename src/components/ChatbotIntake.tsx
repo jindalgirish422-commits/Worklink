@@ -43,6 +43,10 @@ const AVAILABLE_TRADES: TradeCategory[] = [
   'Appliance Repair',
   'Cleaning Professional',
   'Mason / General Technician',
+  'Locksmith',
+  'Electronics Specialist',
+  'Networking Specialist',
+  'Gardener / Landscaper',
 ];
 
 const TIME_SLOT_OPTIONS = [

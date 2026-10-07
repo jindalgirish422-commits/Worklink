@@ -17,6 +17,41 @@ export function checkWorkerEligibility(
   job: JobRequest
 ): WorkerEligibility {
   const checks: HardConstraintCheck[] = [
+    // 0a. Operator Approval & Authorization Status (Milestone 26)
+    {
+      ruleName: 'Operator Approved',
+      passed: worker.approvalStatus ? worker.approvalStatus === 'APPROVED' : true,
+      detail:
+        worker.approvalStatus === 'PENDING_APPROVAL'
+          ? 'Worker registration is pending operator compliance approval'
+          : worker.approvalStatus === 'REJECTED'
+          ? 'Worker registration was rejected by operator governance'
+          : worker.approvalStatus === 'SUSPENDED'
+          ? 'Worker account is temporarily suspended by platform operator'
+          : 'Worker is approved and active in platform governance registry',
+    },
+
+    // 0b. Trade Category Compatibility (Milestone 26 - Hard Constraint)
+    {
+      ruleName: 'Trade Category Compatibility',
+      passed: (() => {
+        if (!job.serviceCategory) return true;
+        if (worker.trade === job.serviceCategory) return true;
+        // Compatible secondary trade intersections
+        const isCarpenterAssembly =
+          (job.serviceCategory === 'Furniture Assembly Specialist' && worker.trade === 'Carpenter') ||
+          (job.serviceCategory === 'Carpenter' && worker.trade === 'Furniture Assembly Specialist');
+        const isMasonHandyman =
+          (job.serviceCategory === 'Mason / General Technician' && worker.trade === 'Carpenter') ||
+          (job.serviceCategory === 'Mason / General Technician' && worker.trade === 'Painter');
+        return isCarpenterAssembly || isMasonHandyman;
+      })(),
+      detail:
+        worker.trade === job.serviceCategory
+          ? `Specialized in requested trade: ${worker.trade}`
+          : `Worker trade (${worker.trade}) is not compatible with requested service (${job.serviceCategory})`,
+    },
+
     // 1. Verification Filter
     {
       ruleName: 'Worker Verified',
