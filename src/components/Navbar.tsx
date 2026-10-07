@@ -21,6 +21,7 @@ import { Button } from './ui/Button';
 import { useAuth } from '../context/AuthContext';
 
 export type NavTabType =
+  | 'customer_home'
   | 'landing'
   | 'marketplace'
   | 'zone_radar'
@@ -99,7 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Brand & Subtitle */}
           <div
             className="flex items-center space-x-3 cursor-pointer select-none group shrink-0"
-            onClick={() => onSelectTab('landing')}
+            onClick={() => onSelectTab('customer_home')}
           >
             <div className="w-9 h-9 rounded-xl bg-[#111111] text-white flex items-center justify-center font-bold tracking-tight shadow-sm transition-transform duration-200 group-hover:scale-105">
               <span className="text-[#0071E3] mr-0.5">W</span>L
@@ -121,6 +122,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Tabs with tactile glass surface */}
           <nav className="hidden md:flex items-center space-x-1 p-1 glass-surface-light rounded-2xl border border-black/5 text-xs font-medium text-[#6E6E73]">
+            {/* Customer Concierge Primary Tab */}
+            <button
+              onClick={() => onSelectTab('customer_home')}
+              className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
+                currentTab === 'customer_home'
+                  ? 'bg-[#FFFFFF] text-[#111111] shadow-xs font-semibold'
+                  : 'hover:text-[#111111]'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#0071E3]" />
+              <span>Concierge</span>
+            </button>
+
             <button
               onClick={() => onSelectTab('landing')}
               className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
@@ -412,6 +426,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Navigation Bar */}
         <div className="flex md:hidden overflow-x-auto py-2 space-x-2 border-t border-black/5 text-xs no-scrollbar">
+          <button
+            onClick={() => onSelectTab('customer_home')}
+            className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${
+              currentTab === 'customer_home'
+                ? 'bg-[#111111] text-white shadow-xs'
+                : 'bg-[#F0F0F2] text-[#6E6E73]'
+            }`}
+          >
+            Concierge
+          </button>
+
           <button
             onClick={() => onSelectTab('landing')}
             className={`px-3 py-1 rounded-lg shrink-0 font-medium transition-all ${

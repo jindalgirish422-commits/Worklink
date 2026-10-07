@@ -31,6 +31,7 @@ import { ScenarioSimulator } from './components/ScenarioSimulator';
 import { WorkerDiscoveryView } from './components/discovery/WorkerDiscoveryView';
 
 import { WorkerDashboard } from './components/worker/WorkerDashboard';
+import { CustomerConciergeHome } from './components/customer/CustomerConciergeHome';
 import { OperatorConsole } from './components/admin/OperatorConsole';
 import { AuthModal } from './components/auth/AuthModal';
 import { LocationPermissionModal } from './components/auth/LocationPermissionModal';
@@ -68,6 +69,8 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
       setCurrentTab('worker_hub');
     } else if (role === 'operator' && currentTab === 'landing') {
       setCurrentTab('operator_console');
+    } else if (role === 'customer' && currentTab === 'landing') {
+      setCurrentTab('customer_home');
     }
   }, [role]);
 
@@ -274,11 +277,31 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
       <main className="flex-1 w-full py-8">
         <Container size="2xl">
           {/* ============================================================== */}
+          {/* TAB: CUSTOMER HOME — SERVICE CONCIERGE (Milestone 16) */}
+          {/* ============================================================== */}
+          {currentTab === 'customer_home' && (
+            <CustomerConciergeHome
+              workers={workers}
+              rankedEligible={rankedEligible}
+              allWorkersRanked={allWorkersRanked}
+              activeJob={activeJob}
+              customerLocation={customerLocation}
+              userProfile={userProfile}
+              activeBooking={activeBooking}
+              onBookClick={(rw) => setSelectedBookingWorker(rw)}
+              onViewProfileClick={(rw) => setSelectedProfileWorker(rw)}
+              onJobCreated={handleJobCreated}
+              onNavigateToTab={(tab) => setCurrentTab(tab)}
+              recentBookings={recentBookings}
+            />
+          )}
+
+          {/* ============================================================== */}
           {/* TAB 0: PUBLIC LANDING PAGE (Launch Experience) */}
           {/* ============================================================== */}
           {currentTab === 'landing' && (
             <LandingPage
-              onFindWorkerClick={() => setCurrentTab('marketplace')}
+              onFindWorkerClick={() => setCurrentTab('customer_home')}
               onExploreRadarClick={() => setCurrentTab('zone_radar')}
               onViewIntelligenceClick={() => setCurrentTab('intelligence')}
             />
