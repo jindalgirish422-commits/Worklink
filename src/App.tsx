@@ -293,6 +293,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
               onJobCreated={handleJobCreated}
               onNavigateToTab={(tab) => setCurrentTab(tab)}
               recentBookings={recentBookings}
+              onOpenWeightsModal={() => setIsWeightsModalOpen(true)}
             />
           )}
 
@@ -354,6 +355,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
               onViewProfileClick={(rw) => setSelectedProfileWorker(rw)}
               onJobCreated={handleJobCreated}
               onResetLocation={() => handleUpdateLocation(DEFAULT_CUSTOMER_LOCATION)}
+              onOpenWeightsModal={() => setIsWeightsModalOpen(true)}
             />
           )}
 

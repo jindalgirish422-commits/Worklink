@@ -56,6 +56,7 @@ interface WorkerDiscoveryViewProps {
   userProfile?: UserPersonalizationProfile;
   activeBooking?: Booking | null;
   onNavigateToBooking?: () => void;
+  onOpenWeightsModal?: () => void;
 }
 
 type DiscoveryTab = 'recommendations' | 'explore';
@@ -94,6 +95,7 @@ export const WorkerDiscoveryView: React.FC<WorkerDiscoveryViewProps> = ({
   userProfile,
   activeBooking,
   onNavigateToBooking,
+  onOpenWeightsModal,
 }) => {
   // Navigation & mode state
   const [activeTab, setActiveTab] = useState<DiscoveryTab>('recommendations');
@@ -387,6 +389,12 @@ export const WorkerDiscoveryView: React.FC<WorkerDiscoveryViewProps> = ({
                 activeJob={activeJob}
                 onBookClick={onBookClick}
                 onViewProfileClick={onViewProfileClick}
+                onChangePreferences={onOpenWeightsModal}
+                onChangeRequirements={() => {
+                  window.scrollTo({ top: 300, behavior: 'smooth' });
+                }}
+                onViewAlternatives={() => setActiveTab('explore')}
+                onOverrideRecommendation={(worker) => onBookClick(worker)}
               />
 
               {/* Milestone 9: Non-Intrusive Personalized Recommendations */}

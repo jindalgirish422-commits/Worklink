@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Sparkles,
   ArrowRight,
@@ -37,6 +37,8 @@ import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { useToast } from '../ui/Toast';
 import { parseNaturalLanguageJob, createJobRequestFromSlots } from '../../services/chatbotService';
+import { ResponsibleAiBanner } from '../trust/ResponsibleAiBanner';
+import { ResponsibleAiTrustModal } from '../trust/ResponsibleAiTrustModal';
 
 export interface CustomerConciergeHomeProps {
   workers: Worker[];
@@ -51,6 +53,7 @@ export interface CustomerConciergeHomeProps {
   onJobCreated: (job: JobRequest) => void;
   onNavigateToTab: (tab: any) => void;
   recentBookings?: Booking[];
+  onOpenWeightsModal?: () => void;
 }
 
 export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
@@ -66,12 +69,16 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
   onJobCreated,
   onNavigateToTab,
   recentBookings = [],
+  onOpenWeightsModal,
 }) => {
   const { showToast } = useToast();
 
   // AI Intake input state
   const [promptInput, setPromptInput] = useState('');
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [isTrustModalOpen, setIsTrustModalOpen] = useState(false);
+  const intakeInputRef = useRef<HTMLInputElement>(null);
+  const secondarySectionRef = useRef<HTMLDivElement>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<{
     id: string;
     service: string;
@@ -287,6 +294,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
           <form onSubmit={handleConciergeSubmit} className="space-y-3">
             <div className="relative">
               <input
+                ref={intakeInputRef}
                 type="text"
                 value={promptInput}
                 onChange={(e) => setPromptInput(e.target.value)}
@@ -527,10 +535,20 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
           </div>
 
           {/* Explainability Callout (Why Recommended) */}
-          <div className="p-3.5 rounded-2xl bg-white/70 border border-black/5 text-xs text-[#111111] space-y-1.5">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#0071E3] block">
-              Why WorkLink Recommended This Professional:
-            </span>
+          <div className="p-3.5 rounded-2xl bg-white/70 border border-black/5 text-xs text-[#111111] space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#0071E3] block">
+                Why WorkLink Recommended This Professional:
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsTrustModalOpen(true)}
+                className="text-xs font-bold text-[#0071E3] hover:underline flex items-center space-x-1 self-start sm:self-auto"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-[#0071E3]" />
+                <span>Explain Match &amp; Responsible AI</span>
+              </button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {primaryRecommendation.matchReasons.map((reason, idx) => (
                 <div key={idx} className="flex items-start space-x-2 text-[#6E6E73]">
@@ -562,9 +580,38 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
           </div>
         </div>
 
+        {/* RESPONSIBLE AI & USER CONTROL BANNER (Milestone 19) */}
+        {/* "AI recommends. Human decides."                     */}
+        <ResponsibleAiBanner
+          primaryWorker={primaryRecommendation}
+          onOpenTrustModal={() => setIsTrustModalOpen(true)}
+          onChangeRequirements={() => {
+            intakeInputRef.current?.focus();
+            intakeInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showToast({
+              type: 'info',
+              title: 'Modify Job Requirements',
+              message: 'Update your service request in the concierge box above.',
+            });
+          }}
+          onChangePreferences={onOpenWeightsModal}
+          onViewAlternatives={() => {
+            if (secondarySectionRef.current) {
+              secondarySectionRef.current.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              onNavigateToTab('marketplace');
+            }
+          }}
+          onOverrideRecommendation={() => {
+            if (secondaryRecommendations.length > 0) {
+              onBookClick(secondaryRecommendations[0]);
+            }
+          }}
+        />
+
         {/* Secondary Recommendations (Solid Surfaces) */}
         {secondaryRecommendations.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
+          <div ref={secondarySectionRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
             {secondaryRecommendations.map((rw) => (
               <div
                 key={rw.worker.id}
@@ -1083,6 +1130,43 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
             </p>
           </div>
         </Modal>
+      )}
+
+      {/* Responsible AI & Trust Architecture Modal */}
+      {isTrustModalOpen && (
+        <ResponsibleAiTrustModal
+          isOpen={isTrustModalOpen}
+          onClose={() => setIsTrustModalOpen(false)}
+          primaryMatch={primaryRecommendation}
+          alternativeMatches={secondaryRecommendations}
+          activeJob={activeJob}
+          onChangeRequirements={() => {
+            setIsTrustModalOpen(false);
+            intakeInputRef.current?.focus();
+            intakeInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showToast({
+              type: 'info',
+              title: 'Modify Job Requirements',
+              message: 'Update your service request in the concierge box above.',
+            });
+          }}
+          onChangePreferences={() => {
+            setIsTrustModalOpen(false);
+            if (onOpenWeightsModal) onOpenWeightsModal();
+          }}
+          onViewAlternatives={() => {
+            setIsTrustModalOpen(false);
+            if (secondarySectionRef.current) {
+              secondarySectionRef.current.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              onNavigateToTab('marketplace');
+            }
+          }}
+          onOverrideRecommendation={(worker) => {
+            setIsTrustModalOpen(false);
+            onBookClick(worker);
+          }}
+        />
       )}
     </div>
   );

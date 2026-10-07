@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Sparkles,
   Check,
@@ -18,12 +18,19 @@ import { getTravelBand } from '../../services/locationService';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { ResponsibleAiBanner } from '../trust/ResponsibleAiBanner';
+import { ResponsibleAiTrustModal } from '../trust/ResponsibleAiTrustModal';
 
 export interface SignatureRecommendationViewProps {
   rankedEligible: RankedWorker[];
   activeJob: JobRequest;
   onBookClick: (worker: RankedWorker) => void;
   onViewProfileClick: (worker: RankedWorker) => void;
+  onOpenTrustModal?: (worker?: RankedWorker) => void;
+  onChangeRequirements?: () => void;
+  onChangePreferences?: () => void;
+  onViewAlternatives?: () => void;
+  onOverrideRecommendation?: (alternativeWorker: RankedWorker) => void;
 }
 
 export const SignatureRecommendationView: React.FC<SignatureRecommendationViewProps> = ({
@@ -31,8 +38,15 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
   activeJob,
   onBookClick,
   onViewProfileClick,
+  onOpenTrustModal,
+  onChangeRequirements,
+  onChangePreferences,
+  onViewAlternatives,
+  onOverrideRecommendation,
 }) => {
   const [expandedWorkerId, setExpandedWorkerId] = useState<string | null>(null);
+  const [isInternalTrustOpen, setIsInternalTrustOpen] = useState(false);
+  const alternativesRef = useRef<HTMLDivElement>(null);
 
   if (rankedEligible.length === 0) {
     return null;
@@ -199,13 +213,30 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
         {/* 3. "WHY THIS WORKER?" PROMINENT SECTION                        */}
         {/* ============================================================== */}
         <div className="mt-7 pt-6 border-t border-black/6 bg-white/60 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-black/4">
-          <div className="flex items-center space-x-2 mb-3.5">
-            <h4 className="text-sm sm:text-base font-extrabold text-[#111111] tracking-tight">
-              Why {primaryFirstName}?
-            </h4>
-            <span className="text-xs text-[#6E6E73] font-normal">
-              (WorkLink AI Multi-Factor Rationale)
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
+            <div className="flex items-center space-x-2">
+              <h4 className="text-sm sm:text-base font-extrabold text-[#111111] tracking-tight">
+                Why {primaryFirstName}?
+              </h4>
+              <span className="text-xs text-[#6E6E73] font-normal">
+                (WorkLink AI Multi-Factor Rationale)
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenTrustModal) {
+                  onOpenTrustModal(primaryMatch);
+                } else {
+                  setIsInternalTrustOpen(true);
+                }
+              }}
+              className="text-xs font-bold text-[#0071E3] hover:underline flex items-center space-x-1 self-start sm:self-auto"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Inspect Responsible AI &amp; Trust Rationale</span>
+            </button>
           </div>
 
           <ul className="space-y-2.5 text-xs sm:text-sm text-[#111111]">
@@ -253,10 +284,41 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
       </div>
 
       {/* ============================================================== */}
+      {/* RESPONSIBLE AI & USER CONTROL BANNER (Milestone 19)            */}
+      {/* "AI recommends. Human decides."                                */}
+      {/* ============================================================== */}
+      <ResponsibleAiBanner
+        primaryWorker={primaryMatch}
+        onOpenTrustModal={() => {
+          if (onOpenTrustModal) {
+            onOpenTrustModal(primaryMatch);
+          } else {
+            setIsInternalTrustOpen(true);
+          }
+        }}
+        onChangeRequirements={onChangeRequirements}
+        onChangePreferences={onChangePreferences}
+        onViewAlternatives={() => {
+          if (onViewAlternatives) {
+            onViewAlternatives();
+          } else if (alternativesRef.current) {
+            alternativesRef.current.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+        onOverrideRecommendation={() => {
+          if (secondaryMatches.length > 0 && onOverrideRecommendation) {
+            onOverrideRecommendation(secondaryMatches[0]);
+          } else if (secondaryMatches.length > 0) {
+            onBookClick(secondaryMatches[0]);
+          }
+        }}
+      />
+
+      {/* ============================================================== */}
       {/* 4. SECONDARY WORKERS: Flatter Surfaces & Calm Hierarchy        */}
       {/* ============================================================== */}
       {secondaryMatches.length > 0 && (
-        <div className="space-y-4 pt-4">
+        <div ref={alternativesRef} className="space-y-4 pt-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-[#111111] uppercase tracking-wider">
@@ -407,6 +469,35 @@ export const SignatureRecommendationView: React.FC<SignatureRecommendationViewPr
             })}
           </div>
         </div>
+      )}
+
+      {/* Responsible AI & Trust Architecture Modal */}
+      {isInternalTrustOpen && (
+        <ResponsibleAiTrustModal
+          isOpen={isInternalTrustOpen}
+          onClose={() => setIsInternalTrustOpen(false)}
+          primaryMatch={primaryMatch}
+          alternativeMatches={secondaryMatches}
+          activeJob={activeJob}
+          onChangeRequirements={onChangeRequirements}
+          onChangePreferences={onChangePreferences}
+          onViewAlternatives={() => {
+            setIsInternalTrustOpen(false);
+            if (onViewAlternatives) {
+              onViewAlternatives();
+            } else if (alternativesRef.current) {
+              alternativesRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
+          onOverrideRecommendation={(worker) => {
+            setIsInternalTrustOpen(false);
+            if (onOverrideRecommendation) {
+              onOverrideRecommendation(worker);
+            } else {
+              onBookClick(worker);
+            }
+          }}
+        />
       )}
     </section>
   );
