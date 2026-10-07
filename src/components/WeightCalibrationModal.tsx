@@ -89,10 +89,10 @@ export const WeightCalibrationModal: React.FC<WeightCalibrationModalProps> = ({
         {/* Responsible AI Banner */}
         <div className="p-4 bg-[rgba(0,113,227,0.04)] border border-[rgba(0,113,227,0.18)] rounded-2xl text-xs text-[#111111] leading-relaxed">
           <strong className="block font-semibold mb-0.5 text-[#0071E3]">
-            Methodological Integrity:
+            Methodological Integrity &amp; Transparency:
           </strong>
-          Weights are business priors awaiting post-pilot calibration, not fitted constants.
-          Category priors emphasize critical dimensions (e.g., emergencies heighten availability weight $w_a$), which are subsequently learned from actual transaction outcomes.
+          Configurable heuristic weights represent operational priors calibrated for practical trade matching.
+          WorkLink does not claim scientifically validated weights until post-pilot empirical validation has concluded.
         </div>
 
         {/* Presets */}

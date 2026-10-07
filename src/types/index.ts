@@ -104,7 +104,23 @@ export interface MatchingWeights {
   w_distance: number;
   w_price: number;
   personalizationBonus: number;
-  source: 'business_prior' | 'calibrated_scenario' | 'learned_from_transactions';
+  source: 'business_prior' | 'calibrated_scenario' | 'learned_from_transactions' | 'heuristic_operational_prior' | 'user_configured';
+  validationNote?: string;
+}
+
+export interface StructuredExplanation {
+  matchScore: number;
+  reasons: string[];
+  tradeOffSummary: string;
+  factorHighlights: {
+    skill: string;
+    experience: string;
+    availability: string;
+    quality: string;
+    distance: string;
+    price: string;
+    personalization?: string;
+  };
 }
 
 export interface WorkerScoreComponents {
@@ -133,8 +149,10 @@ export interface RankedWorker {
   };
   reasons: string[]; // Transparent "Why this worker was recommended"
   tradeOffSummary: string;
+  structuredExplanation?: StructuredExplanation;
   rank: number;
   benchmarkNote?: string;
+  rankingMethod?: 'deterministic_rule_based' | 'model_assisted' | 'deterministic_fallback';
 }
 
 export interface AdditionalWorkItem {
