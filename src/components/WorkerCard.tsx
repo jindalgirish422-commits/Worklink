@@ -14,6 +14,7 @@ import { Avatar } from './ui/Avatar';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 import { MatchScore } from './ui/MatchScore';
+import { getTravelBand } from '../services/locationService';
 
 interface WorkerCardProps {
   rankedWorker: RankedWorker;
@@ -33,7 +34,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
   const [showExplanation, setShowExplanation] = useState(isTopRecommendation);
   const { worker, totalScore, components, reasons, tradeOffSummary, rank } = rankedWorker;
 
-  const isFreeTravel = worker.distanceKm <= 5.0;
+  const travelBand = getTravelBand(worker.distanceKm);
 
   return (
     <div
@@ -88,8 +89,8 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
                 <span className="flex items-center">
                   <MapPin className="w-3.5 h-3.5 text-[#86868B] mr-1" />
                   <span className="font-semibold text-[#111111] mr-1">{worker.distanceKm.toFixed(1)} km</span>
-                  <Badge variant={isFreeTravel ? 'accent' : 'warning'} size="sm">
-                    {isFreeTravel ? 'Free travel' : 'Slab charge'}
+                  <Badge variant={travelBand.badgeVariant} size="sm">
+                    {travelBand.band === 'core_free' ? '₹0 travel (Free Zone)' : `+₹${travelBand.travelCharge} travel`}
                   </Badge>
                 </span>
 

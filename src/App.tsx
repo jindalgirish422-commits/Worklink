@@ -18,6 +18,7 @@ import {
   rankWorkers,
 } from './services/matchingEngine';
 import { parseNaturalLanguageJob, createJobRequestFromSlots } from './services/chatbotService';
+import { recalculateWorkerDistances } from './services/locationService';
 import { Navbar, NavTabType } from './components/Navbar';
 import { LandingPage } from './components/LandingPage';
 import { ChatbotIntake } from './components/ChatbotIntake';
@@ -125,20 +126,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
   // Handle Location Change
   const handleUpdateLocation = (newLoc: CustomerLocation) => {
     setCustomerLocation(newLoc);
-    const updatedWorkers = workers.map((w) => {
-      const R = 6371;
-      const dLat = ((w.coordinates.lat - newLoc.lat) * Math.PI) / 180;
-      const dLng = ((w.coordinates.lng - newLoc.lng) * Math.PI) / 180;
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((newLoc.lat * Math.PI) / 180) *
-          Math.cos((w.coordinates.lat * Math.PI) / 180) *
-          Math.sin(dLng / 2) *
-          Math.sin(dLng / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const dist = parseFloat((R * c).toFixed(1));
-      return { ...w, distanceKm: dist };
-    });
+    const updatedWorkers = recalculateWorkerDistances(workers, newLoc);
     setWorkers(updatedWorkers);
     setActiveJob((prev) => ({ ...prev, location: newLoc }));
     showToast({

@@ -7,6 +7,7 @@ import {
   WorkerScoreComponents,
   UserPersonalizationProfile,
 } from '../types';
+import { isValidCoordinates, isDistanceWithinServiceZone } from './locationService';
 
 export const DEFAULT_WEIGHT_PRESETS: MatchingWeights[] = [
   {
@@ -108,11 +109,12 @@ export function checkWorkerEligibility(
     },
     {
       ruleName: 'Within 10 km Service Zone',
-      passed: worker.distanceKm <= 10.0,
-      detail:
-        worker.distanceKm <= 10.0
-          ? `${worker.distanceKm.toFixed(1)} km from customer (within 10 km boundary)`
-          : `${worker.distanceKm.toFixed(1)} km away (exceeds 10 km cutoff)`,
+      passed: isValidCoordinates(worker.coordinates) && isDistanceWithinServiceZone(worker.distanceKm, 10.0),
+      detail: !isValidCoordinates(worker.coordinates)
+        ? 'Worker GPS coordinates missing or invalid'
+        : isDistanceWithinServiceZone(worker.distanceKm, 10.0)
+        ? `${worker.distanceKm.toFixed(1)} km from customer (within 10.0 km boundary)`
+        : `${worker.distanceKm.toFixed(1)} km away (exceeds 10.0 km cutoff)`,
     },
     {
       ruleName: 'Mandatory Experience & Requirements',
