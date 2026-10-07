@@ -22,3 +22,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+*.pre-glass-backup/
+src.pre-glass-backup/

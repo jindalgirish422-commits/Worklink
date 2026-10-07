@@ -1,8 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
-  Users,
-} from 'lucide-react';
-import {
   Worker,
   JobRequest,
   CustomerLocation,
@@ -21,10 +18,7 @@ import { parseNaturalLanguageJob, createJobRequestFromSlots } from './services/c
 import { recalculateWorkerDistances } from './services/locationService';
 import { Navbar, NavTabType } from './components/Navbar';
 import { LandingPage } from './components/LandingPage';
-import { ChatbotIntake } from './components/ChatbotIntake';
 import { ServiceZoneMap } from './components/ServiceZoneMap';
-import { HardFilterAudit } from './components/HardFilterAudit';
-import { WorkerCard } from './components/WorkerCard';
 import { WorkerProfileModal } from './components/WorkerProfileModal';
 import { BookingFlowModal } from './components/BookingFlowModal';
 import { WeightCalibrationModal } from './components/WeightCalibrationModal';
@@ -32,6 +26,7 @@ import { JobExecutionTracker } from './components/JobExecutionTracker';
 import { FeedbackLearningLoopView } from './components/FeedbackLearningLoopView';
 import { WorkforceIntelligenceView } from './components/WorkforceIntelligenceView';
 import { ScenarioSimulator } from './components/ScenarioSimulator';
+import { WorkerDiscoveryView } from './components/discovery/WorkerDiscoveryView';
 
 import { WorkerDashboard } from './components/worker/WorkerDashboard';
 import { OperatorConsole } from './components/admin/OperatorConsole';
@@ -40,8 +35,6 @@ import { LocationPermissionModal } from './components/auth/LocationPermissionMod
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 import { Container } from './components/ui/Container';
-import { Badge } from './components/ui/Badge';
-import { EmptyState } from './components/ui/EmptyState';
 import { useToast } from './components/ui/Toast';
 
 interface AppContentProps {
@@ -109,19 +102,10 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
   const [selectedBookingWorker, setSelectedBookingWorker] = useState<RankedWorker | null>(null);
   const [selectedMapWorkerId, setSelectedMapWorkerId] = useState<string | undefined>('W3');
 
-  // Trade category filter in marketplace
-  const [tradeFilter, setTradeFilter] = useState<string>('All');
-
   // Dynamic ranking recalculation
   const { rankedEligible, excludedWorkers, allWorkersRanked } = useMemo(() => {
     return rankWorkers(workers, activeJob, currentWeights, userProfile);
   }, [workers, activeJob, currentWeights, userProfile]);
-
-  // Filtered workers for display
-  const displayedEligible = useMemo(() => {
-    if (tradeFilter === 'All') return rankedEligible;
-    return rankedEligible.filter((w) => w.worker.trade === tradeFilter);
-  }, [rankedEligible, tradeFilter]);
 
   // Handle Location Change
   const handleUpdateLocation = (newLoc: CustomerLocation) => {
@@ -256,90 +240,20 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
           )}
 
           {/* ============================================================== */}
-          {/* TAB 3: MARKETPLACE & INTAKE */}
+          {/* TAB 3: MARKETPLACE & EDITORIAL DISCOVERY */}
           {/* ============================================================== */}
           {currentTab === 'marketplace' && (
-            <div className="space-y-8 animate-fade-in">
-              {/* Step 1: Natural-Language Chatbot Intake */}
-              <ChatbotIntake
-                currentLocation={customerLocation}
-                onJobCreated={handleJobCreated}
-                activeJob={activeJob}
-              />
-
-              {/* Step 2: Hard Constraint Filter Audit */}
-              <HardFilterAudit
-                allRanked={allWorkersRanked}
-                activeJob={activeJob}
-              />
-
-              {/* Multi-Factor Recommendation Results */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-black/5 gap-3">
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#111111]">
-                      Explainable Multi-Factor Recommendations
-                    </h2>
-                    <Badge variant="default" size="sm">
-                      {displayedEligible.length} Verified Candidates
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-[#6E6E73] mt-0.5">
-                    Ranked via: Skill Fit + Experience Tier + Slot Availability + Quality + 10km Proximity + Budget
-                  </p>
-                </div>
-
-                {/* Trade Filter Chips */}
-                <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-1">
-                  {[
-                    'All',
-                    'AC Technician',
-                    'Plumber',
-                    'Electrician',
-                    'Carpenter',
-                    'Painter',
-                    'Appliance Repair',
-                    'Cleaning Professional',
-                  ].map((trade) => (
-                    <button
-                      key={trade}
-                      onClick={() => setTradeFilter(trade)}
-                      className={`text-xs px-3 py-1.5 rounded-xl font-medium shrink-0 transition-all ${
-                        tradeFilter === trade
-                          ? 'bg-[#111111] text-white font-semibold shadow-xs'
-                          : 'bg-[#FFFFFF] hover:bg-[#F5F5F7] text-[#6E6E73] border border-black/5'
-                      }`}
-                    >
-                      {trade}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Worker Cards */}
-              {displayedEligible.length > 0 ? (
-                <div className="space-y-4">
-                  {displayedEligible.map((item, idx) => (
-                    <WorkerCard
-                      key={item.worker.id}
-                      rankedWorker={item}
-                      job={activeJob}
-                      isTopRecommendation={idx === 0}
-                      onBookClick={(rw) => setSelectedBookingWorker(rw)}
-                      onViewProfileClick={(rw) => setSelectedProfileWorker(rw)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  icon={<Users className="w-8 h-8" />}
-                  title="No Eligible Workers in 10 km Zone"
-                  description="All scanned candidates were filtered out by the 5 non-negotiable hard constraints. Try broadening your requested time slot or shifting your 10 km zone center."
-                  actionLabel="Reset to Hauz Khas Center"
-                  onAction={() => handleUpdateLocation(DEFAULT_CUSTOMER_LOCATION)}
-                />
-              )}
-            </div>
+            <WorkerDiscoveryView
+              workers={workers}
+              allWorkersRanked={allWorkersRanked}
+              rankedEligible={rankedEligible}
+              activeJob={activeJob}
+              customerLocation={customerLocation}
+              onBookClick={(rw) => setSelectedBookingWorker(rw)}
+              onViewProfileClick={(rw) => setSelectedProfileWorker(rw)}
+              onJobCreated={handleJobCreated}
+              onResetLocation={() => handleUpdateLocation(DEFAULT_CUSTOMER_LOCATION)}
+            />
           )}
 
           {/* ============================================================== */}
