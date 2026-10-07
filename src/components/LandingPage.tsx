@@ -112,23 +112,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           {/* Cinematic Visual with Ambient Depth & Floating AI Glass Surface */}
           <div className="mt-14 sm:mt-20 max-w-5xl mx-auto relative">
-            {/* Ambient blurred backdrop lighting creating physical material depth */}
-            <div className="absolute -top-16 -left-12 w-80 h-80 rounded-full bg-[radial-gradient(circle,_rgba(0,113,227,0.07)_0%,_transparent_70%)] blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-16 -right-12 w-96 h-96 rounded-full bg-[radial-gradient(circle,_rgba(88,86,214,0.06)_0%,_transparent_70%)] blur-3xl pointer-events-none" />
-
-            <div className="card-premium p-6 sm:p-10 bg-[#FFFFFF]/90 relative overflow-hidden shadow-xl border border-black/10">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[rgba(0,113,227,0.08)] via-transparent to-transparent pointer-events-none" />
-
+            <div className="card-premium p-6 sm:p-10 bg-[#FFFFFF] relative overflow-hidden shadow-xl border border-black/[0.08] rounded-3xl">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-center relative z-10">
                 {/* Node 1: Unstructured Need */}
-                <div className="md:col-span-4 p-5 glass-surface-light rounded-2xl border border-black/5 space-y-3">
+                <div className="md:col-span-4 p-5 bg-[#F8F8FA] rounded-2xl border border-black/[0.06] space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-bold tracking-wider text-[#86868B]">
                       01 • Customer Need
                     </span>
                     <span className="w-2 h-2 rounded-full bg-[#0071E3] animate-pulse" />
                   </div>
-                  <p className="text-xs sm:text-sm text-[#111111] font-medium leading-relaxed bg-white/90 p-3.5 rounded-xl border border-black/5 shadow-2xs">
+                  <p className="text-xs sm:text-sm text-[#111111] font-medium leading-relaxed bg-[#FFFFFF] p-3.5 rounded-xl border border-black/[0.06] shadow-2xs">
                     &ldquo;My AC isn't cooling. I need someone tomorrow morning.&rdquo;
                   </p>
                   <p className="text-[11px] text-[#6E6E73]">

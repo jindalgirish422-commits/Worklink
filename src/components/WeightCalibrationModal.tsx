@@ -87,7 +87,7 @@ export const WeightCalibrationModal: React.FC<WeightCalibrationModalProps> = ({
     >
       <div className="space-y-5">
         {/* Responsible AI Banner */}
-        <div className="p-4 glass-surface-accent border border-[#0071E3]/20 rounded-2xl text-xs text-[#111111] leading-relaxed shadow-xs">
+        <div className="p-4 bg-[rgba(0,113,227,0.04)] border border-[rgba(0,113,227,0.18)] rounded-2xl text-xs text-[#111111] leading-relaxed">
           <strong className="block font-semibold mb-0.5 text-[#0071E3]">
             Methodological Integrity:
           </strong>
@@ -110,7 +110,7 @@ export const WeightCalibrationModal: React.FC<WeightCalibrationModalProps> = ({
                   className={`p-3 text-left rounded-2xl border transition-all text-xs ${
                     isSelected
                       ? 'bg-[#111111] text-white border-[#111111] shadow-xs font-semibold'
-                      : 'glass-surface-light hover:bg-[#F5F5F7] border-black/5 text-[#111111] shadow-2xs'
+                      : 'bg-[#FBFBFD] hover:bg-[#F5F5F7] border-black/5 text-[#111111]'
                   }`}
                 >
                   <div className="flex items-center justify-between">

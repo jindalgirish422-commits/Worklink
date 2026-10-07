@@ -181,11 +181,9 @@ export const ChatbotIntake: React.FC<ChatbotIntakeProps> = ({
   };
 
   return (
-    <div className="card-premium relative overflow-hidden p-6 sm:p-8 bg-white/90 backdrop-blur-xl mb-8 border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl space-y-6 glass-specular-edge">
-      {/* Subtle Ambient Radial Glow */}
-      <div className="absolute -top-24 -left-24 w-72 h-72 bg-gradient-to-br from-[#0071E3]/8 to-[#5856D6]/5 rounded-full blur-3xl pointer-events-none -z-0" />
+    <div className="card-premium p-6 sm:p-8 bg-[#FFFFFF] mb-8 border border-black/[0.08] shadow-sm rounded-3xl space-y-6">
       {/* Conversational Header */}
-      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between pb-5 border-b border-black/5 gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-5 border-b border-black/5 gap-4">
         <div>
           <div className="flex items-center space-x-2.5">
             <span className="p-2 rounded-xl bg-[rgba(0,113,227,0.08)] text-[#0071E3]">
@@ -211,7 +209,7 @@ export const ChatbotIntake: React.FC<ChatbotIntakeProps> = ({
               key={idx}
               type="button"
               onClick={() => handleSelectSample(sp.prompt)}
-              className="text-[11px] px-3 py-1 rounded-full glass-surface-light border border-black/5 hover:border-black/15 text-[#111111] font-medium transition-all"
+              className="text-[11px] px-3 py-1 rounded-full bg-[#F5F5F7] hover:bg-[#EBEBEF] text-[#111111] font-medium transition-all"
             >
               {sp.label}
             </button>
@@ -220,14 +218,14 @@ export const ChatbotIntake: React.FC<ChatbotIntakeProps> = ({
       </div>
 
       {/* Primary Conversational Input */}
-      <form onSubmit={handleAnalyzeAndMatch} className="relative z-10 space-y-3">
+      <form onSubmit={handleAnalyzeAndMatch} className="space-y-3">
         <div className="relative">
           <textarea
             value={inputPrompt}
             onChange={(e) => handlePromptChange(e.target.value)}
             rows={3}
             placeholder="e.g. My AC isn't cooling. I need someone tomorrow morning."
-            className="w-full p-4 pr-36 rounded-2xl glass-surface-light border border-black/8 text-[#111111] text-sm focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/25 focus:border-[#0071E3]/40 transition-all resize-none leading-relaxed shadow-inner"
+            className="w-full p-4 pr-36 rounded-2xl bg-[#F5F5F7] border border-black/[0.06] text-[#111111] text-sm focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/20 focus:border-[#0071E3]/40 transition-all resize-none leading-relaxed shadow-inner"
           />
           <div className="absolute right-3.5 bottom-3.5 flex items-center space-x-2">
             <Button
@@ -246,7 +244,7 @@ export const ChatbotIntake: React.FC<ChatbotIntakeProps> = ({
       {/* ============================================================== */}
       {/* CONCISE CONFIRMATION CARD (EXACT REQUIREMENT SPECIFICATION) */}
       {/* ============================================================== */}
-      <div className="relative z-10 p-5 sm:p-6 rounded-2xl glass-surface-medium border border-white/80 space-y-4 animate-fade-in glass-specular-edge shadow-xs">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#F8F8FA] border border-black/[0.06] space-y-4 animate-fade-in">
         <div className="flex items-center justify-between pb-3 border-b border-black/5">
           <div className="flex items-center space-x-2">
             <CheckCircle2 className="w-4 h-4 text-[#34C759]" />
@@ -272,7 +270,7 @@ export const ChatbotIntake: React.FC<ChatbotIntakeProps> = ({
         {!isEditingConfirmation ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {/* 1. Service */}
-            <div className="p-3.5 bg-white/90 backdrop-blur-md rounded-xl border border-white/80 shadow-xs space-y-1">
+            <div className="p-3.5 bg-[#FFFFFF] rounded-xl border border-black/[0.06] shadow-2xs space-y-1">
               <span className="text-[10px] uppercase font-bold text-[#86868B] tracking-wider block">
                 Service
               </span>
@@ -283,7 +281,7 @@ export const ChatbotIntake: React.FC<ChatbotIntakeProps> = ({
             </div>
 
             {/* 2. Required Skill */}
-            <div className="p-3.5 bg-white/90 backdrop-blur-md rounded-xl border border-white/80 shadow-xs space-y-1">
+            <div className="p-3.5 bg-[#FFFFFF] rounded-xl border border-black/[0.06] shadow-2xs space-y-1">
               <span className="text-[10px] uppercase font-bold text-[#86868B] tracking-wider block">
                 Required Skill
               </span>
@@ -291,7 +289,7 @@ export const ChatbotIntake: React.FC<ChatbotIntakeProps> = ({
                 {slots.requiredSkills.map((sk) => (
                   <span
                     key={sk}
-                    className="text-[10px] font-semibold bg-[#F5F5F7]/90 px-2 py-0.5 rounded-md text-[#111111]"
+                    className="text-[10px] font-semibold bg-[#F5F5F7] px-2 py-0.5 rounded-md text-[#111111]"
                   >
                     {sk}
                   </span>
@@ -300,7 +298,7 @@ export const ChatbotIntake: React.FC<ChatbotIntakeProps> = ({
             </div>
 
             {/* 3. When / Time */}
-            <div className="p-3.5 bg-white/90 backdrop-blur-md rounded-xl border border-white/80 shadow-xs space-y-1">
+            <div className="p-3.5 bg-[#FFFFFF] rounded-xl border border-black/[0.06] shadow-2xs space-y-1">
               <span className="text-[10px] uppercase font-bold text-[#86868B] tracking-wider block">
                 When
               </span>
@@ -311,7 +309,7 @@ export const ChatbotIntake: React.FC<ChatbotIntakeProps> = ({
             </div>
 
             {/* 4. Location */}
-            <div className="p-3.5 bg-white/90 backdrop-blur-md rounded-xl border border-white/80 shadow-xs space-y-1">
+            <div className="p-3.5 bg-[#FFFFFF] rounded-xl border border-black/[0.06] shadow-2xs space-y-1">
               <span className="text-[10px] uppercase font-bold text-[#86868B] tracking-wider block">
                 Location
               </span>
@@ -324,7 +322,7 @@ export const ChatbotIntake: React.FC<ChatbotIntakeProps> = ({
             </div>
 
             {/* 5. Budget */}
-            <div className="p-3.5 bg-white/90 backdrop-blur-md rounded-xl border border-white/80 shadow-xs space-y-1">
+            <div className="p-3.5 bg-[#FFFFFF] rounded-xl border border-black/[0.06] shadow-2xs space-y-1">
               <span className="text-[10px] uppercase font-bold text-[#86868B] tracking-wider block">
                 Budget
               </span>
@@ -338,7 +336,7 @@ export const ChatbotIntake: React.FC<ChatbotIntakeProps> = ({
           </div>
         ) : (
           /* Inline Editing Interface */
-          <div className="p-5 bg-white/90 backdrop-blur-md rounded-2xl border border-white/80 shadow-xs space-y-4 animate-fade-in">
+          <div className="p-5 bg-[#FFFFFF] rounded-2xl border border-black/[0.08] shadow-xs space-y-4 animate-fade-in">
             <div className="flex items-center justify-between pb-2 border-b border-black/5">
               <span className="text-xs font-bold text-[#111111]">
                 Refine Extracted Job Parameters

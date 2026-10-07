@@ -38,7 +38,7 @@ export const Sheet: React.FC<SheetProps> = ({
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xl transition-opacity animate-fade-in"
+        className="fixed inset-0 bg-black/30 backdrop-blur-md transition-opacity animate-fade-in"
         onClick={onClose}
       />
 
@@ -46,7 +46,7 @@ export const Sheet: React.FC<SheetProps> = ({
         <div
           role="dialog"
           aria-modal="true"
-          className={`w-screen max-w-md bg-white/95 backdrop-blur-2xl shadow-[0_24px_60px_rgba(0,0,0,0.18)] border-l border-white/80 glass-specular-edge flex flex-col z-10 animate-slide-up ${
+          className={`w-screen max-w-md bg-white/95 backdrop-blur-xl shadow-[0_20px_48px_-10px_rgba(0,0,0,0.12)] border-l border-white/90 glass-specular-edge flex flex-col z-10 animate-slide-up ${
             position === 'bottom'
               ? 'h-[85vh] rounded-t-3xl border-t border-l-0'
               : 'h-full'

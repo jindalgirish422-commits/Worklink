@@ -48,7 +48,7 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xl transition-opacity animate-fade-in"
+        className="fixed inset-0 bg-black/30 backdrop-blur-md transition-opacity animate-fade-in"
         onClick={onClose}
       />
 
@@ -56,7 +56,7 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        className={`relative w-full ${maxWidthStyles[maxWidth]} glass-surface-strong bg-white/95 backdrop-blur-2xl border border-white/80 rounded-3xl shadow-[0_24px_60px_rgba(0,0,0,0.18)] overflow-hidden my-auto z-10 animate-slide-up flex flex-col max-h-[90vh] glass-specular-edge ring-1 ring-black/5`}
+        className={`relative w-full ${maxWidthStyles[maxWidth]} bg-white/95 backdrop-blur-xl border border-white/90 rounded-3xl shadow-[0_20px_48px_-10px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden my-auto z-10 animate-slide-up flex flex-col max-h-[90vh] glass-specular-edge`}
       >
         {/* Header */}
         {(title || subtitle) && (

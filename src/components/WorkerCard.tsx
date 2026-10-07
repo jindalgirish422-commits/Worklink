@@ -40,18 +40,13 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
     <div
       className={`relative overflow-hidden transition-all duration-300 rounded-3xl ${
         isTopRecommendation
-          ? 'glass-surface-strong border border-white/90 shadow-[0_16px_40px_rgba(0,113,227,0.09),0_2px_10px_rgba(0,0,0,0.03)] glass-specular-edge ring-1 ring-[#0071E3]/25'
+          ? 'bg-[#FFFFFF] border-2 border-[#0071E3]/30 shadow-card-hover glass-specular-edge'
           : 'card-premium bg-[#FFFFFF] border border-black/8 shadow-xs'
       }`}
     >
-      {/* Ambient Radial Accent Lighting underneath #1 Top Card */}
-      {isTopRecommendation && (
-        <div className="absolute -top-16 -right-16 w-56 h-56 bg-gradient-to-br from-[#0071E3]/12 to-[#5856D6]/8 rounded-full blur-3xl pointer-events-none -z-0" />
-      )}
-
       {/* Top Banner for #1 Match */}
       {isTopRecommendation && (
-        <div className="relative z-10 bg-[#111111]/95 backdrop-blur-md text-white px-5 py-2.5 flex items-center justify-between text-xs font-semibold border-b border-white/10">
+        <div className="bg-[#111111] text-white px-5 py-2.5 flex items-center justify-between text-xs font-semibold">
           <div className="flex items-center space-x-1.5">
             <Sparkles className="w-3.5 h-3.5 text-[#0071E3]" />
             <span>Top Recommended Match • Multi-Factor Optimal</span>
@@ -60,7 +55,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
         </div>
       )}
 
-      <div className="relative z-10 p-5 sm:p-6">
+      <div className="p-5 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           {/* Avatar and Primary Details */}
           <div className="flex items-start space-x-4">
@@ -155,13 +150,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
 
           {/* Expanded AI Explanation Drawer */}
           {showExplanation && (
-            <div
-              className={`mt-3 p-4 rounded-2xl border space-y-3 text-xs animate-slide-up ${
-                isTopRecommendation
-                  ? 'glass-surface-light border-white/70 shadow-xs'
-                  : 'bg-[#FBFBFD] border-black/5'
-              }`}
-            >
+            <div className="mt-3 p-4 rounded-2xl bg-[#F8F8FA] border border-black/5 space-y-3 text-xs animate-slide-up">
               {/* Bulleted Rationale */}
               <div className="space-y-1.5">
                 {reasons.map((reason, idx) => (
@@ -185,13 +174,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
                   Factor Breakdown (Multi-Factor Scoring)
                 </span>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
-                  <div
-                    className={`p-2.5 rounded-xl border ${
-                      isTopRecommendation
-                        ? 'bg-white/90 backdrop-blur-sm border-white/80'
-                        : 'bg-[#FFFFFF] border-black/5'
-                    }`}
-                  >
+                  <div className="p-2.5 rounded-xl bg-[#FFFFFF] border border-black/5">
                     <div className="flex justify-between text-[#6E6E73] mb-1">
                       <span>Skill Match</span>
                       <span className="font-semibold text-[#111111]">{components.skillScore}/100</span>
@@ -201,13 +184,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
                     </div>
                   </div>
 
-                  <div
-                    className={`p-2.5 rounded-xl border ${
-                      isTopRecommendation
-                        ? 'bg-white/90 backdrop-blur-sm border-white/80'
-                        : 'bg-[#FFFFFF] border-black/5'
-                    }`}
-                  >
+                  <div className="p-2.5 rounded-xl bg-[#FFFFFF] border border-black/5">
                     <div className="flex justify-between text-[#6E6E73] mb-1">
                       <span>Experience</span>
                       <span className="font-semibold text-[#111111]">{components.experienceScore}/100</span>
@@ -217,13 +194,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
                     </div>
                   </div>
 
-                  <div
-                    className={`p-2.5 rounded-xl border ${
-                      isTopRecommendation
-                        ? 'bg-white/90 backdrop-blur-sm border-white/80'
-                        : 'bg-[#FFFFFF] border-black/5'
-                    }`}
-                  >
+                  <div className="p-2.5 rounded-xl bg-[#FFFFFF] border border-black/5">
                     <div className="flex justify-between text-[#6E6E73] mb-1">
                       <span>Availability</span>
                       <span className="font-semibold text-[#111111]">{components.availabilityScore}/100</span>
@@ -233,13 +204,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
                     </div>
                   </div>
 
-                  <div
-                    className={`p-2.5 rounded-xl border ${
-                      isTopRecommendation
-                        ? 'bg-white/90 backdrop-blur-sm border-white/80'
-                        : 'bg-[#FFFFFF] border-black/5'
-                    }`}
-                  >
+                  <div className="p-2.5 rounded-xl bg-[#FFFFFF] border border-black/5">
                     <div className="flex justify-between text-[#6E6E73] mb-1">
                       <span>Quality</span>
                       <span className="font-semibold text-[#111111]">{components.qualityScore}/100</span>
@@ -249,13 +214,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
                     </div>
                   </div>
 
-                  <div
-                    className={`p-2.5 rounded-xl border ${
-                      isTopRecommendation
-                        ? 'bg-white/90 backdrop-blur-sm border-white/80'
-                        : 'bg-[#FFFFFF] border-black/5'
-                    }`}
-                  >
+                  <div className="p-2.5 rounded-xl bg-[#FFFFFF] border border-black/5">
                     <div className="flex justify-between text-[#6E6E73] mb-1">
                       <span>Proximity</span>
                       <span className="font-semibold text-[#111111]">{components.distanceScore}/100</span>
@@ -265,13 +224,7 @@ export const WorkerCard: React.FC<WorkerCardProps> = ({
                     </div>
                   </div>
 
-                  <div
-                    className={`p-2.5 rounded-xl border ${
-                      isTopRecommendation
-                        ? 'bg-white/90 backdrop-blur-sm border-white/80'
-                        : 'bg-[#FFFFFF] border-black/5'
-                    }`}
-                  >
+                  <div className="p-2.5 rounded-xl bg-[#FFFFFF] border border-black/5">
                     <div className="flex justify-between text-[#6E6E73] mb-1">
                       <span>Budget Fit</span>
                       <span className="font-semibold text-[#111111]">{components.priceScore}/100</span>

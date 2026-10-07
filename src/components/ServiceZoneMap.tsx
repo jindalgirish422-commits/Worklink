@@ -130,12 +130,9 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
   };
 
   return (
-    <div className="card-premium relative overflow-hidden p-6 sm:p-8 bg-white/90 backdrop-blur-xl mb-8 border border-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl space-y-6 glass-specular-edge">
-      {/* Ambient Radial Glow */}
-      <div className="absolute -top-24 -right-24 w-72 h-72 bg-gradient-to-br from-[#5856D6]/8 to-[#0071E3]/5 rounded-full blur-3xl pointer-events-none -z-0" />
-
+    <div className="card-premium p-6 sm:p-8 bg-[#FFFFFF] mb-8 border border-black/[0.08] shadow-sm rounded-3xl space-y-6">
       {/* Title & Location Header */}
-      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between pb-6 border-b border-black/5 gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-6 border-b border-black/5 gap-4">
         <div>
           <div className="flex items-center space-x-2.5">
             <span className="p-2 rounded-xl bg-[rgba(88,86,214,0.08)] text-[#5856D6]">
@@ -178,7 +175,7 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
                 className={`text-xs px-3 py-1.5 rounded-xl font-medium transition-all ${
                   isSelected
                     ? 'bg-[#111111] text-white shadow-xs'
-                    : 'glass-surface-light border border-black/5 hover:border-black/15 text-[#111111]'
+                    : 'bg-[#F5F5F7] hover:bg-[#EBEBEF] text-[#111111]'
                 }`}
               >
                 {loc.name.split(' ')[0]}
@@ -189,14 +186,14 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
       </div>
 
       {/* 3 Non-Negotiable Travel Band Summaries */}
-      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* Band 1: 0-5 km */}
         <div
           onClick={() => setFilterBand(filterBand === 'free' ? 'all' : 'free')}
           className={`p-4 rounded-2xl border transition-all cursor-pointer ${
             filterBand === 'free'
-              ? 'glass-surface-medium border-[#0071E3] ring-2 ring-[#0071E3]/25 bg-[rgba(0,113,227,0.08)]'
-              : 'glass-surface-light border-[#0071E3]/20 hover:border-[#0071E3]/40 bg-[rgba(0,113,227,0.03)]'
+              ? 'bg-[#0071E3]/10 border-[#0071E3] ring-1 ring-[#0071E3]/25'
+              : 'bg-[#0071E3]/[0.03] border-[#0071E3]/15 hover:border-[#0071E3]/30'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -220,8 +217,8 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
           onClick={() => setFilterBand(filterBand === 'slab' ? 'all' : 'slab')}
           className={`p-4 rounded-2xl border transition-all cursor-pointer ${
             filterBand === 'slab'
-              ? 'glass-surface-medium border-[#FF9500] ring-2 ring-[#FF9500]/25 bg-[rgba(255,149,0,0.08)]'
-              : 'glass-surface-light border-[#FF9500]/20 hover:border-[#FF9500]/40 bg-[rgba(255,149,0,0.03)]'
+              ? 'bg-[#FF9500]/10 border-[#FF9500] ring-1 ring-[#FF9500]/25'
+              : 'bg-[#FF9500]/[0.03] border-[#FF9500]/15 hover:border-[#FF9500]/30'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -245,8 +242,8 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
           onClick={() => setFilterBand(filterBand === 'out' ? 'all' : 'out')}
           className={`p-4 rounded-2xl border transition-all cursor-pointer ${
             filterBand === 'out'
-              ? 'glass-surface-medium border-[#FF3B30] ring-2 ring-[#FF3B30]/25 bg-[rgba(255,59,48,0.08)]'
-              : 'glass-surface-light border-[#FF3B30]/20 hover:border-[#FF3B30]/40 bg-[rgba(255,59,48,0.03)]'
+              ? 'bg-[#FF3B30]/10 border-[#FF3B30] ring-1 ring-[#FF3B30]/25'
+              : 'bg-[#FF3B30]/[0.03] border-[#FF3B30]/15 hover:border-[#FF3B30]/30'
           }`}
         >
           <div className="flex items-center justify-between">
@@ -267,9 +264,9 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
       </div>
 
       {/* Main Map & Geographic Candidate List */}
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Geometric Radar (Complementary, not overwhelming) */}
-        <div className="lg:col-span-7 flex flex-col items-center justify-center p-5 glass-surface-light rounded-3xl border border-white/80 shadow-xs relative overflow-hidden">
+        <div className="lg:col-span-7 flex flex-col items-center justify-center p-5 bg-[#FBFBFD] rounded-3xl border border-black/[0.06] shadow-2xs relative overflow-hidden">
           {/* Top Location Bar */}
           <div className="w-full flex items-center justify-between pb-3 mb-2 border-b border-black/5 text-xs text-[#6E6E73]">
             <div className="flex items-center space-x-1.5 truncate max-w-[280px]">
@@ -448,7 +445,7 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
 
           {/* Active Worker Spotlight Card */}
           {activeSelectedWorker && (
-            <div className="p-4 rounded-2xl glass-surface-medium border border-white/80 shadow-xs space-y-2.5 animate-fade-in glass-specular-edge">
+            <div className="p-4 rounded-2xl bg-[#F8F8FA] border border-black/[0.06] shadow-2xs space-y-2.5 animate-fade-in">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase text-[#86868B]">
                   Inspecting Worker {activeSelectedWorker.id}
@@ -484,8 +481,8 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
                   onClick={() => onSelectWorker && onSelectWorker(w.id)}
                   className={`p-3 rounded-2xl border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[rgba(0,113,227,0.08)] border-[#0071E3]/40 shadow-xs backdrop-blur-sm'
-                      : 'bg-white/85 hover:bg-white border-black/5 shadow-2xs'
+                      ? 'bg-[rgba(0,113,227,0.06)] border-[#0071E3]/35 shadow-2xs'
+                      : 'bg-[#FFFFFF] hover:bg-[#F5F5F7] border-black/5'
                   }`}
                 >
                   <div className="flex items-center justify-between">
