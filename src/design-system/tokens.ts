@@ -156,6 +156,50 @@ export const tokens = {
     '2xl': '1360px',
     full: '100%',
   },
+
+  // Premium Liquid Glass Material System
+  glass: {
+    light: {
+      background: 'rgba(255, 255, 255, 0.65)',
+      backdropBlur: '16px',
+      saturate: '130%',
+      border: 'rgba(255, 255, 255, 0.45)',
+      shadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
+      specular: 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.5)',
+    },
+    medium: {
+      background: 'rgba(255, 255, 255, 0.75)',
+      backdropBlur: '24px',
+      saturate: '140%',
+      border: 'rgba(255, 255, 255, 0.55)',
+      shadow: '0 12px 36px -4px rgba(0, 0, 0, 0.06), 0 4px 12px -2px rgba(0, 0, 0, 0.02)',
+      specular: 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.65)',
+    },
+    strong: {
+      background: 'rgba(255, 255, 255, 0.85)',
+      backdropBlur: '32px',
+      saturate: '150%',
+      border: 'rgba(255, 255, 255, 0.70)',
+      shadow: '0 20px 50px -8px rgba(0, 0, 0, 0.09), 0 8px 20px -4px rgba(0, 0, 0, 0.04)',
+      specular: 'inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.85)',
+    },
+    dark: {
+      background: 'rgba(17, 17, 17, 0.78)',
+      backdropBlur: '24px',
+      saturate: '140%',
+      border: 'rgba(255, 255, 255, 0.12)',
+      shadow: '0 16px 40px -4px rgba(0, 0, 0, 0.25)',
+      specular: 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.18)',
+    },
+    accent: {
+      background: 'rgba(0, 113, 227, 0.06)',
+      backdropBlur: '20px',
+      saturate: '130%',
+      border: 'rgba(0, 113, 227, 0.20)',
+      shadow: '0 8px 24px -4px rgba(0, 113, 227, 0.12)',
+      specular: 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.5)',
+    },
+  },
 } as const;
 
 export type DesignTokens = typeof tokens;

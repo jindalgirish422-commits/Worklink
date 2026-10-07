@@ -88,7 +88,7 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
     >
       <div className="space-y-5">
         {/* Selected Worker Summary */}
-        <div className="flex items-center space-x-3.5 p-3.5 bg-[#F5F5F7] rounded-2xl border border-black/5">
+        <div className="flex items-center space-x-3.5 p-3.5 glass-surface-light rounded-2xl border border-white/80 shadow-xs">
           <Avatar
             src={worker.avatar}
             alt={worker.name}
@@ -134,7 +134,7 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
         </div>
 
         {/* Cost Breakdown */}
-        <div className="p-4 bg-[#FBFBFD] rounded-2xl border border-black/5 space-y-2.5 text-xs">
+        <div className="p-4 glass-surface-light rounded-2xl border border-white/80 space-y-2.5 text-xs shadow-xs">
           <div className="flex items-center justify-between pb-2 border-b border-black/5 font-bold uppercase tracking-wider text-[#86868B] text-[10px]">
             <span>Item</span>
             <span>Estimated Fee</span>

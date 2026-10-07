@@ -85,7 +85,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
     >
       <div className="space-y-6">
         {/* Rating & Performance Stats Bar */}
-        <div className="flex flex-wrap items-center gap-4 p-3.5 bg-[#F5F5F7] rounded-2xl text-xs text-[#111111]">
+        <div className="flex flex-wrap items-center gap-4 p-3.5 glass-surface-light rounded-2xl border border-white/80 text-xs text-[#111111] shadow-xs">
           <span className="flex items-center font-bold">
             <Star className="w-4 h-4 text-[#FF9500] fill-[#FF9500] mr-1" />
             {worker.rating.toFixed(1)} ({worker.reviewCount} reviews)
@@ -99,20 +99,20 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
         </div>
 
         {/* Bio */}
-        <div className="p-4 bg-[#FBFBFD] rounded-2xl border border-black/5 text-xs text-[#111111] leading-relaxed italic">
+        <div className="p-4 glass-surface-light rounded-2xl border border-white/80 text-xs text-[#111111] leading-relaxed italic shadow-xs">
           "{worker.bio}"
         </div>
 
         {/* Verification Credentials */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-black/5">
+          <div className="p-3.5 glass-surface-light rounded-2xl border border-white/80 shadow-xs">
             <span className="text-[10px] text-[#86868B] font-semibold uppercase tracking-wider block mb-1">
               Trade License
             </span>
             <span className="text-xs font-mono font-bold text-[#111111]">{worker.licenseNumber}</span>
           </div>
 
-          <div className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-black/5">
+          <div className="p-3.5 glass-surface-light rounded-2xl border border-white/80 shadow-xs">
             <span className="text-[10px] text-[#86868B] font-semibold uppercase tracking-wider block mb-1">
               Background Check
             </span>
@@ -121,7 +121,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
             </span>
           </div>
 
-          <div className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-black/5">
+          <div className="p-3.5 glass-surface-light rounded-2xl border border-white/80 shadow-xs">
             <span className="text-[10px] text-[#86868B] font-semibold uppercase tracking-wider block mb-1">
               Avg Response Time
             </span>
@@ -152,7 +152,7 @@ export const WorkerProfileModal: React.FC<WorkerProfileModalProps> = ({
           </h4>
           <div className="space-y-2">
             {worker.recentReviews.map((rev) => (
-              <div key={rev.id} className="p-3 bg-[#FBFBFD] rounded-xl border border-black/5 text-xs">
+              <div key={rev.id} className="p-3 glass-surface-light rounded-xl border border-white/80 text-xs shadow-xs">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-bold text-[#111111]">{rev.userName}</span>
                   <div className="flex items-center space-x-2 text-[#86868B] text-[11px]">

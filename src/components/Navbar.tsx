@@ -51,7 +51,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { currentUser, role, openAuthModal, logout, switchRole } = useAuth();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Scroll listener for dynamic glass material transition
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 15);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Close profile dropdown on outside click
   useEffect(() => {
@@ -76,7 +87,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#FFFFFF]/85 backdrop-blur-md border-b border-black/[0.06] transition-all">
+    <header
+      className={`sticky top-0 z-40 transition-all duration-300 ${
+        isScrolled
+          ? 'glass-surface-strong border-b border-black/[0.08] shadow-sm'
+          : 'bg-[#FFFFFF]/75 backdrop-blur-md border-b border-black/[0.04]'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand & Subtitle */}
@@ -102,8 +119,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Center Navigation Tabs */}
-          <nav className="hidden md:flex items-center space-x-1 p-1 bg-[#F5F5F7] rounded-xl border border-black/5 text-xs font-medium text-[#6E6E73]">
+          {/* Center Navigation Tabs with tactile glass surface */}
+          <nav className="hidden md:flex items-center space-x-1 p-1 glass-surface-light rounded-2xl border border-black/5 text-xs font-medium text-[#6E6E73]">
             <button
               onClick={() => onSelectTab('landing')}
               className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
@@ -214,7 +231,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Dynamic Location Pill */}
             <button
               onClick={onChangeLocationClick}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs bg-[#FFFFFF] hover:bg-[#F5F5F7] border border-black/10 text-[#111111] transition-all max-w-[150px] sm:max-w-[200px] truncate"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs glass-button text-[#111111] transition-all max-w-[150px] sm:max-w-[200px] truncate"
               title="Click to shift dynamic 10km service zone"
             >
               <MapPin className="w-3.5 h-3.5 text-[#FF3B30] shrink-0" />
@@ -227,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               size="sm"
               onClick={onOpenWeightsModal}
               leftIcon={<Sliders className="w-3.5 h-3.5 text-[#0071E3]" />}
-              className="hidden lg:flex"
+              className="hidden lg:flex glass-button"
             >
               <span>Weights</span>
             </Button>
@@ -237,7 +254,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                  className="flex items-center space-x-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-[#F5F5F7] hover:bg-[#EBEBEF] border border-black/5 transition-all text-xs"
+                  className="flex items-center space-x-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl glass-button transition-all text-xs"
                 >
                   <img
                     src={currentUser.avatar}
@@ -257,7 +274,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 {/* Profile Popover Dropdown */}
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-black/10 shadow-lg p-3 z-50 animate-fade-in space-y-3">
+                  <div className="absolute right-0 mt-2 w-64 rounded-2xl glass-surface-strong border border-black/10 shadow-xl p-3 z-50 animate-fade-in space-y-3">
                     <div className="flex items-center space-x-3 pb-3 border-b border-black/5">
                       <img
                         src={currentUser.avatar}

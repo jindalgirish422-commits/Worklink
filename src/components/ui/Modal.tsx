@@ -48,7 +48,7 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/35 backdrop-blur-md transition-opacity animate-fade-in"
+        className="fixed inset-0 bg-black/40 backdrop-blur-xl transition-opacity animate-fade-in"
         onClick={onClose}
       />
 
@@ -56,11 +56,11 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        className={`relative w-full ${maxWidthStyles[maxWidth]} bg-[#FFFFFF] border border-black/10 rounded-3xl shadow-2xl overflow-hidden my-auto z-10 animate-slide-up flex flex-col max-h-[90vh]`}
+        className={`relative w-full ${maxWidthStyles[maxWidth]} glass-surface-strong bg-white/95 backdrop-blur-2xl border border-white/80 rounded-3xl shadow-[0_24px_60px_rgba(0,0,0,0.18)] overflow-hidden my-auto z-10 animate-slide-up flex flex-col max-h-[90vh] glass-specular-edge ring-1 ring-black/5`}
       >
         {/* Header */}
         {(title || subtitle) && (
-          <div className="flex items-start justify-between px-6 py-5 border-b border-black/5 bg-[#FFFFFF]">
+          <div className="flex items-start justify-between px-6 py-5 border-b border-black/5 bg-white/70 backdrop-blur-md">
             <div className="pr-6">
               {title && (
                 <h3 className="text-lg font-bold text-[#111111] tracking-tight">
@@ -89,7 +89,7 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-black/5 bg-[#FBFBFD] flex items-center justify-end gap-3">
+          <div className="px-6 py-4 border-t border-black/5 bg-[#FBFBFD]/80 backdrop-blur-md flex items-center justify-end gap-3">
             {footer}
           </div>
         )}

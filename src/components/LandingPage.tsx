@@ -100,87 +100,117 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               >
                 Find a Worker
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
+              <button
+                type="button"
                 onClick={() => openAuthModal('signup_worker')}
-                className="w-full sm:w-auto px-7"
+                className="w-full sm:w-auto px-7 py-3 rounded-2xl glass-button text-sm font-semibold text-[#111111] transition-all"
               >
                 Become a Worker
-              </Button>
+              </button>
             </div>
           </div>
 
-          {/* Cinematic Visual: Need → Understanding → Match */}
-          <div className="mt-14 sm:mt-20 max-w-5xl mx-auto">
-            <div className="card-premium p-6 sm:p-10 bg-[#FFFFFF] relative overflow-hidden shadow-xl border border-black/10">
+          {/* Cinematic Visual with Ambient Depth & Floating AI Glass Surface */}
+          <div className="mt-14 sm:mt-20 max-w-5xl mx-auto relative">
+            {/* Ambient blurred backdrop lighting creating physical material depth */}
+            <div className="absolute -top-16 -left-12 w-80 h-80 rounded-full bg-[radial-gradient(circle,_rgba(0,113,227,0.07)_0%,_transparent_70%)] blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-16 -right-12 w-96 h-96 rounded-full bg-[radial-gradient(circle,_rgba(88,86,214,0.06)_0%,_transparent_70%)] blur-3xl pointer-events-none" />
+
+            <div className="card-premium p-6 sm:p-10 bg-[#FFFFFF]/90 relative overflow-hidden shadow-xl border border-black/10">
               <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[rgba(0,113,227,0.08)] via-transparent to-transparent pointer-events-none" />
 
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-center relative z-10">
                 {/* Node 1: Unstructured Need */}
-                <div className="md:col-span-4 p-5 bg-[#F5F5F7] rounded-2xl border border-black/5 space-y-3">
+                <div className="md:col-span-4 p-5 glass-surface-light rounded-2xl border border-black/5 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] uppercase font-bold tracking-wider text-[#86868B]">
                       01 • Customer Need
                     </span>
                     <span className="w-2 h-2 rounded-full bg-[#0071E3] animate-pulse" />
                   </div>
-                  <p className="text-xs sm:text-sm text-[#111111] font-medium leading-relaxed bg-[#FFFFFF] p-3.5 rounded-xl border border-black/5 shadow-2xs">
-                    "My AC isn't cooling. I need someone tomorrow morning."
+                  <p className="text-xs sm:text-sm text-[#111111] font-medium leading-relaxed bg-white/90 p-3.5 rounded-xl border border-black/5 shadow-2xs">
+                    &ldquo;My AC isn't cooling. I need someone tomorrow morning.&rdquo;
                   </p>
                   <p className="text-[11px] text-[#6E6E73]">
                     Natural language input — no complex trade drop-downs.
                   </p>
                 </div>
 
-                {/* Connecting Kinetic Center: WorkLink Understanding */}
-                <div className="md:col-span-4 flex flex-col items-center justify-center text-center p-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[#111111] text-white flex items-center justify-center mb-3 shadow-md">
-                    <Zap className="w-6 h-6 text-[#0071E3]" />
+                {/* Connecting Center: WorkLink Understanding */}
+                <div className="md:col-span-3 flex flex-col items-center justify-center text-center p-3">
+                  <div className="w-11 h-11 rounded-2xl bg-[#111111] text-white flex items-center justify-center mb-2 shadow-md">
+                    <Zap className="w-5 h-5 text-[#0071E3]" />
                   </div>
-                  <span className="text-[11px] uppercase font-bold tracking-wider text-[#111111]">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[#111111]">
                     02 • AI Understanding
                   </span>
-                  <p className="text-[11px] text-[#6E6E73] mt-1 max-w-xs">
-                    Decodes trade, core skills, 10 km zone feasibility, and urgency constraints.
+                  <p className="text-[11px] text-[#6E6E73] mt-1 max-w-[190px]">
+                    Decodes trade, skills, 10 km zone feasibility, and urgency.
                   </p>
-                  <div className="w-full max-w-[140px] h-0.5 bg-gradient-to-r from-transparent via-[#0071E3] to-transparent my-3" />
-                  <span className="badge-subtle bg-[rgba(0,113,227,0.08)] text-[#0071E3] text-[10px] font-semibold">
+                  <div className="w-full max-w-[120px] h-0.5 bg-gradient-to-r from-transparent via-[#0071E3] to-transparent my-2" />
+                  <span className="text-[10px] font-semibold text-[#0071E3] bg-[#0071E3]/10 px-2.5 py-0.5 rounded-full">
                     Multi-Factor Calibration
                   </span>
                 </div>
 
-                {/* Node 3: The Match */}
-                <div className="md:col-span-4 p-5 bg-[#FBFBFD] rounded-2xl border border-[#0071E3]/20 space-y-3 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#0071E3]">
-                      03 • Calibrated Match
+                {/* Node 3: WorkLink Signature Floating Glass Recommendation Surface */}
+                <div className="md:col-span-5 glass-surface-strong p-5 rounded-3xl border border-white/80 shadow-float animate-float-subtle relative space-y-3.5">
+                  <div className="flex items-center justify-between pb-2 border-b border-black/5">
+                    <div className="flex items-center space-x-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#0071E3]" />
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#111111]">
+                        WORKLINK AI
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-[#0071E3] bg-[#0071E3]/10 px-2 py-0.5 rounded-full">
+                      Best match for your job
                     </span>
-                    <span className="badge-subtle bg-[#34C759]/10 text-[#1B8738] text-[10px] font-bold">
+                  </div>
+
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold text-[#111111]">AC Specialist</h4>
+                      <p className="text-[11px] text-[#6E6E73] mt-0.5 flex flex-wrap items-center gap-1.5">
+                        <span className="font-bold text-[#FF9500]">★ 4.9</span>
+                        <span>•</span>
+                        <span>3.8 km away</span>
+                        <span>•</span>
+                        <span>Available tomorrow morning</span>
+                      </p>
+                    </div>
+                    <Badge variant="success" size="sm">
                       94% Match
+                    </Badge>
+                  </div>
+
+                  {/* Why this worker? */}
+                  <div className="p-3 rounded-2xl bg-white/70 border border-white/80 text-xs space-y-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111] block">
+                      Why this worker?
                     </span>
+                    <ul className="text-[11px] text-[#6E6E73] space-y-1">
+                      <li className="flex items-center text-[#111111]">
+                        <Check className="w-3 h-3 text-[#34C759] mr-1.5 shrink-0" /> Strong AC repair experience
+                      </li>
+                      <li className="flex items-center text-[#111111]">
+                        <Check className="w-3 h-3 text-[#34C759] mr-1.5 shrink-0" /> Available at your requested time
+                      </li>
+                      <li className="flex items-center text-[#111111]">
+                        <Check className="w-3 h-3 text-[#34C759] mr-1.5 shrink-0" /> Highly rated
+                      </li>
+                      <li className="flex items-center text-[#111111]">
+                        <Check className="w-3 h-3 text-[#34C759] mr-1.5 shrink-0" /> Within your service area
+                      </li>
+                    </ul>
                   </div>
 
-                  <div className="bg-[#FFFFFF] p-4 rounded-xl border border-black/5 space-y-2">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#111111] text-white font-bold flex items-center justify-center text-xs">
-                        MS
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-[#111111]">Manoj Sharma</h4>
-                        <p className="text-[11px] text-[#6E6E73]">AC Technician • 5y Exp</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-[11px] text-[#6E6E73] pt-2 border-t border-black/5">
-                      <span className="font-semibold text-[#111111]">3.2 km (Free Travel)</span>
-                      <span className="font-bold text-[#111111]">₹750 quote</span>
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-[#1B8738] font-medium flex items-center">
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-[#34C759]" />
-                    Meets all 5 hard constraints
-                  </p>
+                  <button
+                    type="button"
+                    onClick={onFindWorkerClick}
+                    className="w-full py-2 px-3 rounded-xl glass-button text-xs font-semibold text-[#111111] text-center hover:bg-white transition-all shadow-xs"
+                  >
+                    View profile
+                  </button>
                 </div>
               </div>
             </div>
