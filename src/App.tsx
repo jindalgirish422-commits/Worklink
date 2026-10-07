@@ -332,6 +332,8 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
               onNavigateToIntelligence={() => setCurrentTab('intelligence')}
               onNavigateToRadar={() => setCurrentTab('zone_radar')}
               currentWeights={currentWeights}
+              activeBooking={activeBooking}
+              recentBookings={recentBookings}
             />
           )}
 
