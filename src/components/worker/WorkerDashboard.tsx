@@ -27,6 +27,9 @@ import {
   Trash2,
   HelpCircle,
   RotateCcw,
+  User,
+  Zap,
+  ArrowUpRight,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Worker, AvailabilityStatus, Booking, BookingStatus, AdditionalWorkItem } from '../../types';
@@ -63,10 +66,15 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     workers.find((w) => w.id === workerProfile?.workerId) ||
     (activeBooking ? workers.find((w) => w.id === activeBooking.worker.id) || workers[2] : workers[2]);
 
+  // Extract worker first name for opening greeting
+  const workerFullName = currentUser?.name || currentWorker.name;
+  const workerFirstName = workerFullName.split(' ')[0] || 'Professional';
+
   const [availability, setAvailability] = useState<AvailabilityStatus>(
     currentWorker?.availabilityStatus || 'immediate'
   );
-  const [activeTab, setActiveTab] = useState<'dispatch' | 'schedule'>('dispatch');
+  // Mobile-first tabs: Today's jobs | New requests | Upcoming (Schedule View)
+  const [activeTab, setActiveTab] = useState<'today_jobs' | 'new_requests' | 'upcoming'>('today_jobs');
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<'today' | 'tomorrow' | 'upcoming'>('today');
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
   const [declineReason, setDeclineReason] = useState<string>('');
@@ -360,15 +368,303 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
     activeBooking &&
     (activeBooking.worker.id === currentWorker.id || !workerProfile);
 
+  const hasNewRequest = Boolean(isIncomingForCurrentWorker && activeBooking?.status === 'requested');
+  const hasActiveJob = Boolean(
+    activeBooking && ['accepted', 'in_progress', 'paused', 'completed'].includes(activeBooking.status)
+  );
+
+  // Customer name extraction
+  const customerName =
+    (activeBooking?.job as any)?.customerName ||
+    (activeBooking?.job?.clarificationAnswers as any)?.customerName ||
+    'Anita Sharma';
+
+  // Earnings computation
+  const todayCompletedEarnings = 2450 + (activeBooking?.status === 'completed' ? (activeBooking.finalTotal || activeBooking.estimatedTotal) : 0);
+  const weekCompletedEarnings = 14800 + (activeBooking?.status === 'completed' ? (activeBooking.finalTotal || activeBooking.estimatedTotal) : 0);
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-16">
       {/* ============================================================== */}
-      {/* 1. INCOMING REQUEST ALERT (Milestone 11 Core Worker Requirement) */}
+      {/* 1. FLOATING STATUS BAR (Glass Material Surface)                */}
       {/* ============================================================== */}
-      {isIncomingForCurrentWorker && activeBooking.status === 'requested' && (
-        <div className="p-6 rounded-3xl bg-gradient-to-r from-amber-500/[0.08] via-amber-500/[0.03] to-white/95 backdrop-blur-xl border border-amber-500/30 glass-specular-edge shadow-sm relative overflow-hidden animate-fade-in">
-          {/* Pulsing indicator */}
-          <div className="flex items-center justify-between pb-4 border-b border-amber-500/15">
+      <div className="sticky top-20 z-20 p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-white/80 backdrop-blur-xl border border-white/60 shadow-lg glass-specular-edge transition-all">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Worker status info */}
+          <div className="flex items-center space-x-3">
+            <div className="relative shrink-0">
+              <img
+                src={currentUser?.avatar || currentWorker.avatar}
+                alt={currentWorker.name}
+                className="w-11 h-11 rounded-xl object-cover ring-2 ring-black/5"
+              />
+              <span
+                className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${
+                  availability === 'immediate'
+                    ? 'bg-[#34C759] animate-pulse'
+                    : availability === 'today'
+                    ? 'bg-[#0071E3]'
+                    : 'bg-[#86868B]'
+                }`}
+              />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-xs sm:text-sm font-bold text-[#111111]">{currentWorker.name}</span>
+                <Badge variant="accent" size="sm">{currentWorker.trade}</Badge>
+                <Badge variant="success" size="sm">Verified Pro</Badge>
+              </div>
+              <p className="text-[11px] text-[#6E6E73] mt-0.5 flex items-center space-x-2">
+                <span>Status:</span>
+                <strong className="text-[#111111]">
+                  {availability === 'immediate'
+                    ? 'Available for Instant Dispatch'
+                    : availability === 'today'
+                    ? 'Slots Available Today'
+                    : 'Off-Duty'}
+                </strong>
+                <span>•</span>
+                <span className="text-[#0071E3] font-semibold flex items-center space-x-0.5">
+                  <Navigation className="w-2.5 h-2.5 inline" />
+                  <span>10 km Radius Active</span>
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Toggle Availability buttons (High touch response) */}
+          <div className="flex items-center space-x-1 p-1 bg-[#F5F5F7]/90 rounded-xl border border-black/5 self-stretch sm:self-auto justify-between sm:justify-start">
+            {(
+              [
+                { status: 'immediate', label: 'Available Now' },
+                { status: 'today', label: 'Slots Today' },
+                { status: 'busy', label: 'Off-Duty' },
+              ] as const
+            ).map((item) => (
+              <button
+                key={item.status}
+                onClick={() => handleStatusChange(item.status)}
+                className={`flex-1 sm:flex-initial px-3 py-2 rounded-lg text-xs font-bold transition-all min-h-[36px] ${
+                  availability === item.status
+                    ? 'bg-[#111111] text-white shadow-xs'
+                    : 'text-[#6E6E73] hover:text-[#111111]'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* 2. OPENING SECTION                                             */}
+      {/* "Good morning, [Name]." Then: Today's work                     */}
+      {/* ============================================================== */}
+      <div className="p-6 rounded-3xl bg-white border border-black/5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#111111]">
+              Good morning, {workerFirstName}.
+            </h1>
+            <p className="text-base sm:text-lg font-bold text-[#111111] tracking-tight flex items-center space-x-2">
+              <span>Today's work</span>
+              <span className="text-xs font-normal text-[#86868B] bg-[#F5F5F7] px-2.5 py-0.5 rounded-full border border-black/5">
+                {new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+              </span>
+            </p>
+          </div>
+
+          {/* Real-time Status Badges */}
+          <div className="flex items-center space-x-2 text-xs">
+            <span className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold">
+              <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
+              <span>Dispatch Pool Live</span>
+            </span>
+            <span className="px-3 py-1.5 rounded-xl bg-[#F5F5F7] text-[#6E6E73] border border-black/5 font-mono">
+              ₹{currentWorker.hourlyRate}/h Base Rate
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* 3. SHOW: METRICS & WORK PIPELINE                               */}
+      {/* Today's jobs | Upcoming | New requests | Earnings | Rating | Completion */}
+      {/* ============================================================== */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        {/* Metric 1: Earnings */}
+        <div className="p-4 rounded-2xl bg-white border border-black/5 shadow-xs">
+          <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider block mb-1">
+            Earnings
+          </span>
+          <div className="flex items-baseline space-x-1">
+            <span className="text-xl font-extrabold text-[#111111]">₹{todayCompletedEarnings}</span>
+          </div>
+          <p className="text-[11px] text-[#34C759] font-medium mt-1 truncate">
+            ₹{weekCompletedEarnings} This Week
+          </p>
+        </div>
+
+        {/* Metric 2: Rating */}
+        <div className="p-4 rounded-2xl bg-white border border-black/5 shadow-xs">
+          <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider block mb-1">
+            Rating
+          </span>
+          <div className="flex items-baseline space-x-1">
+            <span className="text-xl font-extrabold text-[#111111]">{currentWorker.rating.toFixed(1)}</span>
+            <span className="text-xs text-[#FF9500] font-bold">★</span>
+          </div>
+          <p className="text-[11px] text-[#6E6E73] font-medium mt-1 truncate">
+            {currentWorker.reviewCount} Reviews • Top Pro
+          </p>
+        </div>
+
+        {/* Metric 3: Completion */}
+        <div className="p-4 rounded-2xl bg-white border border-black/5 shadow-xs">
+          <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider block mb-1">
+            Completion
+          </span>
+          <div className="flex items-baseline space-x-1">
+            <span className="text-xl font-extrabold text-[#111111]">
+              {(currentWorker.completionRate * 100).toFixed(1)}%
+            </span>
+          </div>
+          <p className="text-[11px] text-[#34C759] font-medium mt-1 truncate">
+            {currentWorker.completedJobs} Jobs Fulfilled
+          </p>
+        </div>
+
+        {/* Metric 4: Today's jobs */}
+        <div
+          onClick={() => setActiveTab('today_jobs')}
+          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+            activeTab === 'today_jobs'
+              ? 'bg-[#111111] text-white border-black shadow-xs'
+              : 'bg-white border-black/5 text-[#111111] hover:border-black/20'
+          }`}
+        >
+          <span className={`text-[11px] font-bold uppercase tracking-wider block mb-1 ${activeTab === 'today_jobs' ? 'text-white/70' : 'text-[#86868B]'}`}>
+            Today's jobs
+          </span>
+          <div className="flex items-baseline space-x-1">
+            <span className="text-xl font-extrabold">
+              {hasActiveJob ? '1 Active' : '2 Scheduled'}
+            </span>
+          </div>
+          <p className={`text-[11px] font-medium mt-1 truncate ${activeTab === 'today_jobs' ? 'text-[#34C759]' : 'text-[#0071E3]'}`}>
+            {hasActiveJob ? 'Service in progress' : 'Ready for dispatch'}
+          </p>
+        </div>
+
+        {/* Metric 5: Upcoming */}
+        <div
+          onClick={() => setActiveTab('upcoming')}
+          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+            activeTab === 'upcoming'
+              ? 'bg-[#111111] text-white border-black shadow-xs'
+              : 'bg-white border-black/5 text-[#111111] hover:border-black/20'
+          }`}
+        >
+          <span className={`text-[11px] font-bold uppercase tracking-wider block mb-1 ${activeTab === 'upcoming' ? 'text-white/70' : 'text-[#86868B]'}`}>
+            Upcoming
+          </span>
+          <div className="flex items-baseline space-x-1">
+            <span className="text-xl font-extrabold">3 Slots</span>
+          </div>
+          <p className={`text-[11px] font-medium mt-1 truncate ${activeTab === 'upcoming' ? 'text-[#5856D6]' : 'text-[#6E6E73]'}`}>
+            Schedule View &amp; Week
+          </p>
+        </div>
+
+        {/* Metric 6: New requests */}
+        <div
+          onClick={() => setActiveTab('new_requests')}
+          className={`p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden ${
+            hasNewRequest
+              ? 'bg-amber-500/10 border-amber-500/40 text-amber-950'
+              : activeTab === 'new_requests'
+              ? 'bg-[#111111] text-white border-black shadow-xs'
+              : 'bg-white border-black/5 text-[#111111] hover:border-black/20'
+          }`}
+        >
+          {hasNewRequest && (
+            <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+          )}
+          <span className={`text-[11px] font-bold uppercase tracking-wider block mb-1 ${hasNewRequest ? 'text-amber-800' : activeTab === 'new_requests' ? 'text-white/70' : 'text-[#86868B]'}`}>
+            New requests
+          </span>
+          <div className="flex items-baseline space-x-1">
+            <span className="text-xl font-extrabold">
+              {hasNewRequest ? '1 New' : '0 Pending'}
+            </span>
+          </div>
+          <p className={`text-[11px] font-bold mt-1 truncate ${hasNewRequest ? 'text-amber-700' : 'text-[#86868B]'}`}>
+            {hasNewRequest ? 'Action required' : 'Inbox clear'}
+          </p>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* 4. MOBILE-FIRST NAVIGATION TABS                                */}
+      {/* Today's jobs | New requests | Upcoming (Schedule View)          */}
+      {/* ============================================================== */}
+      <div className="flex items-center space-x-2 border-b border-black/5 pb-2">
+        <button
+          onClick={() => setActiveTab('today_jobs')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 min-h-[44px] ${
+            activeTab === 'today_jobs'
+              ? 'bg-[#111111] text-white shadow-xs'
+              : 'text-[#6E6E73] hover:text-[#111111] bg-white border border-black/5'
+          }`}
+        >
+          <Briefcase className="w-3.5 h-3.5" />
+          <span>Today's jobs</span>
+          {hasActiveJob && (
+            <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse ml-1" />
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('new_requests')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 min-h-[44px] ${
+            activeTab === 'new_requests'
+              ? 'bg-[#111111] text-white shadow-xs'
+              : 'text-[#6E6E73] hover:text-[#111111] bg-white border border-black/5'
+          }`}
+        >
+          <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+          <span>New requests</span>
+          {hasNewRequest && (
+            <Badge variant="accent" size="sm" className="ml-1 text-[10px] bg-amber-100 text-amber-900 border-amber-300">
+              1 New
+            </Badge>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('upcoming')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 min-h-[44px] ${
+            activeTab === 'upcoming'
+              ? 'bg-[#111111] text-white shadow-xs'
+              : 'text-[#6E6E73] hover:text-[#111111] bg-white border border-black/5'
+          }`}
+        >
+          <Calendar className="w-3.5 h-3.5 text-[#5856D6]" />
+          <span>Upcoming</span>
+          <span className="text-[11px] text-[#86868B] font-normal hidden sm:inline">(Schedule View)</span>
+        </button>
+      </div>
+
+      {/* ============================================================== */}
+      {/* 5. JOB REQUEST CARD (Shown if New Request or on new_requests)  */}
+      {/* Items: Service, Location, Requested time, Estimated earnings,  */}
+      {/*        Distance, Customer, Accept, Decline                     */}
+      {/* ============================================================== */}
+      {isIncomingForCurrentWorker && activeBooking?.status === 'requested' && (
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-500/[0.08] via-amber-500/[0.03] to-white/95 backdrop-blur-xl border border-amber-500/30 glass-specular-edge shadow-sm relative overflow-hidden animate-fade-in space-y-4">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-amber-500/15 gap-2">
             <div className="flex items-center space-x-3">
               <span className="relative flex h-3.5 w-3.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -392,90 +688,127 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
               </div>
             </div>
 
-            <span className="text-xs font-mono font-bold text-amber-800 bg-amber-100/80 px-2.5 py-1 rounded-xl border border-amber-200">
+            <span className="text-xs font-mono font-bold text-amber-800 bg-amber-100/80 px-2.5 py-1 rounded-xl border border-amber-200 self-start sm:self-auto">
               Booking #{activeBooking.id.slice(0, 8)}
             </span>
           </div>
 
-          {/* Job Details Preview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-5 text-xs">
-            <div className="p-3.5 rounded-2xl bg-white/80 border border-black/5 shadow-2xs">
-              <span className="text-[#86868B] block mb-1 font-medium">Service &amp; Task</span>
-              <p className="font-bold text-[#111111] text-sm truncate">
+          {/* Explicit Job Request Fields: Service, Location, Requested time, Estimated earnings, Distance, Customer */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
+            {/* Field 1: Service */}
+            <div className="p-3.5 rounded-2xl bg-white/90 border border-black/5 shadow-2xs">
+              <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider block mb-1">
+                Service
+              </span>
+              <p className="font-extrabold text-[#111111] text-sm truncate">
                 {activeBooking.job.serviceCategory}
               </p>
-              <p className="text-[11px] text-[#6E6E73] truncate mt-0.5">
+              <p className="text-[11px] text-[#6E6E73] truncate mt-0.5 italic">
                 &ldquo;{activeBooking.job.rawPrompt}&rdquo;
               </p>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-white/80 border border-black/5 shadow-2xs">
-              <span className="text-[#86868B] block mb-1 font-medium">Customer Location</span>
-              <p className="font-bold text-[#111111] text-sm flex items-center space-x-1">
-                <MapPin className="w-3.5 h-3.5 text-[#0071E3] shrink-0 inline mr-1" />
-                <span>Indiranagar 100ft Rd</span>
+            {/* Field 2: Customer */}
+            <div className="p-3.5 rounded-2xl bg-white/90 border border-black/5 shadow-2xs">
+              <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider block mb-1">
+                Customer
+              </span>
+              <p className="font-extrabold text-[#111111] text-sm flex items-center space-x-1">
+                <User className="w-3.5 h-3.5 text-[#0071E3] shrink-0 inline mr-1" />
+                <span>{customerName}</span>
               </p>
-              <p className="text-[11px] text-[#0071E3] font-medium mt-0.5">
-                {activeBooking.worker.distanceKm.toFixed(1)} km away • {activeBooking.worker.distanceKm <= 5 ? 'Free Zone' : 'Tariff Zone'}
+              <p className="text-[11px] text-[#34C759] font-medium mt-0.5 flex items-center space-x-1">
+                <ShieldCheck className="w-3 h-3 inline text-[#34C759]" />
+                <span>Verified Homeowner • Paid via Escrow</span>
               </p>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-white/80 border border-black/5 shadow-2xs">
-              <span className="text-[#86868B] block mb-1 font-medium">Requested Schedule</span>
-              <p className="font-bold text-[#111111] text-sm flex items-center space-x-1">
+            {/* Field 3: Location */}
+            <div className="p-3.5 rounded-2xl bg-white/90 border border-black/5 shadow-2xs">
+              <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider block mb-1">
+                Location
+              </span>
+              <p className="font-extrabold text-[#111111] text-sm flex items-center space-x-1">
+                <MapPin className="w-3.5 h-3.5 text-[#0071E3] shrink-0 inline mr-1" />
+                <span>{activeBooking.job.location?.address || 'Indiranagar 100ft Rd, Bangalore'}</span>
+              </p>
+              <p className="text-[11px] text-[#6E6E73] font-medium mt-0.5">
+                Bangalore East Sub-District
+              </p>
+            </div>
+
+            {/* Field 4: Requested time */}
+            <div className="p-3.5 rounded-2xl bg-white/90 border border-black/5 shadow-2xs">
+              <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider block mb-1">
+                Requested time
+              </span>
+              <p className="font-extrabold text-[#111111] text-sm flex items-center space-x-1">
                 <Calendar className="w-3.5 h-3.5 text-[#5856D6] shrink-0 inline mr-1" />
                 <span>{activeBooking.scheduledDate || 'Today'}</span>
               </p>
               <p className="text-[11px] text-[#5856D6] font-medium mt-0.5 flex items-center">
                 <Clock className="w-3 h-3 inline mr-1" />
-                {activeBooking.scheduledTimeSlot || 'Immediate (<45m)'}
+                <span>{activeBooking.scheduledTimeSlot || 'Immediate (<45m)'}</span>
               </p>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-white/80 border border-black/5 shadow-2xs">
-              <span className="text-[#86868B] block mb-1 font-medium">Estimated Payout</span>
-              <p className="text-base font-extrabold text-[#111111]">
+            {/* Field 5: Distance */}
+            <div className="p-3.5 rounded-2xl bg-white/90 border border-black/5 shadow-2xs">
+              <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider block mb-1">
+                Distance
+              </span>
+              <p className="font-extrabold text-[#0071E3] text-sm flex items-center space-x-1">
+                <Navigation className="w-3.5 h-3.5 shrink-0 inline mr-1" />
+                <span>{activeBooking.worker.distanceKm.toFixed(1)} km away</span>
+              </p>
+              <p className="text-[11px] text-[#6E6E73] font-medium mt-0.5">
+                {activeBooking.worker.distanceKm <= 5 ? 'Within 0–5 km Base Zone' : '5–10 km Extended Zone'}
+              </p>
+            </div>
+
+            {/* Field 6: Estimated earnings */}
+            <div className="p-3.5 rounded-2xl bg-white/90 border border-black/5 shadow-2xs">
+              <span className="text-[11px] font-bold text-[#86868B] uppercase tracking-wider block mb-1">
+                Estimated earnings
+              </span>
+              <p className="text-lg font-extrabold text-[#34C759]">
                 ₹{activeBooking.estimatedTotal}
               </p>
-              <p className="text-[11px] text-[#34C759] font-medium mt-0.5">
-                Labour ₹{activeBooking.baseLabourFee} + Travel ₹{activeBooking.travelCharge}
+              <p className="text-[11px] text-[#6E6E73] font-medium mt-0.5">
+                Base Labour ₹{activeBooking.baseLabourFee} + Travel ₹{activeBooking.travelCharge}
               </p>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-amber-500/15">
-            <div className="flex items-center space-x-2 text-xs text-[#6E6E73]">
-              <Info className="w-4 h-4 text-amber-600" />
-              <span>Accepting locks this slot in your schedule and notifies the customer instantly.</span>
-            </div>
+          {/* Action Surfaces: Accept & Decline (Glass Material Surface & Mobile Touch Targets >= 52px) */}
+          <div className="p-3 rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 glass-specular-edge flex flex-col sm:flex-row items-center justify-between gap-3 pt-3">
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={() => setIsJobDetailsOpen(true)}
+              className="text-xs font-semibold text-[#111111] w-full sm:w-auto"
+            >
+              View Job Details &amp; Tools Checklist
+            </Button>
 
-            <div className="flex items-center space-x-2.5">
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={() => setIsJobDetailsOpen(true)}
-                className="text-xs font-semibold text-[#111111]"
-              >
-                View Job Details
-              </Button>
-              <Button
-                variant="ghost"
-                size="md"
+            <div className="flex items-center space-x-3 w-full sm:w-auto">
+              {/* Field 8: Decline */}
+              <button
                 onClick={() => setShowDeclineConfirm(true)}
-                className="text-xs font-semibold text-red-600 hover:bg-red-50 hover:text-red-700"
+                className="min-h-[52px] flex-1 sm:flex-initial px-5 py-3 rounded-2xl bg-white hover:bg-red-50 border border-red-200 active:scale-[0.98] text-red-600 font-bold text-sm transition-all flex items-center justify-center space-x-1.5 shadow-2xs"
               >
-                Decline Request
-              </Button>
-              <Button
-                variant="primary"
-                size="md"
+                <XCircle className="w-4 h-4 text-red-500" />
+                <span>Decline Request</span>
+              </button>
+
+              {/* Field 7: Accept */}
+              <button
                 onClick={handleAccept}
-                className="bg-[#34C759] hover:bg-[#2EB150] text-white font-bold px-5 shadow-xs flex items-center space-x-1.5"
+                className="min-h-[52px] flex-1 sm:flex-initial px-6 py-3 rounded-2xl bg-[#34C759] hover:bg-[#2EB150] active:scale-[0.98] text-white font-extrabold text-sm transition-all flex items-center justify-center space-x-1.5 shadow-xs"
               >
                 <Check className="w-4 h-4" />
                 <span>Accept Job Request</span>
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -569,155 +902,15 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
         </Modal>
       )}
 
-      {/* Header Profile Card */}
-      <div className="p-6 rounded-3xl bg-white border border-black/5 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <img
-                src={currentUser?.avatar || currentWorker.avatar}
-                alt={currentUser?.name || currentWorker.name}
-                className="w-16 h-16 rounded-2xl object-cover ring-2 ring-black/5"
-              />
-              <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#34C759] border-2 border-white flex items-center justify-center">
-                <CheckCircle2 className="w-3 h-3 text-white" />
-              </span>
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-bold tracking-tight text-[#111111]">
-                  {currentUser?.name || currentWorker.name}
-                </h1>
-                <Badge variant="accent" size="sm">
-                  {currentWorker.trade}
-                </Badge>
-                <Badge variant="success" size="sm">
-                  Verified Pro
-                </Badge>
-              </div>
-              <p className="text-xs text-[#6E6E73] mt-1 flex items-center space-x-2">
-                <span>ID: {currentWorker.id}</span>
-                <span>•</span>
-                <span>License: {currentWorker.licenseNumber}</span>
-                <span>•</span>
-                <span className="flex items-center text-[#FF9500]">
-                  <Star className="w-3 h-3 fill-[#FF9500] inline mr-1" />
-                  {currentWorker.rating.toFixed(1)} ({currentWorker.reviewCount} reviews)
-                </span>
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Toggle Availability */}
-          <div className="flex items-center space-x-1.5 p-1 bg-[#F5F5F7] rounded-2xl border border-black/5">
-            {(
-              [
-                { status: 'immediate', label: 'Available Now' },
-                { status: 'today', label: 'Slots Today' },
-                { status: 'busy', label: 'Off-Duty' },
-              ] as const
-            ).map((item) => (
-              <button
-                key={item.status}
-                onClick={() => handleStatusChange(item.status)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  availability === item.status
-                    ? 'bg-[#111111] text-white shadow-xs'
-                    : 'text-[#6E6E73] hover:text-[#111111]'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* KPI Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white border border-black/5 shadow-xs">
-          <span className="text-xs text-[#86868B] block mb-1">Hourly Service Rate</span>
-          <div className="flex items-baseline space-x-1">
-            <span className="text-xl font-bold text-[#111111]">₹{currentWorker.hourlyRate}</span>
-            <span className="text-xs text-[#6E6E73]">/hour</span>
-          </div>
-          <span className="text-[11px] text-[#34C759] mt-1 block font-medium">Standard fair pricing</span>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white border border-black/5 shadow-xs">
-          <span className="text-xs text-[#86868B] block mb-1">Service Zone Boundary</span>
-          <div className="flex items-baseline space-x-1">
-            <span className="text-xl font-bold text-[#0071E3]">10 km</span>
-            <span className="text-xs text-[#6E6E73]">strict radius</span>
-          </div>
-          <span className="text-[11px] text-[#0071E3] mt-1 block font-medium">Zero dispatch &gt;10km</span>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white border border-black/5 shadow-xs">
-          <span className="text-xs text-[#86868B] block mb-1">Jobs Completed</span>
-          <div className="flex items-baseline space-x-1">
-            <span className="text-xl font-bold text-[#111111]">{currentWorker.completedJobs}</span>
-            <span className="text-xs text-[#6E6E73]">total</span>
-          </div>
-          <span className="text-[11px] text-[#34C759] mt-1 block font-medium">
-            {Math.round(currentWorker.completionRate * 100)}% on-time fulfillment
-          </span>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white border border-black/5 shadow-xs">
-          <span className="text-xs text-[#86868B] block mb-1">Dispatch Response</span>
-          <div className="flex items-baseline space-x-1">
-            <span className="text-xl font-bold text-[#111111]">{currentWorker.responseTimeMinutes}</span>
-            <span className="text-xs text-[#6E6E73]">mins avg</span>
-          </div>
-          <span className="text-[11px] text-[#6E6E73] mt-1 block font-medium">Instant auto-ping</span>
-        </div>
-      </div>
-
-      {/* Main Mode Toggle: Active Dispatch vs Schedule View */}
-      <div className="flex items-center space-x-2 border-b border-black/5 pb-2">
-        <button
-          onClick={() => setActiveTab('dispatch')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 ${
-            activeTab === 'dispatch'
-              ? 'bg-[#111111] text-white shadow-xs'
-              : 'text-[#6E6E73] hover:text-[#111111] bg-white border border-black/5'
-          }`}
-        >
-          <Briefcase className="w-3.5 h-3.5" />
-          <span>Active Dispatch &amp; Onsite Service</span>
-          {activeBooking && (activeBooking.status === 'in_progress' || activeBooking.status === 'requested') && (
-            <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse ml-1" />
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab('schedule')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 ${
-            activeTab === 'schedule'
-              ? 'bg-[#111111] text-white shadow-xs'
-              : 'text-[#6E6E73] hover:text-[#111111] bg-white border border-black/5'
-          }`}
-        >
-          <Calendar className="w-3.5 h-3.5 text-[#5856D6]" />
-          <span>Schedule View</span>
-          {activeBooking && (
-            <Badge variant="neutral" size="sm" className="ml-1 text-[10px]">
-              1 Slot Booked
-            </Badge>
-          )}
-        </button>
-      </div>
-
-      {/* TAB 1: ACTIVE DISPATCH & ONSITE SERVICE CONTROLLER (Milestone 12 Core) */}
-      {activeTab === 'dispatch' && (
+      {/* ============================================================== */}
+      {/* 6. TAB CONTENT: TODAY'S JOBS (Active Onsite Execution)          */}
+      {/* ============================================================== */}
+      {activeTab === 'today_jobs' && (
         <div className="space-y-6">
-          {/* ============================================================== */}
-          {/* ONSITE SERVICE CONTROLLER (Worker standing at customer home)  */}
-          {/* ============================================================== */}
-          {activeBooking && ['accepted', 'in_progress', 'paused', 'completed'].includes(activeBooking.status) && (
+          {/* Active Job Surface (Glass for important active job) */}
+          {activeBooking && ['accepted', 'in_progress', 'paused', 'completed'].includes(activeBooking.status) ? (
             <div className="space-y-4 animate-fade-in">
-              {/* Floating / Sticky Glass Status & Action Strip */}
+              {/* Glass Material Surface for Active Job */}
               <div className="p-4 sm:p-5 rounded-3xl bg-white/90 backdrop-blur-xl border border-white/80 glass-specular-edge shadow-sm space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-black/5 gap-3">
                   <div>
@@ -748,7 +941,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                       {activeBooking.job.serviceCategory}
                     </h3>
                     <p className="text-xs text-[#6E6E73]">
-                      Customer: Indiranagar 100ft Rd • Worker Status:{' '}
+                      Customer: {customerName} • Location: {activeBooking.job.location?.address || 'Indiranagar 100ft Rd'} • Status:{' '}
                       <strong className="text-[#111111]">
                         {activeBooking.workerStatusMessage ||
                           (activeBooking.status === 'in_progress'
@@ -774,7 +967,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                   </div>
                 </div>
 
-                {/* Primary High-Clarity Tactile Action Targets */}
+                {/* Primary High-Clarity Tactile Action Targets (Mobile touch targets min-h-[52px]) */}
                 <div className="pt-1">
                   {/* State 1: ACCEPTED -> Start Job */}
                   {activeBooking.status === 'accepted' && (
@@ -831,7 +1024,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
 
                   {/* State 4: COMPLETED -> Finalized */}
                   {activeBooking.status === 'completed' && (
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-800 font-semibold">
+                    <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-800 font-semibold">
                       <div className="flex items-center space-x-2">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                         <span>Job Finalized at {activeBooking.endedAt}. Ready for customer settlement.</span>
@@ -1005,6 +1198,29 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 </div>
               </div>
             </div>
+          ) : (
+            /* Standby Card when no active in-progress job */
+            <div className="p-8 rounded-3xl bg-white border border-black/5 shadow-xs text-center space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-[#0071E3]/10 text-[#0071E3] flex items-center justify-center mx-auto">
+                <Briefcase className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-bold text-[#111111]">
+                No Job In-Progress Right Now
+              </h3>
+              <p className="text-xs text-[#6E6E73] max-w-md mx-auto">
+                You are currently marked as &lsquo;{availability.toUpperCase()}&rsquo;. New customer service requests within 10 km will appear under &lsquo;New requests&rsquo; and alert you immediately.
+              </p>
+              {hasNewRequest && (
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => setActiveTab('new_requests')}
+                  className="bg-amber-500 hover:bg-amber-600 text-white font-bold"
+                >
+                  View 1 Pending Job Request
+                </Button>
+              )}
+            </div>
           )}
 
           {/* Capabilities & Skills Card */}
@@ -1039,14 +1255,41 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
         </div>
       )}
 
-      {/* TAB 2: SCHEDULE VIEW (Milestone 11 Core Worker Requirement) */}
-      {activeTab === 'schedule' && (
+      {/* ============================================================== */}
+      {/* 7. TAB CONTENT: NEW REQUESTS                                   */}
+      {/* ============================================================== */}
+      {activeTab === 'new_requests' && (
+        <div className="space-y-4 animate-fade-in">
+          {!hasNewRequest ? (
+            <div className="p-12 rounded-3xl bg-white border border-black/5 shadow-xs text-center space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-bold text-[#111111]">
+                No Pending Job Requests
+              </h3>
+              <p className="text-xs text-[#6E6E73] max-w-sm mx-auto">
+                All requests in your 10 km service zone have been addressed. Keep your status set to &lsquo;Available Now&rsquo; to receive instant pings.
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-[#6E6E73] italic">
+              Showing active request awaiting your review above.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 8. TAB CONTENT: UPCOMING (Schedule View)                       */}
+      {/* ============================================================== */}
+      {activeTab === 'upcoming' && (
         <div className="space-y-4 animate-fade-in">
           {/* Day Selector */}
-          <div className="p-4 rounded-2xl bg-white border border-black/5 shadow-xs flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-white border border-black/5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center space-x-2">
               <Calendar className="w-4 h-4 text-[#5856D6]" />
-              <h3 className="text-sm font-bold text-[#111111]">Worker Schedule &amp; Time Slots</h3>
+              <h3 className="text-sm font-bold text-[#111111]">Schedule View &amp; Time Slots</h3>
             </div>
 
             <div className="flex items-center space-x-1 p-1 bg-[#F5F5F7] rounded-xl text-xs">
@@ -1060,7 +1303,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
                 <button
                   key={day.key}
                   onClick={() => setSelectedScheduleDay(day.key)}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                  className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
                     selectedScheduleDay === day.key
                       ? 'bg-white text-[#111111] shadow-xs'
                       : 'text-[#6E6E73] hover:text-[#111111]'
@@ -1195,7 +1438,7 @@ export const WorkerDashboard: React.FC<WorkerDashboardProps> = ({
       )}
 
       {/* ============================================================== */}
-      {/* 3. JOB DETAILS MODAL                                           */}
+      {/* 9. JOB DETAILS MODAL                                           */}
       {/* ============================================================== */}
       {activeBooking && (
         <Modal
