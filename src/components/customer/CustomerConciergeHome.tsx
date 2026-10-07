@@ -127,7 +127,14 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
   const handleConciergeSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const query = promptInput.trim();
-    if (!query) return;
+    if (!query) {
+      showToast({
+        type: 'info',
+        title: 'Describe Your Need',
+        message: 'Please describe the trade service you require or tap one of the quick suggestions below.',
+      });
+      return;
+    }
 
     const slots = parseNaturalLanguageJob(query, customerLocation);
     const newJob = createJobRequestFromSlots(query, slots, customerLocation);
@@ -471,6 +478,24 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
+
+        {/* Edge Case Warning: Out-of-zone or No In-Zone Eligible Workers */}
+        {rankedEligible.length === 0 && (
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-900 text-xs flex items-center justify-between gap-3 animate-fade-in">
+            <div className="flex items-center space-x-2">
+              <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                <strong>10 km Zone Advisory:</strong> No verified professionals currently available within your immediate 10 km perimeter for this trade. Showing the nearest regional candidate with transparent travel tariff.
+              </span>
+            </div>
+            <button
+              onClick={() => onNavigateToTab('zone_radar')}
+              className="text-[#0071E3] font-bold text-xs underline shrink-0 hover:text-blue-700"
+            >
+              View 10 km Radar
+            </button>
+          </div>
+        )}
 
         {/* ============================================================ */}
         {/* GLASS SURFACE 2: PRIMARY RECOMMENDATION CARD                 */}

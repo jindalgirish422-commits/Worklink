@@ -27,6 +27,7 @@ export interface BookingFlowModalProps {
   rankedWorker: RankedWorker | null;
   job: JobRequest;
   onBookingConfirmed: (booking: Booking) => void;
+  activeBooking?: Booking | null;
 }
 
 export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
@@ -35,6 +36,7 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
   rankedWorker,
   job,
   onBookingConfirmed,
+  activeBooking,
 }) => {
   if (!isOpen || !rankedWorker) return null;
 
@@ -52,6 +54,8 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
   );
   const [estimatedHours, setEstimatedHours] = useState(2.0);
   const [customerPhone, setCustomerPhone] = useState('+91 98712 34567');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [hoursError, setHoursError] = useState<string | null>(null);
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState<'details' | 'confirmed'>('details');
@@ -66,6 +70,24 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
       : customDate;
 
   const handleConfirm = () => {
+    let hasError = false;
+    const digitsOnly = customerPhone.replace(/\D/g, '');
+    if (digitsOnly.length < 10) {
+      setPhoneError('Please enter a valid 10-digit phone number for dispatch.');
+      hasError = true;
+    } else {
+      setPhoneError(null);
+    }
+
+    if (estimatedHours < 0.5 || estimatedHours > 12) {
+      setHoursError('Estimated duration must be between 0.5 and 12 hours.');
+      hasError = true;
+    } else {
+      setHoursError(null);
+    }
+
+    if (hasError) return;
+
     setIsSubmitting(true);
 
     setTimeout(() => {
@@ -276,25 +298,99 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
             </div>
           </div>
 
+          {/* Edge Case Warning: Duplicate Active Booking */}
+          {activeBooking && ['requested', 'accepted', 'in_progress'].includes(activeBooking.status) && (
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-start space-x-2.5">
+              <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block">Concurrent Booking In Progress</span>
+                <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                  You currently have an active booking (#{activeBooking.id.slice(0, 8)}) with <strong>{activeBooking.worker.name}</strong> for {activeBooking.job.serviceCategory}. Confirming this request will create a separate concurrent dispatch.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Edge Case Advisory: Worker Unavailable Slot Guard */}
+          {worker.availabilityStatus !== 'immediate' && selectedTimeSlot === 'Immediate (<45m)' && (
+            <div className="p-3.5 rounded-2xl bg-[#0071E3]/10 border border-[#0071E3]/25 text-[#0071E3] text-xs flex items-start space-x-2.5">
+              <Clock className="w-4 h-4 text-[#0071E3] shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block">Arrival Window Advisory</span>
+                <p className="text-[11px] text-[#0071E3]/90 mt-0.5 leading-relaxed">
+                  {worker.name} is currently flagged as {worker.availabilityStatus === 'tomorrow' ? 'booked until tomorrow' : 'busy'}. Immediate dispatch may experience delay. Recommended: select a scheduled morning or afternoon slot.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* ============================================================== */}
           {/* 3. ESTIMATE: Transparent Breakdown & Clear Numbers (Glass Card) */}
           {/* ============================================================== */}
           <TransparentPriceSummary mode="estimate" estimate={priceEstimate} isSimulated={true} />
 
-          {/* Contact & Address Confirmation */}
-          <div className="p-4 rounded-2xl bg-white border border-black/8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div>
-              <span className="text-[10px] text-[#86868B] uppercase font-mono block">
-                Service Address
-              </span>
-              <span className="font-semibold text-[#111111]">{job.location.address}</span>
+          {/* Contact & Hours Inputs with Validation */}
+          <div className="p-4 rounded-2xl bg-white border border-black/8 space-y-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] text-[#86868B] uppercase font-mono block mb-1">
+                  Customer Contact Phone *
+                </label>
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => {
+                    setCustomerPhone(e.target.value);
+                    if (phoneError) setPhoneError(null);
+                  }}
+                  placeholder="+91 98712 34567"
+                  className={`w-full px-3 py-2 rounded-xl border text-xs font-medium text-[#111111] bg-white outline-none focus:border-[#0071E3] ${
+                    phoneError ? 'border-[#FF3B30] bg-red-50/20' : 'border-black/10'
+                  }`}
+                />
+                {phoneError && (
+                  <span className="text-[10px] text-[#FF3B30] font-semibold mt-1 block">
+                    {phoneError}
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <label className="text-[10px] text-[#86868B] uppercase font-mono block mb-1">
+                  Estimated Work Duration (Hours)
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min="0.5"
+                    max="12"
+                    step="0.5"
+                    value={estimatedHours}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value) || 0;
+                      setEstimatedHours(val);
+                      if (hoursError) setHoursError(null);
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-medium text-[#111111] bg-white outline-none focus:border-[#0071E3] ${
+                      hoursError ? 'border-[#FF3B30] bg-red-50/20' : 'border-black/10'
+                    }`}
+                  />
+                  <span className="text-xs text-[#86868B] shrink-0 font-medium">hrs</span>
+                </div>
+                {hoursError && (
+                  <span className="text-[10px] text-[#FF3B30] font-semibold mt-1 block">
+                    {hoursError}
+                  </span>
+                )}
+              </div>
             </div>
 
-            <div className="sm:text-right">
-              <span className="text-[10px] text-[#86868B] uppercase font-mono block">
-                Customer Phone
+            <div className="pt-2 border-t border-black/5 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-[#6E6E73] gap-1">
+              <span>Service Location: <strong className="text-[#111111]">{job.location.address}</strong></span>
+              <span className="text-[#34C759] font-medium flex items-center space-x-1">
+                <ShieldCheck className="w-3.5 h-3.5 inline" />
+                <span>Fair Pricing &amp; Zero Cancellation Guarantee</span>
               </span>
-              <span className="font-semibold text-[#111111]">{customerPhone}</span>
             </div>
           </div>
         </div>

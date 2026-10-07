@@ -63,6 +63,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
   // Navigation & Location State - default to public landing page
   const [currentTab, setCurrentTab] = useState<NavTabType>('landing');
   const [customerLocation, setCustomerLocation] = useState<CustomerLocation>(DEFAULT_CUSTOMER_LOCATION);
+  const [isSimulatedOffline, setIsSimulatedOffline] = useState(false);
 
   // Sync tab with role changes for intuitive experience
   useEffect(() => {
@@ -263,6 +264,24 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#111111] flex flex-col font-sans selection:bg-[#111111] selection:text-white">
+      {/* Edge Case: Simulated Network Offline Warning Banner */}
+      {isSimulatedOffline && (
+        <div className="bg-amber-600 text-white px-4 py-2 text-xs font-semibold flex items-center justify-between shadow-xs sticky top-0 z-50 animate-fade-in">
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            <span>
+              📶 Simulated Network Offline: WorkLink is operating with cached local data. Realtime dispatches are paused.
+            </span>
+          </div>
+          <button
+            onClick={() => setIsSimulatedOffline(false)}
+            className="px-2.5 py-0.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold transition-all"
+          >
+            Reconnect Network
+          </button>
+        </div>
+      )}
+
       {/* Sticky Topbar */}
       <Navbar
         currentTab={currentTab}
@@ -431,8 +450,16 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
               <span className="text-[#86868B]">•</span>
               <span>Right Labour. Right Work. Right Time.</span>
             </div>
-            <div className="text-[11px] text-[#86868B]">
-              Workforce Intelligence Foundations • Explainable Multi-Factor Matching
+            <div className="flex items-center space-x-3 text-[11px] text-[#86868B]">
+              <span>Workforce Intelligence Foundations • Explainable Multi-Factor Matching</span>
+              <span>•</span>
+              <button
+                type="button"
+                onClick={() => setIsSimulatedOffline((prev) => !prev)}
+                className="hover:text-[#111111] transition-colors underline font-medium"
+              >
+                {isSimulatedOffline ? '📶 Reconnect Network' : '⚡ Test Offline Mode'}
+              </button>
             </div>
           </div>
         </Container>
@@ -456,6 +483,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
           isOpen={Boolean(selectedBookingWorker)}
           rankedWorker={selectedBookingWorker}
           job={activeJob}
+          activeBooking={activeBooking}
           onClose={() => setSelectedBookingWorker(null)}
           onBookingConfirmed={handleBookingConfirmed}
         />

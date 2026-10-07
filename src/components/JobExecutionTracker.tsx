@@ -126,6 +126,7 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(
     booking.paymentStatus || (booking.status === 'paid' || booking.status === 'rated' ? 'paid' : 'pending')
   );
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<PaymentReceipt | null>(null);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
@@ -260,10 +261,27 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
     onUpdateBooking(updated);
   };
 
-  const handleProcessPayment = (method: 'UPI' | 'Card' | 'Cash on Delivery') => {
+  const handleProcessPayment = (
+    method: 'UPI' | 'Card' | 'Cash on Delivery',
+    simulateFailure: boolean = false
+  ) => {
     setPaymentStatus('processing');
+    setPaymentError(null);
 
     setTimeout(() => {
+      if (simulateFailure) {
+        setPaymentStatus('failed');
+        setPaymentError(
+          'Simulated Bank Gateway Timeout: Bank did not acknowledge payment authorization within 15s. No funds were debited.'
+        );
+        showToast({
+          type: 'error',
+          title: 'Payment Failed (Simulated)',
+          message: 'Bank gateway timeout. Retry payment or select Cash on Delivery.',
+        });
+        return;
+      }
+
       try {
         confetti({
           particleCount: 90,
@@ -1162,18 +1180,59 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
                     </p>
                   </div>
 
+                  {/* Edge Case Alert: Payment Failure State */}
+                  {paymentStatus === 'failed' && (
+                    <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl space-y-2 text-xs text-red-900 animate-fade-in">
+                      <div className="flex items-center space-x-2 font-bold text-red-700">
+                        <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                        <span>Payment Authorization Failed (Simulated)</span>
+                      </div>
+                      <p className="text-[11px] text-red-800 leading-relaxed">
+                        {paymentError || 'Bank switch timeout. No funds were debited from your account.'}
+                      </p>
+                      <div className="flex items-center space-x-2 pt-1">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleProcessPayment('UPI', false)}
+                          className="text-xs font-bold bg-[#111111]"
+                        >
+                          Retry UPI Payment
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleProcessPayment('Cash on Delivery', false)}
+                          className="text-xs font-semibold"
+                        >
+                          Switch to Cash on Delivery
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Payment Action or Confirmation */}
                   {!(paymentStatus === 'paid' || isPaid) ? (
                     <div className="space-y-3">
-                      <span className="text-xs font-semibold text-[#111111] block">
-                        Select Payment Method:
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-[#111111]">
+                          Select Payment Method:
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleProcessPayment('UPI', true)}
+                          className="text-[10px] text-amber-700 hover:text-amber-800 font-semibold underline"
+                          title="Simulate payment gateway failure edge case"
+                        >
+                          ⚡ Test Payment Failure
+                        </button>
+                      </div>
                       <div className="grid grid-cols-3 gap-2">
                         <Button
                           variant="primary"
                           size="sm"
                           isLoading={paymentStatus === 'processing'}
-                          onClick={() => handleProcessPayment('UPI')}
+                          onClick={() => handleProcessPayment('UPI', false)}
                           className="font-bold text-xs"
                         >
                           Pay UPI
@@ -1182,7 +1241,7 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
                           variant="secondary"
                           size="sm"
                           isLoading={paymentStatus === 'processing'}
-                          onClick={() => handleProcessPayment('Card')}
+                          onClick={() => handleProcessPayment('Card', false)}
                           className="font-semibold text-xs"
                         >
                           Credit Card
@@ -1191,7 +1250,7 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
                           variant="outline"
                           size="sm"
                           isLoading={paymentStatus === 'processing'}
-                          onClick={() => handleProcessPayment('Cash on Delivery')}
+                          onClick={() => handleProcessPayment('Cash on Delivery', false)}
                           className="font-semibold text-xs"
                         >
                           Cash on Delivery
