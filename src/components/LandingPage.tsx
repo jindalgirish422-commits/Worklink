@@ -22,6 +22,7 @@ import { Modal } from './ui/Modal';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import { useToast } from './ui/Toast';
+import { useAuth } from '../context/AuthContext';
 
 interface LandingPageProps {
   onFindWorkerClick: () => void;
@@ -35,6 +36,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onViewIntelligenceClick,
 }) => {
   const { showToast } = useToast();
+  const { openAuthModal } = useAuth();
   const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
   const [proName, setProName] = useState('');
   const [proTrade, setProTrade] = useState('AC Technician');
@@ -101,7 +103,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <Button
                 variant="outline"
                 size="lg"
-                onClick={() => setIsWorkerModalOpen(true)}
+                onClick={() => openAuthModal('signup_worker')}
                 className="w-full sm:w-auto px-7"
               >
                 Become a Worker

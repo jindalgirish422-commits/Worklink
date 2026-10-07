@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Users,
 } from 'lucide-react';
@@ -10,6 +10,7 @@ import {
   RankedWorker,
   Booking,
   UserPersonalizationProfile,
+  AvailabilityStatus,
 } from './types';
 import { INITIAL_WORKERS, DEFAULT_CUSTOMER_LOCATION } from './data/mockWorkers';
 import {
@@ -17,7 +18,7 @@ import {
   rankWorkers,
 } from './services/matchingEngine';
 import { parseNaturalLanguageJob, createJobRequestFromSlots } from './services/chatbotService';
-import { Navbar } from './components/Navbar';
+import { Navbar, NavTabType } from './components/Navbar';
 import { LandingPage } from './components/LandingPage';
 import { ChatbotIntake } from './components/ChatbotIntake';
 import { ServiceZoneMap } from './components/ServiceZoneMap';
@@ -31,22 +32,48 @@ import { FeedbackLearningLoopView } from './components/FeedbackLearningLoopView'
 import { WorkforceIntelligenceView } from './components/WorkforceIntelligenceView';
 import { ScenarioSimulator } from './components/ScenarioSimulator';
 
+import { WorkerDashboard } from './components/worker/WorkerDashboard';
+import { OperatorConsole } from './components/admin/OperatorConsole';
+import { AuthModal } from './components/auth/AuthModal';
+import { LocationPermissionModal } from './components/auth/LocationPermissionModal';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
 import { Container } from './components/ui/Container';
 import { Badge } from './components/ui/Badge';
 import { EmptyState } from './components/ui/EmptyState';
 import { useToast } from './components/ui/Toast';
 
-export const App: React.FC = () => {
+interface AppContentProps {
+  workers: Worker[];
+  setWorkers: React.Dispatch<React.SetStateAction<Worker[]>>;
+}
+
+const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
   const { showToast } = useToast();
+  const {
+    currentUser,
+    role,
+    isAuthModalOpen,
+    closeAuthModal,
+    authModalMode,
+    isLocationModalOpen,
+    openLocationModal,
+    closeLocationModal,
+    updateLocation,
+  } = useAuth();
 
   // Navigation & Location State - default to public landing page
-  const [currentTab, setCurrentTab] = useState<
-    'landing' | 'marketplace' | 'zone_radar' | 'active_booking' | 'intelligence' | 'simulator'
-  >('landing');
+  const [currentTab, setCurrentTab] = useState<NavTabType>('landing');
   const [customerLocation, setCustomerLocation] = useState<CustomerLocation>(DEFAULT_CUSTOMER_LOCATION);
 
-  // Workers dataset
-  const [workers, setWorkers] = useState<Worker[]>(INITIAL_WORKERS);
+  // Sync tab with role changes for intuitive experience
+  useEffect(() => {
+    if (role === 'worker' && currentTab === 'landing') {
+      setCurrentTab('worker_hub');
+    } else if (role === 'operator' && currentTab === 'landing') {
+      setCurrentTab('operator_console');
+    }
+  }, [role]);
 
   // Active Job Intake
   const defaultPrompt =
@@ -121,6 +148,13 @@ export const App: React.FC = () => {
     });
   };
 
+  // Handle Worker Status Change from Worker Dashboard
+  const handleUpdateWorkerStatus = (workerId: string, status: AvailabilityStatus) => {
+    setWorkers((prev) =>
+      prev.map((w) => (w.id === workerId ? { ...w, availabilityStatus: status } : w))
+    );
+  };
+
   // Job created from Chatbot
   const handleJobCreated = (newJob: JobRequest) => {
     setActiveJob(newJob);
@@ -189,7 +223,7 @@ export const App: React.FC = () => {
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         location={customerLocation}
-        onChangeLocationClick={() => setCurrentTab('zone_radar')}
+        onChangeLocationClick={openLocationModal}
         currentWeights={currentWeights}
         onOpenWeightsModal={() => setIsWeightsModalOpen(true)}
         hasActiveBooking={!!activeBooking}
@@ -199,7 +233,7 @@ export const App: React.FC = () => {
       <main className="flex-1 w-full py-8">
         <Container size="2xl">
           {/* ============================================================== */}
-          {/* TAB 0: PUBLIC LANDING PAGE (Milestone 2 Launch Experience) */}
+          {/* TAB 0: PUBLIC LANDING PAGE (Launch Experience) */}
           {/* ============================================================== */}
           {currentTab === 'landing' && (
             <LandingPage
@@ -210,7 +244,31 @@ export const App: React.FC = () => {
           )}
 
           {/* ============================================================== */}
-          {/* TAB 1: MARKETPLACE & INTAKE */}
+          {/* TAB 1: WORKER HUB (Worker Role View) */}
+          {/* ============================================================== */}
+          {currentTab === 'worker_hub' && (
+            <WorkerDashboard
+              workers={workers}
+              onUpdateWorkerStatus={handleUpdateWorkerStatus}
+              activeBooking={activeBooking}
+            />
+          )}
+
+          {/* ============================================================== */}
+          {/* TAB 2: OPERATOR CONSOLE (Admin/Operator Role View) */}
+          {/* ============================================================== */}
+          {currentTab === 'operator_console' && (
+            <OperatorConsole
+              workers={workers}
+              onOpenWeightsModal={() => setIsWeightsModalOpen(true)}
+              onNavigateToIntelligence={() => setCurrentTab('intelligence')}
+              onNavigateToRadar={() => setCurrentTab('zone_radar')}
+              currentWeights={currentWeights}
+            />
+          )}
+
+          {/* ============================================================== */}
+          {/* TAB 3: MARKETPLACE & INTAKE */}
           {/* ============================================================== */}
           {currentTab === 'marketplace' && (
             <div className="space-y-8 animate-fade-in">
@@ -297,7 +355,7 @@ export const App: React.FC = () => {
           )}
 
           {/* ============================================================== */}
-          {/* TAB 2: 10 KM SERVICE ZONE RADAR */}
+          {/* TAB 4: 10 KM SERVICE ZONE RADAR */}
           {/* ============================================================== */}
           {currentTab === 'zone_radar' && (
             <ServiceZoneMap
@@ -314,7 +372,7 @@ export const App: React.FC = () => {
           )}
 
           {/* ============================================================== */}
-          {/* TAB 3: LIVE JOB EXECUTION & TIMER */}
+          {/* TAB 5: LIVE JOB EXECUTION & TIMER */}
           {/* ============================================================== */}
           {currentTab === 'active_booking' && (
             <div className="space-y-8 animate-fade-in">
@@ -333,12 +391,12 @@ export const App: React.FC = () => {
           )}
 
           {/* ============================================================== */}
-          {/* TAB 4: APPENDIX G SIMULATOR */}
+          {/* TAB 6: APPENDIX G SIMULATOR */}
           {/* ============================================================== */}
           {currentTab === 'simulator' && <ScenarioSimulator />}
 
           {/* ============================================================== */}
-          {/* TAB 5: WORKFORCE INTELLIGENCE & RESEARCH */}
+          {/* TAB 7: WORKFORCE INTELLIGENCE & RESEARCH */}
           {/* ============================================================== */}
           {currentTab === 'intelligence' && <WorkforceIntelligenceView />}
         </Container>
@@ -389,7 +447,39 @@ export const App: React.FC = () => {
         weights={currentWeights}
         onSaveWeights={(w) => setCurrentWeights(w)}
       />
+
+      {/* Authentication & Onboarding Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        initialMode={authModalMode}
+      />
+
+      {/* Transparent Location Permission Modal */}
+      <LocationPermissionModal
+        isOpen={isLocationModalOpen}
+        onClose={closeLocationModal}
+        currentLocation={customerLocation}
+        onLocationConfirmed={(loc, granted) => {
+          handleUpdateLocation(loc);
+          updateLocation(loc, granted);
+        }}
+      />
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  const [workers, setWorkers] = useState<Worker[]>(INITIAL_WORKERS);
+
+  const handleWorkerAdded = (newWorker: Worker) => {
+    setWorkers((prev) => [newWorker, ...prev]);
+  };
+
+  return (
+    <AuthProvider onWorkerAdded={handleWorkerAdded}>
+      <AppContent workers={workers} setWorkers={setWorkers} />
+    </AuthProvider>
   );
 };
 

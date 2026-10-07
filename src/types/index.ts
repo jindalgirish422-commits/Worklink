@@ -186,3 +186,5 @@ export interface UserPersonalizationProfile {
   avgRatingGiven: number;
   hasCancellations: boolean;
 }
+
+export * from './auth';
