@@ -42,6 +42,7 @@ import { useToast } from './ui/Toast';
 import { TransparentPriceSummary } from './pricing/TransparentPriceSummary';
 import { ReceiptModal } from './payment/ReceiptModal';
 import { PaymentHistoryModal } from './payment/PaymentHistoryModal';
+import { FeedbackExperience } from './feedback/FeedbackExperience';
 
 interface JobExecutionTrackerProps {
   booking: Booking | null;
@@ -1240,87 +1241,26 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
                 </div>
               )}
 
-              {/* Post-Service Feedback & Rating Form */}
-              {booking.status === 'completed' && isPaid && (
-                <div className="card-premium p-6 bg-[#FFFFFF] animate-fade-in space-y-4">
-                  <div className="flex items-center space-x-2 pb-3 border-b border-black/5">
-                    <Sparkles className="w-4 h-4 text-[#FF9500]" />
-                    <h3 className="text-sm font-bold text-[#111111] tracking-tight">
-                      Rate Your Experience with {booking.worker.name}
-                    </h3>
-                  </div>
-
-                  {/* Star Picker */}
-                  <div className="flex items-center justify-center space-x-2 py-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onClick={() => setRating(star)}
-                        className="p-1 hover:scale-110 transition-transform"
-                      >
-                        <Star
-                          className={`w-7 h-7 ${
-                            star <= rating
-                              ? 'fill-[#FF9500] text-[#FF9500]'
-                              : 'text-[#86868B]'
-                          }`}
-                        />
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Quick Positive Tags */}
-                  <div className="flex flex-wrap gap-1.5 justify-center">
-                    {[
-                      'Punctual & Polite',
-                      'Accurate Diagnostics',
-                      'Clean Worksite',
-                      'Fair Pricing',
-                      'Fast Resolution',
-                    ].map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() =>
-                          setSelectedTags((prev) =>
-                            prev.includes(tag)
-                              ? prev.filter((t) => t !== tag)
-                              : [...prev, tag]
-                          )
-                        }
-                        className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all ${
-                          selectedTags.includes(tag)
-                            ? 'bg-[#111111] text-white shadow-xs'
-                            : 'bg-[#F5F5F7] text-[#6E6E73] hover:text-[#111111]'
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Comment Field */}
-                  <div>
-                    <label className="block text-xs font-semibold text-[#111111] mb-1">
-                      Your Review
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={feedbackComment}
-                      onChange={(e) => setFeedbackComment(e.target.value)}
-                      className="w-full p-3 rounded-xl border border-black/10 bg-[#FBFBFD] text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0071E3]"
-                      placeholder="Share helpful feedback..."
-                    />
-                  </div>
-
-                  <Button
-                    variant="primary"
-                    size="md"
-                    onClick={handleSubmitFeedback}
-                    className="w-full font-bold"
-                  >
-                    Submit Rating &amp; Finish
-                  </Button>
-                </div>
+              {/* Milestone 14: Premium Feedback Experience (Subtle Glass Treatment) */}
+              {(booking.status === 'completed' || booking.status === 'rated') && (isPaid || booking.paymentStatus === 'paid') && (
+                <FeedbackExperience
+                  booking={booking}
+                  onSubmitFeedback={(feedbackPayload) => {
+                    const ratedBooking: Booking = {
+                      ...booking,
+                      status: 'rated',
+                      feedback: feedbackPayload,
+                    };
+                    onUpdateBooking(ratedBooking);
+                    onCompleteFeedbackLoop(ratedBooking);
+                    showToast({
+                      type: 'success',
+                      title: 'Rating & Feedback Recorded',
+                      message: `Thank you! Feedback recorded in WorkLink learning loop. Worker rating updated to ${feedbackPayload.rating}★.`,
+                    });
+                  }}
+                  isAlreadySubmitted={booking.status === 'rated'}
+                />
               )}
             </div>
           </div>

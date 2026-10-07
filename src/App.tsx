@@ -204,22 +204,48 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
           const updatedRating = parseFloat(
             ((w.rating * w.reviewCount + userStars) / (w.reviewCount + 1)).toFixed(2)
           );
+          const newReview = completedBooking.feedback?.comment
+            ? [
+                {
+                  id: `rev-${Date.now()}`,
+                  userName: 'Customer',
+                  rating: userStars,
+                  comment: completedBooking.feedback.comment,
+                  date: 'Just now',
+                  tradeTag: w.trade,
+                },
+                ...w.recentReviews,
+              ]
+            : w.recentReviews;
+
           return {
             ...w,
             completedJobs: newCompleted,
             rating: updatedRating,
             reviewCount: w.reviewCount + 1,
             completionRate: Math.min(1.0, w.completionRate + 0.005),
+            recentReviews: newReview,
           };
         }
         return w;
       })
     );
 
-    if (!userProfile.repeatWorkersBooked.includes(completedBooking.worker.id)) {
+    // If rated 4 or 5 stars, record in repeat workers preference for future recommendation boost
+    const userRating = completedBooking.feedback?.rating || 5;
+    if (userRating >= 4 && !userProfile.repeatWorkersBooked.includes(completedBooking.worker.id)) {
       setUserProfile((prev) => ({
         ...prev,
+        previousBookingsCount: prev.previousBookingsCount + 1,
         repeatWorkersBooked: [...prev.repeatWorkersBooked, completedBooking.worker.id],
+        avgRatingGiven: parseFloat(
+          ((prev.avgRatingGiven * prev.previousBookingsCount + userRating) / (prev.previousBookingsCount + 1)).toFixed(2)
+        ),
+      }));
+    } else {
+      setUserProfile((prev) => ({
+        ...prev,
+        previousBookingsCount: prev.previousBookingsCount + 1,
       }));
     }
   };

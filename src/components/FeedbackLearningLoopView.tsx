@@ -36,72 +36,129 @@ export const FeedbackLearningLoopView: React.FC<FeedbackLearningLoopViewProps> =
         </div>
       </div>
 
-      {/* Signal Propagation Flow */}
-      <div className="my-6 p-5 bg-[#FBFBFD] rounded-3xl border border-black/5">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-[#6E6E73] mb-4">
-          Telemetry Signal Propagation Flow
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-center text-xs">
+      {/* Milestone 14: Closed Feedback Loop (Recommendation -> Booking -> Service -> Completion -> Rating -> Worker signal -> Future recommendation) */}
+      <div className="my-6 p-5 bg-[#FBFBFD] rounded-3xl border border-black/5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#6E6E73]">
+            Closed Telemetry Feedback Loop
+          </h3>
+          <Badge variant="accent" size="sm">
+            Continuous Self-Tuning
+          </Badge>
+        </div>
+
+        {/* 7-Step Pipeline */}
+        <div className="grid grid-cols-2 sm:grid-cols-7 gap-2 text-center text-xs">
           {[
-            { step: '1. Recommender', desc: 'Multi-factor match & rationale' },
-            { step: '2. Booking', desc: 'Customer acceptance & dispatch' },
-            { step: '3. Execution', desc: 'Live timer & verified work' },
-            { step: '4. Invoice', desc: 'Transparent post-service billing' },
-            { step: '5. Rating / Review', desc: 'Customer satisfaction & tags' },
-            { step: '6. Prior Update', desc: 'Calibrates future match weights' },
+            { step: '1. Recommendation', desc: 'AI multi-factor match' },
+            { step: '2. Booking', desc: 'Customer dispatch confirmation' },
+            { step: '3. Service', desc: 'Live execution & verified timer' },
+            { step: '4. Completion', desc: 'Final invoice & zero dispute' },
+            { step: '5. Rating', desc: 'Lightweight star evaluation' },
+            { step: '6. Worker Signal', desc: 'Recalibrates quality & affinity' },
+            { step: '7. Future Rec', desc: 'Personalized next match boost' },
           ].map((item, idx) => (
-            <div key={idx} className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
-              <span className="font-bold text-[#111111] block mb-1">{item.step}</span>
-              <span className="text-[11px] text-[#6E6E73]">{item.desc}</span>
+            <div
+              key={idx}
+              className={`p-3 rounded-2xl border shadow-xs transition-all ${
+                idx >= 4
+                  ? 'bg-white border-[#0071E3]/20 text-[#111111]'
+                  : 'bg-white border-black/5 text-[#111111]'
+              }`}
+            >
+              <span className="font-bold text-[11px] block mb-0.5">{item.step}</span>
+              <span className="text-[10px] text-[#6E6E73] leading-tight block">{item.desc}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Telemetry Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div className="p-4 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
-          <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider block mb-1">
-            Worker Reliability
-          </span>
-          <div className="flex items-baseline space-x-1.5">
-            <span className="text-2xl font-bold text-[#111111]">98.4%</span>
-            <span className="text-xs text-[#1B8738] font-semibold">+0.6%</span>
+      {/* Milestone 14: 7 Key Worker Telemetry Signals */}
+      <div className="mb-6 space-y-2">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[#6E6E73]">
+          Active Worker Signals Calibrated by Customer Feedback
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+          {/* Signal 1: rating */}
+          <div className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
+            <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider block mb-0.5">
+              1. Rating
+            </span>
+            <div className="flex items-baseline space-x-1">
+              <span className="text-xl font-bold text-[#FF9500]">4.91★</span>
+            </div>
+            <p className="text-[10px] text-[#6E6E73] mt-1">Bayesian quality prior</p>
           </div>
-          <p className="text-[11px] text-[#6E6E73] mt-1">Based on completed vs cancelled jobs</p>
-        </div>
 
-        <div className="p-4 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
-          <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider block mb-1">
-            Response Punctuality
-          </span>
-          <div className="flex items-baseline space-x-1.5">
-            <span className="text-2xl font-bold text-[#111111]">14.2 min</span>
-            <span className="text-xs text-[#1B8738] font-semibold">-2.1m</span>
+          {/* Signal 2: completion */}
+          <div className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
+            <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider block mb-0.5">
+              2. Completion
+            </span>
+            <div className="flex items-baseline space-x-1">
+              <span className="text-xl font-bold text-[#111111]">98.6%</span>
+              <span className="text-[10px] text-[#1B8738] font-bold">+0.4%</span>
+            </div>
+            <p className="text-[10px] text-[#6E6E73] mt-1">Verified jobs executed</p>
           </div>
-          <p className="text-[11px] text-[#6E6E73] mt-1">Average dispatch to doorstep arrival</p>
-        </div>
 
-        <div className="p-4 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
-          <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider block mb-1">
-            Price Acceptance
-          </span>
-          <div className="flex items-baseline space-x-1.5">
-            <span className="text-2xl font-bold text-[#111111]">96.8%</span>
-            <span className="text-xs text-[#86868B] font-medium">Stable</span>
+          {/* Signal 3: cancellation */}
+          <div className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
+            <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider block mb-0.5">
+              3. Cancellation
+            </span>
+            <div className="flex items-baseline space-x-1">
+              <span className="text-xl font-bold text-[#111111]">0.8%</span>
+              <span className="text-[10px] text-[#1B8738] font-bold">Low</span>
+            </div>
+            <p className="text-[10px] text-[#6E6E73] mt-1">Zero arbitrary drops</p>
           </div>
-          <p className="text-[11px] text-[#6E6E73] mt-1">Pre-service estimate vs final invoice fit</p>
-        </div>
 
-        <div className="p-4 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
-          <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider block mb-1">
-            Repeat Bookings
-          </span>
-          <div className="flex items-baseline space-x-1.5">
-            <span className="text-2xl font-bold text-[#111111]">38.2%</span>
-            <span className="text-xs text-[#1B8738] font-semibold">+4.2%</span>
+          {/* Signal 4: response time */}
+          <div className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
+            <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider block mb-0.5">
+              4. Response Time
+            </span>
+            <div className="flex items-baseline space-x-1">
+              <span className="text-xl font-bold text-[#111111]">13.8m</span>
+              <span className="text-[10px] text-[#1B8738] font-bold">-1.4m</span>
+            </div>
+            <p className="text-[10px] text-[#6E6E73] mt-1">Arrival window accuracy</p>
           </div>
-          <p className="text-[11px] text-[#6E6E73] mt-1">Customers re-booking preferred workers</p>
+
+          {/* Signal 5: repeat booking */}
+          <div className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
+            <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider block mb-0.5">
+              5. Repeat Booking
+            </span>
+            <div className="flex items-baseline space-x-1">
+              <span className="text-xl font-bold text-[#5856D6]">39.4%</span>
+              <span className="text-[10px] text-[#1B8738] font-bold">+3.2%</span>
+            </div>
+            <p className="text-[10px] text-[#6E6E73] mt-1">Customer loyalty signal</p>
+          </div>
+
+          {/* Signal 6: satisfaction */}
+          <div className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
+            <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider block mb-0.5">
+              6. Satisfaction
+            </span>
+            <div className="flex items-baseline space-x-1">
+              <span className="text-xl font-bold text-[#1B8738]">97.2%</span>
+            </div>
+            <p className="text-[10px] text-[#6E6E73] mt-1">Positive review sentiment</p>
+          </div>
+
+          {/* Signal 7: disputes */}
+          <div className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-black/5 shadow-xs">
+            <span className="text-[10px] text-[#86868B] font-bold uppercase tracking-wider block mb-0.5">
+              7. Disputes
+            </span>
+            <div className="flex items-baseline space-x-1">
+              <span className="text-xl font-bold text-[#34C759]">0.0%</span>
+            </div>
+            <p className="text-[10px] text-[#6E6E73] mt-1">Frictionless resolution</p>
+          </div>
         </div>
       </div>
 

@@ -252,14 +252,27 @@ export interface Booking {
   receiptNumber?: string;
   paidAt?: string;
   isSimulatedPayment?: boolean;
-  feedback?: {
-    rating: number;
-    tags: string[];
-    comment: string;
-    submittedAt: string;
-  };
+  feedback?: BookingFeedback;
   cancellationReason?: string;
   cancelledBy?: 'customer' | 'worker';
+}
+
+export interface FeedbackSignals {
+  rating: number;            // 1 - 5
+  completion: boolean;       // completed without dispute
+  cancellation: boolean;     // false for completed jobs
+  responseTime: number;      // recorded response time in minutes
+  repeatBooking: boolean;    // added to repeat pro list
+  satisfaction: number;      // 0 - 100 percentage
+  disputes: number;          // 0 disputes
+}
+
+export interface BookingFeedback {
+  rating: number;
+  tags: string[];
+  comment: string;
+  submittedAt: string;
+  signals?: FeedbackSignals;
 }
 
 export interface UserPersonalizationProfile {
