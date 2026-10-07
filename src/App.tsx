@@ -262,6 +262,13 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
     }
   };
 
+  const handleFindWorkerClick = () => {
+    setCurrentTab('customer_home');
+    if (!currentUser?.locationPermissionGranted) {
+      openLocationModal();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#111111] flex flex-col font-sans selection:bg-[#111111] selection:text-white">
       {/* Edge Case: Simulated Network Offline Warning Banner */}
@@ -322,7 +329,7 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
           {/* ============================================================== */}
           {currentTab === 'landing' && (
             <LandingPage
-              onFindWorkerClick={() => setCurrentTab('customer_home')}
+              onFindWorkerClick={handleFindWorkerClick}
               onExploreRadarClick={() => setCurrentTab('zone_radar')}
               onViewIntelligenceClick={() => setCurrentTab('intelligence')}
             />

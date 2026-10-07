@@ -89,6 +89,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
 
   // Quick suggestion chips for natural language intake
   const CONCIERGE_SUGGESTIONS = [
+    { label: "❄️ AC Isn't Cooling (Tomorrow Morning)", prompt: "My AC isn't cooling. I need someone tomorrow morning." },
     { label: '❄️ AC Diagnostics & Gas Refill', prompt: "My split AC isn't cooling and the outdoor compressor is making a loud buzzing noise. Need an expert today." },
     { label: '🚰 Emergency Bathroom Pipe Leak', prompt: 'Urgent: Water is leaking from under the bathroom washbasin angle valve. Need a plumber right now.' },
     { label: '⚡ Tripping Circuit Breaker', prompt: 'Main MCB tripping repeatedly whenever high-load appliances turn on. Need certified electrician.' },
@@ -314,7 +315,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
                 type="text"
                 value={promptInput}
                 onChange={(e) => setPromptInput(e.target.value)}
-                placeholder="Describe what you need in plain words (e.g. My AC is leaking water, fix kitchen drain, replace main breaker...)"
+                placeholder="Describe what you need in plain words (e.g. My AC isn't cooling. I need someone tomorrow morning.)"
                 className="w-full pl-3.5 sm:pl-4 pr-24 sm:pr-40 py-3.5 sm:py-4.5 rounded-xl sm:rounded-2xl bg-white/95 border border-black/10 text-xs sm:text-base text-[#111111] placeholder:text-[#86868B] focus:outline-none focus:ring-2 focus:ring-[#0071E3] shadow-inner transition-all"
               />
               <div className="absolute right-1.5 sm:right-2 top-1.5 sm:top-2 bottom-1.5 sm:bottom-2 flex items-center">
