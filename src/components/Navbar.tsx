@@ -224,7 +224,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <FlaskConical className="w-3.5 h-3.5 text-[#AF52DE]" />
-              <span>Simulator</span>
+              <span>Demo Hub</span>
             </button>
 
             <button
@@ -529,7 +529,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <FlaskConical className="w-3.5 h-3.5 text-[#AF52DE]" />
-            <span>Simulator</span>
+            <span>Demo Hub</span>
           </button>
 
           <button

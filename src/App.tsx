@@ -28,6 +28,7 @@ import { JobExecutionTracker } from './components/JobExecutionTracker';
 import { FeedbackLearningLoopView } from './components/FeedbackLearningLoopView';
 import { WorkforceIntelligenceView } from './components/WorkforceIntelligenceView';
 import { ScenarioSimulator } from './components/ScenarioSimulator';
+import { HackathonDemoView } from './components/demo/HackathonDemoView';
 import { WorkerDiscoveryView } from './components/discovery/WorkerDiscoveryView';
 
 import { WorkerDashboard } from './components/worker/WorkerDashboard';
@@ -398,9 +399,21 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
           )}
 
           {/* ============================================================== */}
-          {/* TAB 6: APPENDIX G SIMULATOR */}
+          {/* TAB 6: PREMIUM HACKATHON DEMO MODE & SIMULATOR (Milestone 22) */}
           {/* ============================================================== */}
-          {currentTab === 'simulator' && <ScenarioSimulator />}
+          {currentTab === 'simulator' && (
+            <HackathonDemoView
+              workers={workers}
+              onOpenWorkerProfile={(rw) => setSelectedProfileWorker(rw)}
+              onOpenBookingModal={(rw) => setSelectedBookingWorker(rw)}
+              onApplyToLiveApp={(job, loc, prof) => {
+                setActiveJob(job);
+                setCustomerLocation(loc);
+                if (prof) setUserProfile(prof);
+                setCurrentTab('customer_home');
+              }}
+            />
+          )}
 
           {/* ============================================================== */}
           {/* TAB 7: WORKFORCE INTELLIGENCE & RESEARCH */}

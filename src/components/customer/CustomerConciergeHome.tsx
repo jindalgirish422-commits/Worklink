@@ -267,7 +267,7 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
       {/* ============================================================== */}
       <div className="pt-2 sm:pt-4 space-y-4">
         <div className="space-y-1.5">
-          <div className="inline-flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-[#0071E3] bg-[#0071E3]/10 px-3 py-1 rounded-full flex items-center space-x-1.5 border border-[#0071E3]/20">
               <Sparkles className="w-3.5 h-3.5" />
               <span>WorkLink Service Concierge</span>
@@ -276,6 +276,15 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
               <MapPin className="w-3.5 h-3.5 text-[#FF3B30] inline" />
               <span>{customerLocation.address.split(',')[0]} (10 km Zone)</span>
             </span>
+            <button
+              type="button"
+              onClick={() => onNavigateToTab('simulator')}
+              className="text-xs font-semibold text-[#0071E3] hover:text-[#0051B3] bg-blue-50/90 hover:bg-blue-100 border border-blue-200/80 px-3 py-1 rounded-full inline-flex items-center space-x-1.5 transition-all shadow-2xs hover-lift active-press"
+            >
+              <Zap className="w-3.5 h-3.5 text-[#0071E3] fill-[#0071E3]" />
+              <span>⚡ Hackathon Demo Mode: Evaluate 5 Live Scenarios</span>
+              <ChevronRight className="w-3 h-3 text-[#0071E3]" />
+            </button>
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#111111]">
