@@ -291,31 +291,12 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
       {/* "Good morning." Then: "What do you need today?"                 */}
       {/* ============================================================== */}
       <div className="pt-2 sm:pt-4 space-y-4">
-        <div className="space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-bold text-[#0071E3] bg-[#0071E3]/10 px-3 py-1 rounded-full flex items-center space-x-1.5 border border-[#0071E3]/20">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>WorkLink Service Concierge</span>
-            </span>
-            <span className="text-xs text-[#86868B] flex items-center space-x-1">
-              <MapPin className="w-3.5 h-3.5 text-[#FF3B30] inline" />
-              <span>{customerLocation.address.split(',')[0]} (10 km Zone)</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => onNavigateToTab('simulator')}
-              className="text-xs font-semibold text-[#0071E3] hover:text-[#0051B3] bg-blue-50/90 hover:bg-blue-100 border border-blue-200/80 px-3 py-1 rounded-full inline-flex items-center space-x-1.5 transition-all shadow-2xs hover-lift active-press"
-            >
-              <Zap className="w-3.5 h-3.5 text-[#0071E3] fill-[#0071E3]" />
-              <span>⚡ Hackathon Demo Mode: Evaluate 5 Live Scenarios</span>
-              <ChevronRight className="w-3 h-3 text-[#0071E3]" />
-            </button>
-          </div>
-
+        {/* WorkLink Service Concierge — Cleaned header adhering to premium luxury standard */}
+        <div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#111111]">
             Good morning.
           </h1>
-          <p className="text-lg sm:text-xl font-medium text-[#6E6E73] tracking-tight">
+          <p className="text-lg sm:text-xl font-medium text-[#6E6E73] tracking-tight mt-1">
             What do you need today?
           </p>
         </div>
@@ -342,8 +323,8 @@ export const CustomerConciergeHome: React.FC<CustomerConciergeHomeProps> = ({
                   size="md"
                   className="h-full px-3.5 sm:px-6 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm bg-[#111111] hover:bg-black text-white flex items-center space-x-1.5 shadow-sm active-press min-h-[38px]"
                 >
-                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0071E3]" />
-                  <span>Match</span>
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+                  <span>Find Worker</span>
                 </Button>
               </div>
             </div>

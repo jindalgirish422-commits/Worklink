@@ -97,171 +97,89 @@ export const Navbar: React.FC<NavbarProps> = ({
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Brand & Subtitle */}
+          {/* Brand */}
           <div
-            className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer select-none group shrink-0"
+            className="flex items-center space-x-2.5 cursor-pointer select-none group shrink-0"
             onClick={() => onSelectTab('customer_home')}
           >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#111111] text-white flex items-center justify-center font-bold tracking-tight shadow-sm transition-transform duration-200 group-hover:scale-105 shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-[#111111] text-white flex items-center justify-center font-bold tracking-tight shadow-2xs transition-transform duration-200 group-hover:scale-105 shrink-0">
               <span className="text-[#0071E3] mr-0.5">W</span>L
             </div>
-            <div>
-              <div className="flex items-center space-x-1.5 sm:space-x-2">
-                <span className="font-bold text-sm sm:text-base tracking-tight text-[#111111]">
-                  WorkLink
-                </span>
-                <Badge variant={getRoleBadgeVariant(role)} size="sm">
-                  {role === 'worker' ? 'Pro' : role === 'operator' ? 'Admin' : 'Market'}
-                </Badge>
-              </div>
-              <p className="text-[11px] text-[#86868B] font-normal leading-tight hidden lg:block">
-                Right Labour. Right Work. Right Time.
-              </p>
-            </div>
+            <span className="font-bold text-base sm:text-lg tracking-tight text-[#111111]">
+              WorkLink
+            </span>
           </div>
 
-          {/* Center Navigation Tabs with tactile glass surface */}
-          <nav className="hidden md:flex items-center space-x-1 p-1 glass-surface-light rounded-2xl border border-black/5 text-xs font-medium text-[#6E6E73]">
-            {/* Customer Concierge Primary Tab */}
+          {/* Primary Navigation: Home, Bookings (and role hubs when active) */}
+          <nav className="hidden sm:flex items-center space-x-1 text-xs font-medium text-[#6E6E73]">
+            {/* Home (customer_home / Concierge) */}
             <button
               onClick={() => onSelectTab('customer_home')}
-              className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
-                currentTab === 'customer_home'
-                  ? 'bg-[#FFFFFF] text-[#111111] shadow-xs font-semibold'
-                  : 'hover:text-[#111111]'
+              className={`px-3.5 py-1.5 rounded-xl transition-all duration-150 ${
+                currentTab === 'customer_home' || currentTab === 'landing'
+                  ? 'bg-black/[0.05] text-[#111111] font-semibold'
+                  : 'hover:text-[#111111] hover:bg-black/[0.03]'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#0071E3]" />
-              <span>Concierge</span>
+              Home
             </button>
 
+            {/* Bookings */}
             <button
-              onClick={() => onSelectTab('landing')}
-              className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
-                currentTab === 'landing'
-                  ? 'bg-[#FFFFFF] text-[#111111] shadow-xs font-semibold'
-                  : 'hover:text-[#111111]'
+              onClick={() => onSelectTab('active_booking')}
+              className={`px-3.5 py-1.5 rounded-xl transition-all duration-150 flex items-center space-x-1.5 ${
+                currentTab === 'active_booking'
+                  ? 'bg-black/[0.05] text-[#111111] font-semibold'
+                  : 'hover:text-[#111111] hover:bg-black/[0.03]'
               }`}
             >
-              <Home className="w-3.5 h-3.5 text-[#111111]" />
-              <span>Overview</span>
+              <span>Bookings</span>
+              {hasActiveBooking && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#34C759]" />
+              )}
             </button>
 
-            {/* Role-Specific Primary Tab */}
             {role === 'worker' && (
               <button
                 onClick={() => onSelectTab('worker_hub')}
-                className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
+                className={`px-3.5 py-1.5 rounded-xl transition-all duration-150 ${
                   currentTab === 'worker_hub'
-                    ? 'bg-[#FFFFFF] text-[#111111] shadow-xs font-semibold'
-                    : 'hover:text-[#111111]'
+                    ? 'bg-black/[0.05] text-[#111111] font-semibold'
+                    : 'hover:text-[#111111] hover:bg-black/[0.03]'
                 }`}
               >
-                <Briefcase className="w-3.5 h-3.5 text-[#34C759]" />
-                <span>Worker Hub</span>
+                Worker Hub
               </button>
             )}
 
             {role === 'operator' && (
               <button
                 onClick={() => onSelectTab('operator_console')}
-                className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
+                className={`px-3.5 py-1.5 rounded-xl transition-all duration-150 ${
                   currentTab === 'operator_console'
-                    ? 'bg-[#FFFFFF] text-[#111111] shadow-xs font-semibold'
-                    : 'hover:text-[#111111]'
+                    ? 'bg-black/[0.05] text-[#111111] font-semibold'
+                    : 'hover:text-[#111111] hover:bg-black/[0.03]'
                 }`}
               >
-                <Shield className="w-3.5 h-3.5 text-[#AF52DE]" />
-                <span>Operator Console</span>
+                Operator
               </button>
             )}
-
-            <button
-              onClick={() => onSelectTab('marketplace')}
-              className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
-                currentTab === 'marketplace'
-                  ? 'bg-[#FFFFFF] text-[#111111] shadow-xs font-semibold'
-                  : 'hover:text-[#111111]'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#0071E3]" />
-              <span>Intake &amp; Match</span>
-            </button>
-
-            <button
-              onClick={() => onSelectTab('zone_radar')}
-              className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
-                currentTab === 'zone_radar'
-                  ? 'bg-[#FFFFFF] text-[#111111] shadow-xs font-semibold'
-                  : 'hover:text-[#111111]'
-              }`}
-            >
-              <Compass className="w-3.5 h-3.5 text-[#5856D6]" />
-              <span>10 km Radar</span>
-            </button>
-
-            <button
-              onClick={() => onSelectTab('active_booking')}
-              className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 relative ${
-                currentTab === 'active_booking'
-                  ? 'bg-[#FFFFFF] text-[#111111] shadow-xs font-semibold'
-                  : 'hover:text-[#111111]'
-              }`}
-            >
-              <Clock className="w-3.5 h-3.5 text-[#34C759]" />
-              <span>Execution</span>
-              {hasActiveBooking && (
-                <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
-              )}
-            </button>
-
-            <button
-              onClick={() => onSelectTab('simulator')}
-              className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
-                currentTab === 'simulator'
-                  ? 'bg-[#FFFFFF] text-[#111111] shadow-xs font-semibold'
-                  : 'hover:text-[#111111]'
-              }`}
-            >
-              <FlaskConical className="w-3.5 h-3.5 text-[#AF52DE]" />
-              <span>Demo Hub</span>
-            </button>
-
-            <button
-              onClick={() => onSelectTab('intelligence')}
-              className={`px-3 py-1.5 rounded-lg transition-all duration-200 flex items-center space-x-1.5 ${
-                currentTab === 'intelligence'
-                  ? 'bg-[#FFFFFF] text-[#111111] shadow-xs font-semibold'
-                  : 'hover:text-[#111111]'
-              }`}
-            >
-              <BarChart3 className="w-3.5 h-3.5 text-[#FF9500]" />
-              <span>Intelligence</span>
-            </button>
           </nav>
 
-          {/* Right Action Controls */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Dynamic Location Pill */}
+          {/* Right Action Controls: Location & Profile */}
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* Subtle Understated Location Indicator (📍 Hauz Khas Enclave · 10 km) */}
             <button
               onClick={onChangeLocationClick}
-              className="flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs glass-button text-[#111111] transition-all max-w-[105px] xs:max-w-[150px] sm:max-w-[200px] truncate min-h-[36px]"
-              title="Click to shift dynamic 10km service zone"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs text-[#6E6E73] hover:text-[#111111] hover:bg-black/[0.03] transition-colors truncate max-w-[105px] xs:max-w-[155px] sm:max-w-[220px]"
+              title="📍 Hauz Khas Enclave · 10 km (Click to view or change your location)"
             >
-              <MapPin className="w-3.5 h-3.5 text-[#FF3B30] shrink-0" />
-              <span className="truncate">{location.address.split(',')[0]} (10km)</span>
+              <MapPin className="w-3.5 h-3.5 text-[#86868B] shrink-0" />
+              <span className="truncate font-medium text-[#111111]">
+                {location.address.split(',')[0]}
+              </span>
+              <span className="text-[#86868B] shrink-0 font-normal">· 10 km</span>
             </button>
-
-            {/* Weights Preset Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onOpenWeightsModal}
-              leftIcon={<Sliders className="w-3.5 h-3.5 text-[#0071E3]" />}
-              className="hidden lg:flex glass-button"
-            >
-              <span>Weights</span>
-            </Button>
 
             {/* User Account / Profile Menu */}
             {currentUser ? (
@@ -376,18 +294,60 @@ export const Navbar: React.FC<NavbarProps> = ({
                         </button>
                       )}
 
-                      {role === 'operator' && (
-                        <button
-                          onClick={() => {
-                            setIsProfileMenuOpen(false);
-                            onSelectTab('operator_console');
-                          }}
-                          className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#111111] hover:bg-[#F5F5F7] flex items-center space-x-2"
-                        >
-                          <Shield className="w-3.5 h-3.5 text-[#AF52DE]" />
-                          <span>Operator Console</span>
-                        </button>
-                      )}
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          onSelectTab('operator_console');
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#111111] hover:bg-[#F5F5F7] flex items-center space-x-2"
+                      >
+                        <Shield className="w-3.5 h-3.5 text-[#AF52DE]" />
+                        <span>Operator Console</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          onSelectTab('simulator');
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#111111] hover:bg-[#F5F5F7] flex items-center space-x-2"
+                      >
+                        <FlaskConical className="w-3.5 h-3.5 text-[#AF52DE]" />
+                        <span>Demo Hub (5 Live Scenarios)</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          onSelectTab('intelligence');
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#111111] hover:bg-[#F5F5F7] flex items-center space-x-2"
+                      >
+                        <BarChart3 className="w-3.5 h-3.5 text-[#FF9500]" />
+                        <span>Workforce Intelligence</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          onSelectTab('zone_radar');
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#111111] hover:bg-[#F5F5F7] flex items-center space-x-2"
+                      >
+                        <Compass className="w-3.5 h-3.5 text-[#5856D6]" />
+                        <span>10 km Service Radar</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          onOpenWeightsModal();
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#111111] hover:bg-[#F5F5F7] flex items-center space-x-2"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#0071E3]" />
+                        <span>Matching Weights</span>
+                      </button>
 
                       <button
                         onClick={() => {
@@ -427,122 +387,62 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Compact Glass Navigation Rail (Mobile Material Design) */}
         <nav
           aria-label="Mobile Navigation"
-          className="flex md:hidden items-center space-x-1.5 py-1.5 px-1.5 my-1.5 rounded-2xl bg-white/75 backdrop-blur-md border border-black/5 shadow-2xs overflow-x-auto no-scrollbar text-xs scroll-smooth"
+          className="flex sm:hidden items-center space-x-1.5 py-1 px-1 my-1.5 rounded-2xl bg-white/75 backdrop-blur-md border border-black/5 shadow-2xs text-xs"
         >
           <button
             onClick={() => onSelectTab('customer_home')}
-            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
-              currentTab === 'customer_home'
+            className={`min-h-[40px] flex-1 py-2 px-3 rounded-xl font-medium transition-all flex items-center justify-center space-x-1.5 ${
+              currentTab === 'customer_home' || currentTab === 'landing'
                 ? 'bg-[#111111] text-white shadow-xs font-semibold'
-                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
+                : 'text-[#6E6E73] hover:text-[#111111]'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#0071E3]" />
-            <span>Concierge</span>
+            <Home className="w-3.5 h-3.5" />
+            <span>Home</span>
           </button>
 
           <button
-            onClick={() => onSelectTab('landing')}
-            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
-              currentTab === 'landing'
+            onClick={() => onSelectTab('active_booking')}
+            className={`min-h-[40px] flex-1 py-2 px-3 rounded-xl font-medium transition-all flex items-center justify-center space-x-1.5 relative ${
+              currentTab === 'active_booking'
                 ? 'bg-[#111111] text-white shadow-xs font-semibold'
-                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
+                : 'text-[#6E6E73] hover:text-[#111111]'
             }`}
           >
-            <Home className="w-3.5 h-3.5 text-[#111111]" />
-            <span>Overview</span>
+            <Clock className="w-3.5 h-3.5" />
+            <span>Bookings</span>
+            {hasActiveBooking && (
+              <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
+            )}
           </button>
 
           {role === 'worker' && (
             <button
               onClick={() => onSelectTab('worker_hub')}
-              className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
+              className={`min-h-[40px] flex-1 py-2 px-3 rounded-xl font-medium transition-all flex items-center justify-center space-x-1.5 ${
                 currentTab === 'worker_hub'
                   ? 'bg-[#111111] text-white shadow-xs font-semibold'
-                  : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
+                  : 'text-[#6E6E73] hover:text-[#111111]'
               }`}
             >
               <Briefcase className="w-3.5 h-3.5 text-[#34C759]" />
-              <span>Worker Hub</span>
+              <span>Jobs</span>
             </button>
           )}
 
           {role === 'operator' && (
             <button
               onClick={() => onSelectTab('operator_console')}
-              className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
+              className={`min-h-[40px] flex-1 py-2 px-3 rounded-xl font-medium transition-all flex items-center justify-center space-x-1.5 ${
                 currentTab === 'operator_console'
                   ? 'bg-[#111111] text-white shadow-xs font-semibold'
-                  : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
+                  : 'text-[#6E6E73] hover:text-[#111111]'
               }`}
             >
               <Shield className="w-3.5 h-3.5 text-[#AF52DE]" />
-              <span>Admin Console</span>
+              <span>Operator</span>
             </button>
           )}
-
-          <button
-            onClick={() => onSelectTab('marketplace')}
-            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
-              currentTab === 'marketplace'
-                ? 'bg-[#111111] text-white shadow-xs font-semibold'
-                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#0071E3]" />
-            <span>Match</span>
-          </button>
-
-          <button
-            onClick={() => onSelectTab('zone_radar')}
-            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
-              currentTab === 'zone_radar'
-                ? 'bg-[#111111] text-white shadow-xs font-semibold'
-                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
-            }`}
-          >
-            <Compass className="w-3.5 h-3.5 text-[#5856D6]" />
-            <span>10km Radar</span>
-          </button>
-
-          <button
-            onClick={() => onSelectTab('active_booking')}
-            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 relative ${
-              currentTab === 'active_booking'
-                ? 'bg-[#111111] text-white shadow-xs font-semibold'
-                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5 text-[#34C759]" />
-            <span>Execution</span>
-            {hasActiveBooking && (
-              <span className="w-2 h-2 rounded-full bg-[#34C759] animate-pulse" />
-            )}
-          </button>
-
-          <button
-            onClick={() => onSelectTab('simulator')}
-            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
-              currentTab === 'simulator'
-                ? 'bg-[#111111] text-white shadow-xs font-semibold'
-                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
-            }`}
-          >
-            <FlaskConical className="w-3.5 h-3.5 text-[#AF52DE]" />
-            <span>Demo Hub</span>
-          </button>
-
-          <button
-            onClick={() => onSelectTab('intelligence')}
-            className={`min-h-[40px] px-3.5 py-2 rounded-xl shrink-0 font-medium transition-all active-press flex items-center space-x-1.5 ${
-              currentTab === 'intelligence'
-                ? 'bg-[#111111] text-white shadow-xs font-semibold'
-                : 'text-[#6E6E73] hover:text-[#111111] hover:bg-black/5'
-            }`}
-          >
-            <BarChart3 className="w-3.5 h-3.5 text-[#FF9500]" />
-            <span>Intelligence</span>
-          </button>
         </nav>
       </div>
     </header>
