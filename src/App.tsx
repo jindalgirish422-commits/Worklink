@@ -6,6 +6,7 @@ import {
   MatchingWeights,
   RankedWorker,
   Booking,
+  BookingStatus,
   UserPersonalizationProfile,
   AvailabilityStatus,
 } from './types';
@@ -138,10 +139,46 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
     setSelectedBookingWorker(null);
     setCurrentTab('active_booking');
     showToast({
-      type: 'success',
-      title: 'Worker Dispatched',
-      message: `${booking.worker.name} accepted your request. Tracking active.`,
+      type: 'info',
+      title: 'Booking Requested',
+      message: `Request sent to ${booking.worker.name}. Scheduled for ${booking.scheduledDate || 'Today'} (${booking.scheduledTimeSlot || 'Immediate'}).`,
     });
+  };
+
+  const handleAcceptBooking = (bookingId: string) => {
+    if (activeBooking && activeBooking.id === bookingId) {
+      const updated: Booking = { ...activeBooking, status: 'accepted' };
+      setActiveBooking(updated);
+      showToast({
+        type: 'success',
+        title: 'Job Request Accepted',
+        message: `Accepted request #${bookingId.slice(0, 8)}. Scheduled for ${updated.scheduledDate || 'Today'} (${updated.scheduledTimeSlot || 'Immediate'}).`,
+      });
+    }
+  };
+
+  const handleRejectBooking = (bookingId: string, reason?: string) => {
+    if (activeBooking && activeBooking.id === bookingId) {
+      const updated: Booking = {
+        ...activeBooking,
+        status: 'cancelled',
+        cancellationReason: reason || 'Worker schedule conflict',
+        cancelledBy: 'worker',
+      };
+      setActiveBooking(updated);
+      showToast({
+        type: 'warning',
+        title: 'Job Request Declined',
+        message: `Booking #${bookingId.slice(0, 8)} was declined. Customer will be notified.`,
+      });
+    }
+  };
+
+  const handleAdvanceBookingStatus = (bookingId: string, nextStatus: BookingStatus) => {
+    if (activeBooking && activeBooking.id === bookingId) {
+      const updated: Booking = { ...activeBooking, status: nextStatus };
+      setActiveBooking(updated);
+    }
   };
 
   // Booking lifecycle update
@@ -223,6 +260,9 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
               workers={workers}
               onUpdateWorkerStatus={handleUpdateWorkerStatus}
               activeBooking={activeBooking}
+              onAcceptBooking={handleAcceptBooking}
+              onRejectBooking={handleRejectBooking}
+              onAdvanceBookingStatus={handleAdvanceBookingStatus}
             />
           )}
 
@@ -250,6 +290,8 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
               activeJob={activeJob}
               customerLocation={customerLocation}
               userProfile={userProfile}
+              activeBooking={activeBooking}
+              onNavigateToBooking={() => setCurrentTab('active_booking')}
               onBookClick={(rw) => setSelectedBookingWorker(rw)}
               onViewProfileClick={(rw) => setSelectedProfileWorker(rw)}
               onJobCreated={handleJobCreated}

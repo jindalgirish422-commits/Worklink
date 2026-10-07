@@ -19,7 +19,7 @@ import {
   Award,
   DollarSign,
 } from 'lucide-react';
-import { Worker, RankedWorker, JobRequest, LocationCoordinates } from '../../types';
+import { Worker, RankedWorker, JobRequest, LocationCoordinates, Booking } from '../../types';
 import {
   DiscoveryFilters,
   DEFAULT_DISCOVERY_FILTERS,
@@ -54,6 +54,8 @@ interface WorkerDiscoveryViewProps {
   onJobCreated: (job: JobRequest) => void;
   onResetLocation?: () => void;
   userProfile?: UserPersonalizationProfile;
+  activeBooking?: Booking | null;
+  onNavigateToBooking?: () => void;
 }
 
 type DiscoveryTab = 'recommendations' | 'explore';
@@ -90,6 +92,8 @@ export const WorkerDiscoveryView: React.FC<WorkerDiscoveryViewProps> = ({
   onJobCreated,
   onResetLocation,
   userProfile,
+  activeBooking,
+  onNavigateToBooking,
 }) => {
   // Navigation & mode state
   const [activeTab, setActiveTab] = useState<DiscoveryTab>('recommendations');
@@ -180,6 +184,42 @@ export const WorkerDiscoveryView: React.FC<WorkerDiscoveryViewProps> = ({
 
   return (
     <div className="space-y-8 animate-fade-in relative pb-24">
+      {/* Upcoming Booking Notification Card (Milestone 11) */}
+      {activeBooking && ['requested', 'accepted', 'in_progress'].includes(activeBooking.status) && (
+        <div
+          onClick={onNavigateToBooking}
+          className="p-3.5 px-5 rounded-2xl bg-white/90 backdrop-blur-xl border border-white/80 glass-specular-edge shadow-xs flex items-center justify-between cursor-pointer hover:border-[#0071E3]/40 transition-all group"
+        >
+          <div className="flex items-center space-x-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#0071E3] animate-pulse" />
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-bold text-[#111111]">
+                Upcoming Booking with {activeBooking.worker.name}
+              </span>
+              <Badge
+                variant={
+                  activeBooking.status === 'requested'
+                    ? 'accent'
+                    : activeBooking.status === 'accepted'
+                    ? 'default'
+                    : 'success'
+                }
+                size="sm"
+              >
+                {activeBooking.status.replace('_', ' ').toUpperCase()}
+              </Badge>
+              <span className="text-[#6E6E73] hidden sm:inline">
+                • {activeBooking.scheduledDate || 'Today'} ({activeBooking.scheduledTimeSlot || 'Immediate'})
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center space-x-1 text-xs font-semibold text-[#0071E3] group-hover:translate-x-0.5 transition-transform shrink-0">
+            <span>View Booking</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      )}
+
       {/* ============================================================== */}
       {/* 1. EDITORIAL HEADER & DISCOVERY HERO */}
       {/* ============================================================== */}

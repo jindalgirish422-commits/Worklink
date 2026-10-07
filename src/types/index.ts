@@ -162,20 +162,25 @@ export interface AdditionalWorkItem {
   approved: boolean;
 }
 
+export type BookingStatus =
+  | 'requested'
+  | 'accepted'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled'
+  | 'rated'
+  | 'en_route'
+  | 'arrived'
+  | 'paused'
+  | 'paid';
+
 export interface Booking {
   id: string;
   job: JobRequest;
   worker: Worker;
-  status:
-    | 'requested'
-    | 'accepted'
-    | 'en_route'
-    | 'arrived'
-    | 'in_progress'
-    | 'paused'
-    | 'completed'
-    | 'paid'
-    | 'cancelled';
+  status: BookingStatus;
+  scheduledDate?: string;
+  scheduledTimeSlot?: string;
   startTime?: number;
   elapsedSeconds: number;
   isTimerRunning: boolean;
@@ -197,6 +202,8 @@ export interface Booking {
     comment: string;
     submittedAt: string;
   };
+  cancellationReason?: string;
+  cancelledBy?: 'customer' | 'worker';
 }
 
 export interface UserPersonalizationProfile {
