@@ -63,13 +63,18 @@ export interface JobRequest {
   id: string;
   rawPrompt: string;
   serviceCategory: TradeCategory;
+  service?: string;
   requiredSkills: string[];
   requiredExperienceYears: number;
   urgency: 'emergency' | 'high' | 'normal' | 'scheduled';
+  requestedDate?: string;
   requestedTime: string;
   location: CustomerLocation;
   budgetMax?: number;
+  budget?: number | null;
   mandatoryConditions: string[];
+  additionalConstraints?: string[];
+  notes?: string;
   clarificationAnswers?: Record<string, string>;
   createdAt: string;
 }
