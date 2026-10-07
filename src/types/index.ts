@@ -176,6 +176,48 @@ export type BookingStatus =
   | 'paused'
   | 'paid';
 
+export type PaymentStatus = 'pending' | 'processing' | 'paid' | 'failed';
+
+export interface PaymentReceipt {
+  receiptNumber: string;
+  transactionReference: string;
+  bookingId: string;
+  workerName: string;
+  workerTrade: string;
+  customerName: string;
+  customerAddress: string;
+  serviceCategory: string;
+  timestamp: string;
+  paymentMethod: 'UPI' | 'Card' | 'Cash on Delivery';
+  paymentStatus: PaymentStatus;
+  isSimulated: boolean;
+  actualHours: number;
+  workingDurationFormatted: string;
+  hourlyRate: number;
+  actualLabour: number;
+  travelDistanceKm: number;
+  travelCharge: number;
+  additionalWorkItems: Array<{ name: string; cost: number; approved: boolean }>;
+  additionalWorkTotal: number;
+  platformFee: number;
+  discount: number;
+  finalTotal: number;
+}
+
+export interface PaymentTransactionRecord {
+  id: string;
+  bookingId: string;
+  amount: number;
+  status: PaymentStatus;
+  method: 'UPI' | 'Card' | 'Cash on Delivery';
+  isSimulated: boolean;
+  transactionReference: string;
+  timestamp: string;
+  receiptNumber: string;
+  workerName: string;
+  serviceCategory: string;
+}
+
 export interface Booking {
   id: string;
   job: JobRequest;
@@ -204,8 +246,12 @@ export interface Booking {
   discount: number;
   estimatedTotal: number;
   finalTotal: number;
+  paymentStatus?: PaymentStatus;
   paymentMethod?: 'UPI' | 'Card' | 'Cash on Delivery';
   paymentReference?: string;
+  receiptNumber?: string;
+  paidAt?: string;
+  isSimulatedPayment?: boolean;
   feedback?: {
     rating: number;
     tags: string[];

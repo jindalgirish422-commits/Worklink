@@ -19,6 +19,7 @@ import { Modal } from './ui/Modal';
 import { Avatar } from './ui/Avatar';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
+import { TransparentPriceSummary } from './pricing/TransparentPriceSummary';
 
 export interface BookingFlowModalProps {
   isOpen: boolean;
@@ -271,68 +272,9 @@ export const BookingFlowModal: React.FC<BookingFlowModalProps> = ({
           </div>
 
           {/* ============================================================== */}
-          {/* 3. ESTIMATE: Transparent Breakdown & Clear Numbers            */}
+          {/* 3. ESTIMATE: Transparent Breakdown & Clear Numbers (Glass Card) */}
           {/* ============================================================== */}
-          <div className="p-5 rounded-2xl bg-white border border-black/8 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-black/5">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#6E6E73]">
-                Estimated Cost Breakdown
-              </h4>
-              <span className="text-[11px] text-[#34C759] font-medium flex items-center space-x-1">
-                <Check className="w-3 h-3" />
-                <span>Zero Prepayment Required</span>
-              </span>
-            </div>
-
-            <div className="space-y-2 text-xs text-[#111111]">
-              <div className="flex justify-between items-center">
-                <span>
-                  Base Labour ({estimatedHours} hrs @ ₹{worker.hourlyRate}/hr)
-                </span>
-                <span className="font-semibold">₹{priceEstimate.baseLabour}</span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="flex items-center space-x-1 text-[#6E6E73]">
-                  <span>Travel Tariff ({worker.distanceKm.toFixed(1)} km)</span>
-                  {travelBand.band === 'core_free' && (
-                    <span className="text-[10px] text-[#34C759] font-bold">
-                      (Free Core Zone)
-                    </span>
-                  )}
-                </span>
-                <span className="font-semibold">
-                  {priceEstimate.travelCharge === 0 ? '₹0' : `+₹${priceEstimate.travelCharge}`}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-[#6E6E73]">Platform Trust &amp; Safety Fee</span>
-                <span className="font-semibold">₹{priceEstimate.platformFee}</span>
-              </div>
-
-              {priceEstimate.discount > 0 && (
-                <div className="flex justify-between items-center text-[#34C759]">
-                  <span>Introductory Match Discount</span>
-                  <span>-₹{priceEstimate.discount}</span>
-                </div>
-              )}
-
-              <div className="pt-2 border-t border-black/8 flex justify-between items-baseline font-bold text-sm">
-                <span>Estimated Total</span>
-                <span className="text-lg text-[#111111]">
-                  ₹{priceEstimate.estimatedTotal}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-3 bg-[#F8F8FA] rounded-xl text-[11px] text-[#86868B] flex items-start space-x-2">
-              <Info className="w-3.5 h-3.5 text-[#0071E3] shrink-0 mt-0.5" />
-              <span>
-                Actual total is calculated via the live service timer once the specialist completes the repair. You only pay for verified work hours.
-              </span>
-            </div>
-          </div>
+          <TransparentPriceSummary mode="estimate" estimate={priceEstimate} isSimulated={true} />
 
           {/* Contact & Address Confirmation */}
           <div className="p-4 rounded-2xl bg-white border border-black/8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">

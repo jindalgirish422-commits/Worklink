@@ -9,6 +9,7 @@ import {
   BookingStatus,
   UserPersonalizationProfile,
   AvailabilityStatus,
+  PaymentTransactionRecord,
 } from './types';
 import { INITIAL_WORKERS, DEFAULT_CUSTOMER_LOCATION } from './data/mockWorkers';
 import {
@@ -97,6 +98,11 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
   // Active Booking & History State
   const [activeBooking, setActiveBooking] = useState<Booking | null>(null);
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentTransactionRecord[]>([]);
+
+  const handleAddPaymentTransaction = (record: PaymentTransactionRecord) => {
+    setPaymentHistory((prev) => [record, ...prev]);
+  };
 
   // Modals State
   const [selectedProfileWorker, setSelectedProfileWorker] = useState<RankedWorker | null>(null);
@@ -327,6 +333,8 @@ const AppContent: React.FC<AppContentProps> = ({ workers, setWorkers }) => {
                 onUpdateBooking={handleUpdateBooking}
                 onCloseBooking={() => setActiveBooking(null)}
                 onCompleteFeedbackLoop={handleCompleteFeedbackLoop}
+                paymentTransactions={paymentHistory}
+                onAddPaymentTransaction={handleAddPaymentTransaction}
               />
 
               <FeedbackLearningLoopView

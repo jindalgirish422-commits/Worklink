@@ -22,21 +22,34 @@ import {
   DollarSign,
   Info,
   FileText,
+  CreditCard,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Booking, AdditionalWorkItem, BookingStatus } from '../types';
+import {
+  Booking,
+  AdditionalWorkItem,
+  BookingStatus,
+  PaymentReceipt,
+  PaymentTransactionRecord,
+  PaymentStatus,
+} from '../types';
 import { calculateFinalPrice } from '../services/pricingEngine';
 import { Avatar } from './ui/Avatar';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 import { Modal } from './ui/Modal';
 import { useToast } from './ui/Toast';
+import { TransparentPriceSummary } from './pricing/TransparentPriceSummary';
+import { ReceiptModal } from './payment/ReceiptModal';
+import { PaymentHistoryModal } from './payment/PaymentHistoryModal';
 
 interface JobExecutionTrackerProps {
   booking: Booking | null;
   onUpdateBooking: (updated: Booking) => void;
   onCloseBooking: () => void;
   onCompleteFeedbackLoop: (completedBooking: Booking) => void;
+  paymentTransactions?: PaymentTransactionRecord[];
+  onAddPaymentTransaction?: (record: PaymentTransactionRecord) => void;
 }
 
 export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
@@ -44,6 +57,8 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   onUpdateBooking,
   onCloseBooking,
   onCompleteFeedbackLoop,
+  paymentTransactions,
+  onAddPaymentTransaction,
 }) => {
   const { showToast } = useToast();
 
@@ -104,7 +119,16 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   const [feedbackComment, setFeedbackComment] = useState(
     'Arrived on time. Fixed the cooling issue cleanly with transparent billing.'
   );
-  const [isPaid, setIsPaid] = useState(booking.status === 'paid' || booking.status === 'rated');
+  const [isPaid, setIsPaid] = useState(
+    booking.status === 'paid' || booking.status === 'rated' || booking.paymentStatus === 'paid'
+  );
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(
+    booking.paymentStatus || (booking.status === 'paid' || booking.status === 'rated' ? 'paid' : 'pending')
+  );
+  const [selectedReceipt, setSelectedReceipt] = useState<PaymentReceipt | null>(null);
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [localTransactions, setLocalTransactions] = useState<PaymentTransactionRecord[]>([]);
 
   // Sync state if booking updates externally
   useEffect(() => {
@@ -236,32 +260,139 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   };
 
   const handleProcessPayment = (method: 'UPI' | 'Card' | 'Cash on Delivery') => {
-    try {
-      confetti({
-        particleCount: 90,
-        spread: 60,
-        origin: { y: 0.7 },
+    setPaymentStatus('processing');
+
+    setTimeout(() => {
+      try {
+        confetti({
+          particleCount: 90,
+          spread: 60,
+          origin: { y: 0.7 },
+        });
+      } catch (e) {
+        // ignore
+      }
+
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const randSuffix = Math.floor(1000 + Math.random() * 9000);
+      const transactionReference = `MOCK-TXN-${dateStr}-${randSuffix}`;
+      const receiptNumber = `RCP-${dateStr}-${randSuffix}`;
+      const timestamp = new Date().toLocaleString([], {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
       });
-    } catch (e) {
-      // ignore
+
+      const receipt: PaymentReceipt = {
+        receiptNumber,
+        transactionReference,
+        bookingId: booking.id,
+        workerName: booking.worker.name,
+        workerTrade: booking.worker.trade,
+        customerName: 'Customer',
+        customerAddress: booking.job.location.address,
+        serviceCategory: booking.job.category,
+        timestamp,
+        paymentMethod: method,
+        paymentStatus: 'paid',
+        isSimulated: true,
+        actualHours: actualHoursWorked,
+        workingDurationFormatted: formatTime(seconds),
+        hourlyRate: booking.worker.hourlyRate,
+        actualLabour: finalPriceCalc.actualLabour,
+        travelDistanceKm: booking.travelDistanceKm,
+        travelCharge: finalPriceCalc.travelCharge,
+        additionalWorkItems: availableAddons
+          .filter((a) => a.approved)
+          .map((a) => ({ name: a.name, cost: a.cost, approved: true })),
+        additionalWorkTotal: finalPriceCalc.additionalWorkTotal,
+        platformFee: finalPriceCalc.platformFee,
+        discount: finalPriceCalc.discount,
+        finalTotal: finalPriceCalc.finalTotal,
+      };
+
+      const txRecord: PaymentTransactionRecord = {
+        id: `tx-${Date.now()}`,
+        bookingId: booking.id,
+        amount: finalPriceCalc.finalTotal,
+        status: 'paid',
+        method,
+        isSimulated: true,
+        transactionReference,
+        timestamp,
+        receiptNumber,
+        workerName: booking.worker.name,
+        serviceCategory: booking.job.category,
+      };
+
+      setSelectedReceipt(receipt);
+      setPaymentStatus('paid');
+      setIsPaid(true);
+
+      setLocalTransactions((prev) => [txRecord, ...prev]);
+      onAddPaymentTransaction?.(txRecord);
+
+      const updated: Booking = {
+        ...booking,
+        status: 'completed',
+        paymentStatus: 'paid',
+        paymentMethod: method,
+        paymentReference: transactionReference,
+        receiptNumber,
+        paidAt: timestamp,
+        isSimulatedPayment: true,
+        actualHours: actualHoursWorked,
+        finalTotal: finalPriceCalc.finalTotal,
+      };
+      onUpdateBooking(updated);
+
+      showToast({
+        type: 'success',
+        title: 'Payment Confirmed (Simulated)',
+        message: `₹${finalPriceCalc.finalTotal} settled via ${method}. Mock Ref: ${transactionReference}`,
+      });
+    }, 600);
+  };
+
+  const handleOpenReceipt = () => {
+    if (!selectedReceipt) {
+      const receipt: PaymentReceipt = {
+        receiptNumber: booking.receiptNumber || `RCP-${booking.id.slice(0, 8)}`,
+        transactionReference: booking.paymentReference || `MOCK-TXN-${booking.id.slice(0, 8)}`,
+        bookingId: booking.id,
+        workerName: booking.worker.name,
+        workerTrade: booking.worker.trade,
+        customerName: 'Customer',
+        customerAddress: booking.job.location.address,
+        serviceCategory: booking.job.category,
+        timestamp: booking.paidAt || new Date().toLocaleString(),
+        paymentMethod: booking.paymentMethod || 'UPI',
+        paymentStatus: booking.paymentStatus || 'paid',
+        isSimulated: true,
+        actualHours: booking.actualHours || actualHoursWorked,
+        workingDurationFormatted: formatTime(seconds),
+        hourlyRate: booking.worker.hourlyRate,
+        actualLabour: finalPriceCalc.actualLabour,
+        travelDistanceKm: booking.travelDistanceKm,
+        travelCharge: finalPriceCalc.travelCharge,
+        additionalWorkItems: availableAddons
+          .filter((a) => a.approved)
+          .map((a) => ({ name: a.name, cost: a.cost, approved: true })),
+        additionalWorkTotal: finalPriceCalc.additionalWorkTotal,
+        platformFee: finalPriceCalc.platformFee,
+        discount: finalPriceCalc.discount,
+        finalTotal: booking.finalTotal || finalPriceCalc.finalTotal,
+      };
+      setSelectedReceipt(receipt);
     }
+    setIsReceiptModalOpen(true);
+  };
 
-    setIsPaid(true);
-    const updated: Booking = {
-      ...booking,
-      status: 'completed',
-      paymentMethod: method,
-      paymentReference: `PAY-${Date.now().toString().slice(-8)}`,
-      actualHours: actualHoursWorked,
-      finalTotal: finalPriceCalc.finalTotal,
-    };
-    onUpdateBooking(updated);
-
-    showToast({
-      type: 'success',
-      title: 'Payment Confirmed',
-      message: `₹${finalPriceCalc.finalTotal} settled via ${method}.`,
-    });
+  const handleSelectReceiptFromHistory = (_receiptNum: string) => {
+    setIsHistoryModalOpen(false);
+    handleOpenReceipt();
   };
 
   const handleSubmitFeedback = () => {
@@ -644,31 +775,42 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
 
             {/* Transparent Price Estimate */}
             <div className="p-5 rounded-2xl bg-[#FBFBFD] border border-black/5 space-y-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#86868B] block">
-                Price Estimate
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#86868B] block">
+                  Price Estimate
+                </span>
+                <Badge variant="accent" size="sm" className="font-extrabold tracking-wider">
+                  ESTIMATED
+                </Badge>
+              </div>
               <div className="space-y-1.5 text-xs text-[#6E6E73]">
                 <div className="flex justify-between">
-                  <span>Base Labour ({booking.estimatedHours || 2}h @ ₹{booking.worker.hourlyRate}/h)</span>
+                  <span>Labour ({booking.estimatedHours || 2}h @ ₹{booking.worker.hourlyRate}/h)</span>
                   <span className="font-semibold text-[#111111]">₹{booking.baseLabourFee}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Travel Tariff</span>
+                  <span>Estimated Travel</span>
                   <span className="font-semibold text-[#111111]">
                     {booking.travelCharge === 0 ? <span className="text-[#34C759]">₹0 (Free)</span> : `₹${booking.travelCharge}`}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Platform Fee</span>
+                  <span>Platform Fee (8%)</span>
                   <span className="font-semibold text-[#111111]">₹{booking.platformFee}</span>
                 </div>
+                {booking.discount > 0 && (
+                  <div className="flex justify-between text-[#1B8738]">
+                    <span>Discount</span>
+                    <span className="font-semibold">-₹{booking.discount}</span>
+                  </div>
+                )}
                 <div className="flex justify-between pt-1 border-t border-black/5 font-extrabold text-base text-[#111111]">
-                  <span>Total Estimate</span>
+                  <span>Estimated Total</span>
                   <span className="text-[#0071E3]">₹{booking.estimatedTotal}</span>
                 </div>
               </div>
               <span className="text-[10px] text-[#86868B] block pt-1">
-                Zero prepayment. Pay upon completion.
+                Zero prepayment. Final settled only upon completion.
               </span>
             </div>
           </div>
@@ -963,123 +1105,140 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
 
             {/* Right: Transparent Billing & Finalization Status */}
             <div className="lg:col-span-5 space-y-6">
-              {/* Post-Service Final Invoice / Finalization Status */}
-              <div className="card-premium p-6 bg-[#FFFFFF]">
-                <div className="flex items-center space-x-2 pb-4 border-b border-black/5">
-                  <Receipt className="w-4 h-4 text-[#34C759]" />
-                  <h3 className="text-sm font-bold text-[#111111] tracking-tight">
-                    {booking.status === 'completed'
-                      ? 'Finalization Status &amp; Invoice Breakdown'
-                      : 'Live Billing Breakdown'}
-                  </h3>
+              {/* Service Finalization Status Banner when Completed */}
+              {booking.status === 'completed' && (
+                <div className="card-premium p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-1.5 animate-fade-in">
+                  <div className="flex items-center justify-between font-bold">
+                    <span className="flex items-center space-x-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>Finalization Status &amp; Invoice Breakdown</span>
+                    </span>
+                    <Badge variant="success" size="sm">COMPLETED</Badge>
+                  </div>
+                  <div className="flex justify-between text-[11px] text-emerald-800 pt-1 border-t border-emerald-200/60">
+                    <span>Service Finalized: <strong>{booking.endedAt || 'Today'}</strong></span>
+                    <span>Billable Working Duration: <strong>{actualHoursWorked} Hours ({formatTime(seconds)})</strong></span>
+                  </div>
                 </div>
+              )}
 
-                {/* Finalization Metadata when Completed */}
-                {booking.status === 'completed' && (
-                  <div className="p-3 my-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-1">
-                    <div className="flex justify-between font-bold">
-                      <span>Service Finalized:</span>
-                      <span>{booking.endedAt || 'Today'}</span>
+              {/* One Premium Glass Summary Surface */}
+              <TransparentPriceSummary
+                mode="final"
+                finalCalculation={finalPriceCalc}
+                workingDurationFormatted={formatTime(seconds)}
+                isSimulated={true}
+              />
+
+              {/* Payment Section (when completed or paid) */}
+              {booking.status === 'completed' && (
+                <div className="card-premium p-6 bg-[#FFFFFF] space-y-4 animate-fade-in">
+                  <div className="flex items-center justify-between pb-3 border-b border-black/5">
+                    <div className="flex items-center space-x-2">
+                      <CreditCard className="w-4 h-4 text-[#0071E3]" />
+                      <h3 className="text-sm font-bold text-[#111111] tracking-tight">
+                        {paymentStatus === 'paid' || isPaid
+                          ? 'Settlement & Payment Receipt'
+                          : 'Transparent Payment Settlement'}
+                      </h3>
                     </div>
-                    <div className="flex justify-between text-[11px] text-emerald-800">
-                      <span>Billable Working Duration:</span>
-                      <span>{actualHoursWorked} Hours ({formatTime(seconds)})</span>
+                    <Badge
+                      variant={paymentStatus === 'paid' || isPaid ? 'success' : 'accent'}
+                      size="sm"
+                    >
+                      {paymentStatus === 'paid' || isPaid ? 'PAID' : paymentStatus === 'processing' ? 'PROCESSING' : 'PENDING'}
+                    </Badge>
+                  </div>
+
+                  {/* Prominent Mock Payment Notice */}
+                  <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] space-y-1">
+                    <div className="flex items-center space-x-1.5 font-bold">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span>MOCK TEST PAYMENT GATEWAY • SIMULATED SETTLEMENT</span>
                     </div>
-                  </div>
-                )}
-
-                <div className="space-y-2.5 py-4 text-xs border-b border-black/5">
-                  <div className="flex justify-between text-[#111111]">
-                    <span>Actual Labour ({actualHoursWorked} hrs @ ₹{booking.worker.hourlyRate}/hr)</span>
-                    <span className="font-semibold">₹{finalPriceCalc.actualLabour}</span>
+                    <p className="text-amber-800 text-[10px] leading-relaxed">
+                      Never represent simulated transaction as real payment. No real credit card or bank funds are debited.
+                    </p>
                   </div>
 
-                  <div className="flex justify-between text-[#111111]">
-                    <div>
-                      <span>Travel Expense ({booking.worker.distanceKm.toFixed(1)} km)</span>
-                      <span className="text-[10px] text-[#86868B] block">
-                        {booking.worker.distanceKm <= 5 ? 'Free within 5 km zone' : 'Configurable slab > 5 km'}
+                  {/* Payment Action or Confirmation */}
+                  {!(paymentStatus === 'paid' || isPaid) ? (
+                    <div className="space-y-3">
+                      <span className="text-xs font-semibold text-[#111111] block">
+                        Select Payment Method:
                       </span>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          isLoading={paymentStatus === 'processing'}
+                          onClick={() => handleProcessPayment('UPI')}
+                          className="font-bold text-xs"
+                        >
+                          Pay UPI
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          isLoading={paymentStatus === 'processing'}
+                          onClick={() => handleProcessPayment('Card')}
+                          className="font-semibold text-xs"
+                        >
+                          Credit Card
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          isLoading={paymentStatus === 'processing'}
+                          onClick={() => handleProcessPayment('Cash on Delivery')}
+                          className="font-semibold text-xs"
+                        >
+                          Cash on Delivery
+                        </Button>
+                      </div>
+                      <p className="text-[10px] text-[#86868B] text-center">
+                        Secure instant test settlement • Digital itemized invoice generated automatically
+                      </p>
                     </div>
-                    <span className="font-semibold">
-                      {finalPriceCalc.travelCharge === 0 ? (
-                        <span className="text-[#1B8738]">FREE</span>
-                      ) : (
-                        `₹${finalPriceCalc.travelCharge}`
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between text-[#111111]">
-                    <span>Approved Spares &amp; Additional Work</span>
-                    <span className="font-semibold">₹{finalPriceCalc.additionalWorkTotal}</span>
-                  </div>
-
-                  <div className="flex justify-between text-[#111111]">
-                    <span>WorkLink Platform Fee (8%)</span>
-                    <span className="font-semibold">₹{finalPriceCalc.platformFee}</span>
-                  </div>
-
-                  <div className="flex justify-between text-[#1B8738]">
-                    <span>Promotional Discount</span>
-                    <span className="font-semibold">-₹{finalPriceCalc.discount}</span>
-                  </div>
-                </div>
-
-                {/* Final Total Amount */}
-                <div className="pt-3 pb-5 flex items-baseline justify-between">
-                  <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#86868B] block">
-                      {booking.status === 'completed' ? 'Final Payable Amount' : 'Estimated Current Amount'}
-                    </span>
-                    <span className="text-[11px] text-[#86868B]">All taxes included</span>
-                  </div>
-                  <span className="text-3xl font-extrabold text-[#111111]">
-                    ₹{finalPriceCalc.finalTotal}
-                  </span>
-                </div>
-
-                {/* Payment Options (When completed) */}
-                {booking.status === 'completed' && (
-                  <>
-                    {!isPaid ? (
-                      <div className="pt-2 border-t border-black/5">
-                        <span className="text-xs font-bold text-[#111111] block mb-2">
-                          Select Payment Method:
-                        </span>
-                        <div className="grid grid-cols-3 gap-2">
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => handleProcessPayment('UPI')}
-                          >
-                            Pay UPI
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleProcessPayment('Card')}
-                          >
-                            Card
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleProcessPayment('Cash on Delivery')}
-                          >
-                            Cash
-                          </Button>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="p-3.5 bg-[rgba(52,199,89,0.08)] border border-[rgba(52,199,89,0.2)] rounded-2xl space-y-1.5 text-xs text-[#1B8738]">
+                        <div className="flex items-center space-x-2 font-bold">
+                          <CheckCircle2 className="w-4 h-4 text-[#34C759] shrink-0" />
+                          <span>Payment Settled (₹{finalPriceCalc.finalTotal})</span>
                         </div>
+                        <p className="text-[11px] text-[#2C6E49]">
+                          Method: <strong>{booking.paymentMethod || 'UPI'}</strong> • Ref: <strong>{booking.paymentReference || 'MOCK-TXN-20261008-01'}</strong>
+                        </p>
+                        <p className="text-[10px] text-[#2C6E49]/80 font-mono">
+                          Receipt #{booking.receiptNumber || `RCP-${booking.id.slice(0, 8)}`} • {booking.paidAt || 'Just now'}
+                        </p>
                       </div>
-                    ) : (
-                      <div className="p-3 bg-[rgba(52,199,89,0.08)] border border-[rgba(52,199,89,0.2)] rounded-2xl flex items-center space-x-2 text-xs text-[#1B8738] font-semibold">
-                        <CheckCircle2 className="w-4 h-4 text-[#34C759] shrink-0" />
-                        <span>Payment settled via {booking.paymentMethod || 'UPI'}. Receipt #{booking.paymentReference || 'PAY-8921'}</span>
+
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleOpenReceipt}
+                          className="text-xs font-semibold"
+                          leftIcon={<Receipt className="w-3.5 h-3.5" />}
+                        >
+                          View Digital Receipt
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsHistoryModalOpen(true)}
+                          className="text-xs font-semibold text-[#0071E3] hover:bg-[#0071E3]/5"
+                          leftIcon={<CreditCard className="w-3.5 h-3.5" />}
+                        >
+                          Billing Ledger
+                        </Button>
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Post-Service Feedback & Rating Form */}
               {booking.status === 'completed' && isPaid && (
@@ -1300,6 +1459,41 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
           </div>
         </Modal>
       )}
+
+      {/* Itemized Digital Receipt Modal */}
+      <ReceiptModal
+        isOpen={isReceiptModalOpen}
+        onClose={() => setIsReceiptModalOpen(false)}
+        receipt={selectedReceipt}
+      />
+
+      {/* Chronological Payment History Ledger Modal */}
+      <PaymentHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        transactions={
+          paymentTransactions && paymentTransactions.length > 0
+            ? paymentTransactions
+            : localTransactions.length > 0
+            ? localTransactions
+            : [
+                {
+                  id: 'tx-current-1',
+                  bookingId: booking.id,
+                  amount: finalPriceCalc.finalTotal,
+                  status: (paymentStatus === 'paid' || isPaid ? 'paid' : 'pending') as PaymentStatus,
+                  method: booking.paymentMethod || 'UPI',
+                  isSimulated: true,
+                  transactionReference: booking.paymentReference || 'MOCK-TXN-20261008-8821',
+                  timestamp: booking.paidAt || 'Today, 11:30 AM',
+                  receiptNumber: booking.receiptNumber || 'RCP-20261008-8821',
+                  workerName: booking.worker.name,
+                  serviceCategory: booking.job.category,
+                },
+              ]
+        }
+        onSelectReceipt={handleSelectReceiptFromHistory}
+      />
     </div>
   );
 };
