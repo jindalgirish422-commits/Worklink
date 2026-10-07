@@ -1,15 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import {
   Sparkles,
-  MapPin,
-  ShieldCheck,
-  Wrench,
-  Compass,
-  ArrowRight,
-  Sliders,
-  CheckCircle2,
-  Clock,
-  Filter,
   Users,
 } from 'lucide-react';
 import {
@@ -20,7 +11,6 @@ import {
   RankedWorker,
   Booking,
   UserPersonalizationProfile,
-  TradeCategory,
 } from './types';
 import { INITIAL_WORKERS, DEFAULT_CUSTOMER_LOCATION } from './data/mockWorkers';
 import {
@@ -41,7 +31,14 @@ import { FeedbackLearningLoopView } from './components/FeedbackLearningLoopView'
 import { WorkforceIntelligenceView } from './components/WorkforceIntelligenceView';
 import { ScenarioSimulator } from './components/ScenarioSimulator';
 
+import { Container } from './components/ui/Container';
+import { Badge } from './components/ui/Badge';
+import { EmptyState } from './components/ui/EmptyState';
+import { useToast } from './components/ui/Toast';
+
 export const App: React.FC = () => {
+  const { showToast } = useToast();
+
   // Navigation & Location State
   const [currentTab, setCurrentTab] = useState<
     'marketplace' | 'zone_radar' | 'active_booking' | 'intelligence' | 'simulator'
@@ -101,7 +98,6 @@ export const App: React.FC = () => {
   // Handle Location Change
   const handleUpdateLocation = (newLoc: CustomerLocation) => {
     setCustomerLocation(newLoc);
-    // Recalculate distance for all workers relative to new location
     const updatedWorkers = workers.map((w) => {
       const R = 6371;
       const dLat = ((w.coordinates.lat - newLoc.lat) * Math.PI) / 180;
@@ -118,6 +114,11 @@ export const App: React.FC = () => {
     });
     setWorkers(updatedWorkers);
     setActiveJob((prev) => ({ ...prev, location: newLoc }));
+    showToast({
+      type: 'info',
+      title: 'Service Zone Shifted',
+      message: `10 km radius re-anchored to ${newLoc.address.split(',')[0]}.`,
+    });
   };
 
   // Job created from Chatbot
@@ -130,6 +131,11 @@ export const App: React.FC = () => {
     setActiveBooking(booking);
     setSelectedBookingWorker(null);
     setCurrentTab('active_booking');
+    showToast({
+      type: 'success',
+      title: 'Worker Dispatched',
+      message: `${booking.worker.name} accepted your request. Tracking active.`,
+    });
   };
 
   // Booking lifecycle update
@@ -141,7 +147,6 @@ export const App: React.FC = () => {
   const handleCompleteFeedbackLoop = (completedBooking: Booking) => {
     setRecentBookings((prev) => [completedBooking, ...prev]);
 
-    // Update worker telemetry in state (increase completedJobs, adjust rating)
     setWorkers((prev) =>
       prev.map((w) => {
         if (w.id === completedBooking.worker.id) {
@@ -162,7 +167,6 @@ export const App: React.FC = () => {
       })
     );
 
-    // Update user profile repeat worker list
     if (!userProfile.repeatWorkersBooked.includes(completedBooking.worker.id)) {
       setUserProfile((prev) => ({
         ...prev,
@@ -179,8 +183,8 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fbfbfd] text-[#1d1d1f] flex flex-col font-sans selection:bg-slate-900 selection:text-white">
-      {/* Apple-inspired Sticky Topbar */}
+    <div className="min-h-screen bg-[#F5F5F7] text-[#111111] flex flex-col font-sans selection:bg-[#111111] selection:text-white">
+      {/* Sticky Topbar */}
       <Navbar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
@@ -192,172 +196,180 @@ export const App: React.FC = () => {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* ============================================================== */}
-        {/* TAB 1: MARKETPLACE & INTAKE (Primary Non-Negotiable Flow) */}
-        {/* ============================================================== */}
-        {currentTab === 'marketplace' && (
-          <div className="space-y-8 animate-fade-in">
-            {/* Hero Brand Statement */}
-            <div className="text-center max-w-3xl mx-auto pt-2 pb-6">
-              <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 text-xs font-semibold mb-4 border border-slate-200/80">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                <span>Explainable Skilled-Labour Intelligence</span>
-              </div>
-              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
-                "Right Labour. Right Work. Right Time."
-              </h1>
-              <p className="mt-4 text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
-                WorkLink is not about finding the nearest worker.
-                <br className="hidden sm:inline" />
-                WorkLink is about finding the <strong className="font-semibold text-slate-900">most suitable available worker</strong>.
-              </p>
-            </div>
-
-            {/* Step 1: Natural-Language Chatbot Intake */}
-            <ChatbotIntake
-              currentLocation={customerLocation}
-              onJobCreated={handleJobCreated}
-              activeJob={activeJob}
-            />
-
-            {/* Step 2: Hard Constraint Filter Audit */}
-            <HardFilterAudit
-              allRanked={allWorkersRanked}
-              activeJob={activeJob}
-            />
-
-            {/* Multi-Factor Ranking Results Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200/70 gap-3">
-              <div>
-                <div className="flex items-center space-x-2">
-                  <h2 className="text-xl font-bold tracking-tight text-slate-900">
-                    Explainable Multi-Factor Recommendations
-                  </h2>
-                  <span className="badge-subtle bg-slate-900 text-white font-bold text-[11px]">
-                    {displayedEligible.length} Verified Candidates
-                  </span>
+      <main className="flex-1 w-full py-8">
+        <Container size="2xl">
+          {/* ============================================================== */}
+          {/* TAB 1: MARKETPLACE & INTAKE */}
+          {/* ============================================================== */}
+          {currentTab === 'marketplace' && (
+            <div className="space-y-8 animate-fade-in">
+              {/* Hero Section */}
+              <div className="text-center max-w-3xl mx-auto pt-4 pb-8">
+                <div className="inline-flex items-center space-x-2 mb-4">
+                  <Badge variant="accent" size="md">
+                    <Sparkles className="w-3.5 h-3.5 text-[#0071E3] mr-1" />
+                    Explainable Skilled-Labour Intelligence
+                  </Badge>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Ranked via: Skill Fit + Experience + Slot Availability + Reputation + 10km Proximity + Budget
+
+                <h1 className="text-hero text-[#111111]">
+                  "Right Labour. Right Work. Right Time."
+                </h1>
+
+                <p className="mt-4 text-subheading max-w-2xl mx-auto">
+                  WorkLink is not about finding the nearest worker.
+                  <br className="hidden sm:inline" />
+                  WorkLink is about finding the <strong className="font-semibold text-[#111111]">most suitable available worker</strong>.
                 </p>
               </div>
 
-              {/* Trade Chips */}
-              <div className="flex items-center space-x-1 overflow-x-auto no-scrollbar py-1">
-                {[
-                  'All',
-                  'AC Technician',
-                  'Plumber',
-                  'Electrician',
-                  'Carpenter',
-                  'Painter',
-                  'Appliance Repair',
-                  'Cleaning Professional',
-                ].map((trade) => (
-                  <button
-                    key={trade}
-                    onClick={() => setTradeFilter(trade)}
-                    className={`text-xs px-3 py-1.5 rounded-xl font-medium shrink-0 transition-all ${
-                      tradeFilter === trade
-                        ? 'bg-slate-900 text-white font-semibold shadow-xs'
-                        : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
-                    }`}
-                  >
-                    {trade}
-                  </button>
-                ))}
+              {/* Step 1: Natural-Language Chatbot Intake */}
+              <ChatbotIntake
+                currentLocation={customerLocation}
+                onJobCreated={handleJobCreated}
+                activeJob={activeJob}
+              />
+
+              {/* Step 2: Hard Constraint Filter Audit */}
+              <HardFilterAudit
+                allRanked={allWorkersRanked}
+                activeJob={activeJob}
+              />
+
+              {/* Multi-Factor Recommendation Results */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-black/5 gap-3">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h2 className="text-lg sm:text-xl font-bold tracking-tight text-[#111111]">
+                      Explainable Multi-Factor Recommendations
+                    </h2>
+                    <Badge variant="default" size="sm">
+                      {displayedEligible.length} Verified Candidates
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-[#6E6E73] mt-0.5">
+                    Ranked via: Skill Fit + Experience Tier + Slot Availability + Quality + 10km Proximity + Budget
+                  </p>
+                </div>
+
+                {/* Trade Filter Chips */}
+                <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-1">
+                  {[
+                    'All',
+                    'AC Technician',
+                    'Plumber',
+                    'Electrician',
+                    'Carpenter',
+                    'Painter',
+                    'Appliance Repair',
+                    'Cleaning Professional',
+                  ].map((trade) => (
+                    <button
+                      key={trade}
+                      onClick={() => setTradeFilter(trade)}
+                      className={`text-xs px-3 py-1.5 rounded-xl font-medium shrink-0 transition-all ${
+                        tradeFilter === trade
+                          ? 'bg-[#111111] text-white font-semibold shadow-xs'
+                          : 'bg-[#FFFFFF] hover:bg-[#F5F5F7] text-[#6E6E73] border border-black/5'
+                      }`}
+                    >
+                      {trade}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {/* Worker Cards */}
+              {displayedEligible.length > 0 ? (
+                <div className="space-y-4">
+                  {displayedEligible.map((item, idx) => (
+                    <WorkerCard
+                      key={item.worker.id}
+                      rankedWorker={item}
+                      job={activeJob}
+                      isTopRecommendation={idx === 0}
+                      onBookClick={(rw) => setSelectedBookingWorker(rw)}
+                      onViewProfileClick={(rw) => setSelectedProfileWorker(rw)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={<Users className="w-8 h-8" />}
+                  title="No Eligible Workers in 10 km Zone"
+                  description="All scanned candidates were filtered out by the 5 non-negotiable hard constraints. Try broadening your requested time slot or shifting your 10 km zone center."
+                  actionLabel="Reset to Hauz Khas Center"
+                  onAction={() => handleUpdateLocation(DEFAULT_CUSTOMER_LOCATION)}
+                />
+              )}
             </div>
+          )}
 
-            {/* List of Ranked Worker Cards */}
-            {displayedEligible.length > 0 ? (
-              <div className="space-y-4">
-                {displayedEligible.map((item, idx) => (
-                  <WorkerCard
-                    key={item.worker.id}
-                    rankedWorker={item}
-                    job={activeJob}
-                    isTopRecommendation={idx === 0}
-                    onBookClick={(rw) => setSelectedBookingWorker(rw)}
-                    onViewProfileClick={(rw) => setSelectedProfileWorker(rw)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="apple-card p-12 bg-white text-center border border-slate-200">
-                <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-base font-bold text-slate-900">No Eligible Workers in 10 km Zone</h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                  All scanned candidates were filtered out by the 5 hard constraints. Try widening your time slot or shifting your 10 km service zone center.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ============================================================== */}
-        {/* TAB 2: 10 KM SERVICE ZONE RADAR */}
-        {/* ============================================================== */}
-        {currentTab === 'zone_radar' && (
-          <ServiceZoneMap
-            location={customerLocation}
-            onUpdateLocation={handleUpdateLocation}
-            workers={workers}
-            selectedWorkerId={selectedMapWorkerId}
-            onSelectWorker={(id) => {
-              setSelectedMapWorkerId(id);
-              const found = allWorkersRanked.find((w) => w.worker.id === id);
-              if (found) setSelectedProfileWorker(found);
-            }}
-          />
-        )}
-
-        {/* ============================================================== */}
-        {/* TAB 3: LIVE JOB EXECUTION & TIMER */}
-        {/* ============================================================== */}
-        {currentTab === 'active_booking' && (
-          <div className="space-y-8 animate-fade-in">
-            <JobExecutionTracker
-              booking={activeBooking}
-              onUpdateBooking={handleUpdateBooking}
-              onCloseBooking={() => setActiveBooking(null)}
-              onCompleteFeedbackLoop={handleCompleteFeedbackLoop}
+          {/* ============================================================== */}
+          {/* TAB 2: 10 KM SERVICE ZONE RADAR */}
+          {/* ============================================================== */}
+          {currentTab === 'zone_radar' && (
+            <ServiceZoneMap
+              location={customerLocation}
+              onUpdateLocation={handleUpdateLocation}
+              workers={workers}
+              selectedWorkerId={selectedMapWorkerId}
+              onSelectWorker={(id) => {
+                setSelectedMapWorkerId(id);
+                const found = allWorkersRanked.find((w) => w.worker.id === id);
+                if (found) setSelectedProfileWorker(found);
+              }}
             />
+          )}
 
-            <FeedbackLearningLoopView
-              recentBookings={recentBookings}
-              onBookAgain={handleBookAgain}
-            />
-          </div>
-        )}
+          {/* ============================================================== */}
+          {/* TAB 3: LIVE JOB EXECUTION & TIMER */}
+          {/* ============================================================== */}
+          {currentTab === 'active_booking' && (
+            <div className="space-y-8 animate-fade-in">
+              <JobExecutionTracker
+                booking={activeBooking}
+                onUpdateBooking={handleUpdateBooking}
+                onCloseBooking={() => setActiveBooking(null)}
+                onCompleteFeedbackLoop={handleCompleteFeedbackLoop}
+              />
 
-        {/* ============================================================== */}
-        {/* TAB 4: APPENDIX G SIMULATOR */}
-        {/* ============================================================== */}
-        {currentTab === 'simulator' && <ScenarioSimulator />}
+              <FeedbackLearningLoopView
+                recentBookings={recentBookings}
+                onBookAgain={handleBookAgain}
+              />
+            </div>
+          )}
 
-        {/* ============================================================== */}
-        {/* TAB 5: WORKFORCE INTELLIGENCE & RESEARCH */}
-        {/* ============================================================== */}
-        {currentTab === 'intelligence' && <WorkforceIntelligenceView />}
+          {/* ============================================================== */}
+          {/* TAB 4: APPENDIX G SIMULATOR */}
+          {/* ============================================================== */}
+          {currentTab === 'simulator' && <ScenarioSimulator />}
+
+          {/* ============================================================== */}
+          {/* TAB 5: WORKFORCE INTELLIGENCE & RESEARCH */}
+          {/* ============================================================== */}
+          {currentTab === 'intelligence' && <WorkforceIntelligenceView />}
+        </Container>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-black/[0.06] bg-white py-6 mt-12 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-900">WorkLink</span>
-            <span>•</span>
-            <span>Right Labour. Right Work. Right Time.</span>
+      <footer className="border-t border-black/5 bg-[#FFFFFF] py-6 mt-12 text-center text-xs text-[#6E6E73]">
+        <Container size="2xl">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center space-x-2">
+              <span className="font-bold text-[#111111]">WorkLink</span>
+              <span className="text-[#86868B]">•</span>
+              <span>Right Labour. Right Work. Right Time.</span>
+            </div>
+            <div className="text-[11px] text-[#86868B]">
+              Workforce Intelligence Foundations • Explainable Multi-Factor Matching
+            </div>
           </div>
-          <div className="text-[11px] text-slate-400">
-            Workforce Intelligence Foundation • Explainable Matching System
-          </div>
-        </div>
+        </Container>
       </footer>
 
-      {/* Profile Modal */}
+      {/* Modals */}
       {selectedProfileWorker && (
         <WorkerProfileModal
           rankedWorker={selectedProfileWorker}
@@ -370,10 +382,9 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Booking Confirmation Flow Modal */}
       {selectedBookingWorker && (
         <BookingFlowModal
-          isOpen={!!selectedBookingWorker}
+          isOpen={Boolean(selectedBookingWorker)}
           rankedWorker={selectedBookingWorker}
           job={activeJob}
           onClose={() => setSelectedBookingWorker(null)}
@@ -381,7 +392,6 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* Matching Weights Calibration Modal */}
       <WeightCalibrationModal
         isOpen={isWeightsModalOpen}
         onClose={() => setIsWeightsModalOpen(false)}
@@ -391,4 +401,5 @@ export const App: React.FC = () => {
     </div>
   );
 };
+
 export default App;

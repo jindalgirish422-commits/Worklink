@@ -1,15 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Compass,
-  MapPin,
   Navigation,
-  Info,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Layers,
 } from 'lucide-react';
 import { CustomerLocation, Worker } from '../types';
+import { Badge } from './ui/Badge';
+import { Button } from './ui/Button';
 
 interface ServiceZoneMapProps {
   location: CustomerLocation;
@@ -53,10 +49,6 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
   selectedWorkerId,
   onSelectWorker,
 }) => {
-  const [activeTab, setActiveTab] = useState<'radar' | 'breakdown'>('radar');
-
-  // Compute dynamic distance for every worker relative to current user coords
-  // (using Haversine or projected Euclidean distance)
   const calculateDistance = (wLat: number, wLng: number) => {
     const R = 6371; // Earth radius km
     const dLat = ((wLat - location.lat) * Math.PI) / 180;
@@ -85,40 +77,41 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
   const slabZoneCount = dynamicWorkers.filter((w) => w.isWithin10km && !w.isFreeZone).length;
   const outsideZoneCount = dynamicWorkers.filter((w) => !w.isWithin10km).length;
 
-  // Radar mapping coordinates: center is (250, 250), radius 210 represents 12 km
-  // 1 km = 210 / 12 = 17.5 px
   const center = 250;
   const scale = 210 / 12; // px per km
 
   return (
-    <div className="apple-card p-6 md:p-8 bg-white border border-black/[0.06] shadow-sm mb-8">
-      {/* Title & Location Selector */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-6 border-b border-slate-100 gap-4">
+    <div className="card-premium p-6 md:p-8 bg-[#FFFFFF] mb-8">
+      {/* Title & Locality Selector */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-6 border-b border-black/5 gap-4">
         <div>
-          <div className="flex items-center space-x-2">
-            <span className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
-              <Compass className="w-5 h-5" />
+          <div className="flex items-center space-x-2.5">
+            <span className="p-2 rounded-xl bg-[rgba(88,86,214,0.08)] text-[#5856D6]">
+              <Compass className="w-4 h-4" />
             </span>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#111111]">
               Dynamic 10 km Service Zone Radar
             </h2>
-            <span className="badge-subtle bg-indigo-50 text-indigo-700 border border-indigo-100/60 font-semibold text-[11px]">
+            <Badge variant="accent" size="sm">
               Spatial Feasibility
-            </span>
+            </Badge>
           </div>
-          <p className="text-sm text-slate-500 mt-1 max-w-2xl">
-            The service zone is created relative to your exact pin. When you change location, the 10 km feasibility zone moves, dynamically recalculating the eligible worker pool and travel fee tiers.
+          <p className="text-xs sm:text-sm text-[#6E6E73] mt-1.5 max-w-2xl leading-relaxed">
+            The service boundary is anchored dynamically to your current coordinates. Moving the customer pin shifts the 10 km zone, recalculating eligibility and travel fee tiers in real time.
           </p>
         </div>
 
-        {/* Quick Locality Shift Buttons */}
+        {/* Quick Shift Buttons */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-slate-400 font-medium mr-1">Shift Center:</span>
+          <span className="text-xs text-[#86868B] font-medium mr-1">Shift Center:</span>
           {PRESET_LOCALITIES.map((loc, idx) => {
             const isSelected = location.lat === loc.lat && location.lng === loc.lng;
             return (
-              <button
+              <Button
                 key={idx}
+                type="button"
+                variant={isSelected ? 'primary' : 'secondary'}
+                size="sm"
                 onClick={() =>
                   onUpdateLocation({
                     address: loc.address,
@@ -127,14 +120,9 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
                     radiusKm: 10.0,
                   })
                 }
-                className={`text-[11px] px-3 py-1.5 rounded-xl font-semibold transition-all ${
-                  isSelected
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                }`}
               >
                 {loc.name.split(' ')[0]}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -142,73 +130,73 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
 
       {/* Zone Status Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-6">
-        <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-100">
+        <div className="p-4 rounded-2xl bg-[rgba(0,113,227,0.04)] border border-[rgba(0,113,227,0.14)]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-blue-900 uppercase tracking-wider">
+            <span className="text-xs font-bold text-[#0071E3] uppercase tracking-wider">
               0 – 5 km Zone
             </span>
-            <span className="badge-subtle bg-blue-600 text-white font-bold">
+            <Badge variant="accent" size="sm">
               {freeZoneCount} Workers
-            </span>
+            </Badge>
           </div>
-          <p className="text-xs text-blue-700 mt-1 font-medium">
+          <p className="text-xs text-[#111111] mt-1.5 font-medium">
             Free Travel Zone — Zero travel surcharge applied.
           </p>
         </div>
 
-        <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-100">
+        <div className="p-4 rounded-2xl bg-[rgba(255,149,0,0.05)] border border-[rgba(255,149,0,0.18)]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-amber-900 uppercase tracking-wider">
+            <span className="text-xs font-bold text-[#B25E00] uppercase tracking-wider">
               5 – 10 km Zone
             </span>
-            <span className="badge-subtle bg-amber-600 text-white font-bold">
+            <Badge variant="warning" size="sm">
               {slabZoneCount} Workers
-            </span>
+            </Badge>
           </div>
-          <p className="text-xs text-amber-700 mt-1 font-medium">
+          <p className="text-xs text-[#111111] mt-1.5 font-medium">
             Configurable Slab Charge — Travel fee per km above 5 km.
           </p>
         </div>
 
-        <div className="p-4 rounded-xl bg-rose-50/70 border border-rose-100">
+        <div className="p-4 rounded-2xl bg-[rgba(255,59,48,0.04)] border border-[rgba(255,59,48,0.16)]">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-rose-900 uppercase tracking-wider">
+            <span className="text-xs font-bold text-[#D70015] uppercase tracking-wider">
               &gt; 10 km Cutoff
             </span>
-            <span className="badge-subtle bg-rose-600 text-white font-bold">
+            <Badge variant="danger" size="sm">
               {outsideZoneCount} Ineligible
-            </span>
+            </Badge>
           </div>
-          <p className="text-xs text-rose-700 mt-1 font-medium">
+          <p className="text-xs text-[#111111] mt-1.5 font-medium">
             Strict Boundary — Workers outside 10 km are excluded from matching.
           </p>
         </div>
       </div>
 
-      {/* Main Radar / Map Display */}
+      {/* Main Radar & Worker List */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
         {/* Left: SVG Geometric Radar */}
-        <div className="lg:col-span-7 flex flex-col items-center justify-center p-4 bg-slate-50/70 rounded-2xl border border-slate-200/70 relative overflow-hidden">
-          <div className="absolute top-3 left-4 flex items-center space-x-1.5 text-xs text-slate-500 font-semibold">
-            <Navigation className="w-3.5 h-3.5 text-blue-600" />
+        <div className="lg:col-span-7 flex flex-col items-center justify-center p-4 bg-[#FBFBFD] rounded-3xl border border-black/5 relative overflow-hidden">
+          <div className="absolute top-3.5 left-4 flex items-center space-x-1.5 text-xs text-[#6E6E73] font-medium">
+            <Navigation className="w-3.5 h-3.5 text-[#0071E3]" />
             <span>Center: {location.address.split(',')[0]}</span>
           </div>
 
           <svg viewBox="0 0 500 500" className="w-full max-w-[420px] aspect-square">
             <defs>
               <radialGradient id="freeZoneGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.14" />
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.04" />
+                <stop offset="0%" stopColor="#0071E3" stopOpacity="0.12" />
+                <stop offset="100%" stopColor="#0071E3" stopOpacity="0.02" />
               </radialGradient>
               <radialGradient id="slabZoneGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.08" />
-                <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.02" />
+                <stop offset="0%" stopColor="#FF9500" stopOpacity="0.08" />
+                <stop offset="100%" stopColor="#FF9500" stopOpacity="0.01" />
               </radialGradient>
             </defs>
 
             {/* Grid background lines */}
-            <line x1="250" y1="20" x2="250" y2="480" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="3,3" />
-            <line x1="20" y1="250" x2="480" y2="250" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="3,3" />
+            <line x1="250" y1="20" x2="250" y2="480" stroke="#E5E5EA" strokeWidth="1" strokeDasharray="3,3" />
+            <line x1="20" y1="250" x2="480" y2="250" stroke="#E5E5EA" strokeWidth="1" strokeDasharray="3,3" />
 
             {/* Outer Ineligible Cutoff Boundary (>10 km) */}
             <circle
@@ -216,55 +204,54 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
               cy={center}
               r={11.4 * scale}
               fill="none"
-              stroke="#cbd5e1"
+              stroke="#D1D1D6"
               strokeWidth="1"
               strokeDasharray="4,4"
             />
 
-            {/* 10 km Hard Constraint Boundary */}
+            {/* 10 km Boundary */}
             <circle
               cx={center}
               cy={center}
               r={10.0 * scale}
               fill="url(#slabZoneGrad)"
-              stroke="#f59e0b"
+              stroke="#FF9500"
               strokeWidth="1.5"
               strokeDasharray="6,3"
             />
-            <text x="255" y={center - 10.0 * scale + 14} fill="#b45309" fontSize="10" fontWeight="bold">
-              10 km Hard Cutoff
+            <text x="255" y={center - 10.0 * scale + 14} fill="#B25E00" fontSize="10" fontWeight="bold">
+              10 km Hard Boundary
             </text>
 
-            {/* 5 km Free Travel Zone */}
+            {/* 5 km Free Zone */}
             <circle
               cx={center}
               cy={center}
               r={5.0 * scale}
               fill="url(#freeZoneGrad)"
-              stroke="#3b82f6"
-              strokeWidth="2"
+              stroke="#0071E3"
+              strokeWidth="1.75"
             />
-            <text x="255" y={center - 5.0 * scale + 14} fill="#1d4ed8" fontSize="10" fontWeight="bold">
+            <text x="255" y={center - 5.0 * scale + 14} fill="#0071E3" fontSize="10" fontWeight="bold">
               5 km Free Boundary
             </text>
 
-            {/* Center Customer Pin */}
-            <circle cx={center} cy={center} r="7" fill="#0f172a" stroke="#ffffff" strokeWidth="2.5" />
-            <circle cx={center} cy={center} r="18" fill="none" stroke="#0f172a" strokeOpacity="0.25" strokeWidth="1.5" />
-            <text x={center} y={center + 24} textAnchor="middle" fill="#0f172a" fontSize="11" fontWeight="bold">
-              Customer
+            {/* Customer Pin */}
+            <circle cx={center} cy={center} r="7" fill="#111111" stroke="#FFFFFF" strokeWidth="2.5" />
+            <circle cx={center} cy={center} r="18" fill="none" stroke="#111111" strokeOpacity="0.2" strokeWidth="1.5" />
+            <text x={center} y={center + 24} textAnchor="middle" fill="#111111" fontSize="11" fontWeight="bold">
+              Customer Pin
             </text>
 
-            {/* Render Worker Pins */}
+            {/* Worker Pins */}
             {dynamicWorkers.map((w) => {
-              // Calculate angle and distance relative to user
               const dLatKm = (w.coordinates.lat - location.lat) * 111.0;
               const dLngKm = (w.coordinates.lng - location.lng) * 98.0;
               const pxX = center + dLngKm * scale;
               const pxY = center - dLatKm * scale;
 
               const isSelected = selectedWorkerId === w.id;
-              const pinColor = !w.isWithin10km ? '#ef4444' : w.isFreeZone ? '#2563eb' : '#d97706';
+              const pinColor = !w.isWithin10km ? '#FF3B30' : w.isFreeZone ? '#0071E3' : '#FF9500';
 
               return (
                 <g
@@ -277,9 +264,8 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
                     cy={pxY}
                     r={isSelected ? 10 : 8}
                     fill={pinColor}
-                    stroke="#ffffff"
+                    stroke="#FFFFFF"
                     strokeWidth={isSelected ? 3 : 2}
-                    className="drop-shadow-sm"
                   />
                   <text
                     x={pxX}
@@ -295,7 +281,7 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
                     x={pxX}
                     y={pxY + 18}
                     textAnchor="middle"
-                    fill="#64748b"
+                    fill="#6E6E73"
                     fontSize="9"
                     fontWeight="500"
                   >
@@ -307,69 +293,63 @@ export const ServiceZoneMap: React.FC<ServiceZoneMapProps> = ({
           </svg>
 
           {/* Map Legend */}
-          <div className="flex flex-wrap items-center justify-center gap-4 mt-3 text-xs text-slate-600 font-medium">
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-3 text-xs text-[#6E6E73] font-medium">
             <span className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#0071E3]" />
               <span>0–5 km (Free)</span>
             </span>
             <span className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FF9500]" />
               <span>5–10 km (Slab)</span>
             </span>
             <span className="flex items-center space-x-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FF3B30]" />
               <span>&gt;10 km (Ineligible)</span>
             </span>
           </div>
         </div>
 
-        {/* Right: Workers in Dynamic Radius List */}
+        {/* Right: Workers List */}
         <div className="lg:col-span-5 flex flex-col h-[420px] overflow-hidden">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Live Workers Relative to Pin
+          <div className="flex items-center justify-between pb-3 border-b border-black/5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[#111111]">
+              Live Candidates Relative to Pin
             </h3>
-            <span className="text-xs text-slate-500">{dynamicWorkers.length} scanned</span>
+            <span className="text-xs text-[#86868B]">{dynamicWorkers.length} scanned</span>
           </div>
 
-          <div className="overflow-y-auto space-x-0 space-y-2.5 py-3 pr-1 flex-1">
+          <div className="overflow-y-auto space-y-2.5 py-3 pr-1 flex-1">
             {dynamicWorkers.map((w) => {
               const isSelected = selectedWorkerId === w.id;
               return (
                 <div
                   key={w.id}
                   onClick={() => onSelectWorker && onSelectWorker(w.id)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                  className={`p-3 rounded-2xl border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-blue-50/80 border-blue-300 shadow-xs'
-                      : 'bg-white hover:bg-slate-50 border-slate-200/80'
+                      ? 'bg-[rgba(0,113,227,0.06)] border-[#0071E3]/40 shadow-xs'
+                      : 'bg-[#FFFFFF] hover:bg-[#F5F5F7] border-black/5'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <span className="font-bold text-xs text-slate-900">{w.id}: {w.name}</span>
-                      <span className="text-[11px] text-slate-500">({w.trade})</span>
+                      <span className="font-bold text-xs text-[#111111]">{w.id}: {w.name}</span>
+                      <span className="text-[11px] text-[#6E6E73]">({w.trade})</span>
                     </div>
                     {w.isWithin10km ? (
-                      <span
-                        className={`badge-subtle text-[10px] font-bold ${
-                          w.isFreeZone
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
+                      <Badge variant={w.isFreeZone ? 'accent' : 'warning'} size="sm">
                         {w.distanceKm} km ({w.isFreeZone ? 'Free travel' : 'Slab fee'})
-                      </span>
+                      </Badge>
                     ) : (
-                      <span className="badge-subtle bg-rose-100 text-rose-800 text-[10px] font-bold">
+                      <Badge variant="danger" size="sm">
                         {w.distanceKm} km (&gt;10km Excluded)
-                      </span>
+                      </Badge>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between mt-2 text-[11px] text-slate-600">
+                  <div className="flex items-center justify-between mt-2 text-[11px] text-[#6E6E73]">
                     <span>★ {w.rating.toFixed(1)} ({w.completedJobs} jobs)</span>
-                    <span className="font-semibold text-slate-800">₹{w.estimatedQuote}</span>
+                    <span className="font-semibold text-[#111111]">₹{w.estimatedQuote}</span>
                     <span className="capitalize">{w.availabilityStatus}</span>
                   </div>
                 </div>

@@ -4,21 +4,19 @@ import {
   Play,
   Pause,
   CheckCircle2,
-  AlertCircle,
-  CreditCard,
-  Star,
-  MapPin,
   Wrench,
   Sparkles,
-  ArrowRight,
-  ShieldCheck,
-  Plus,
   Receipt,
-  RotateCcw,
+  Star,
+  ArrowRight,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Booking, AdditionalWorkItem } from '../types';
 import { calculateFinalPrice } from '../services/pricingEngine';
+import { Avatar } from './ui/Avatar';
+import { Badge } from './ui/Badge';
+import { Button } from './ui/Button';
+import { useToast } from './ui/Toast';
 
 interface JobExecutionTrackerProps {
   booking: Booking | null;
@@ -33,12 +31,18 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   onCloseBooking,
   onCompleteFeedbackLoop,
 }) => {
+  const { showToast } = useToast();
+
   if (!booking) {
     return (
-      <div className="apple-card p-12 bg-white text-center border border-slate-200">
-        <Clock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-        <h3 className="text-base font-bold text-slate-900">No Active Service Booking</h3>
-        <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+      <div className="card-premium p-12 bg-[#FFFFFF] text-center max-w-xl mx-auto my-8">
+        <div className="w-14 h-14 rounded-2xl bg-[#F0F0F2] text-[#86868B] flex items-center justify-center mx-auto mb-4">
+          <Clock className="w-6 h-6" />
+        </div>
+        <h3 className="text-base sm:text-lg font-bold text-[#111111]">
+          No Active Service Booking
+        </h3>
+        <p className="text-xs sm:text-sm text-[#6E6E73] mt-1.5 max-w-sm mx-auto leading-relaxed">
           Match and book a skilled worker from the marketplace to track real-time dispatch, live working-hour timer, transparent post-service billing, and payment.
         </p>
       </div>
@@ -46,10 +50,10 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   }
 
   // Timer state
-  const [seconds, setSeconds] = useState(booking.elapsedSeconds || 5400); // default to 1.5 hrs (5400s) for demonstration ease
+  const [seconds, setSeconds] = useState(booking.elapsedSeconds || 5400); // 1.5 hrs default for ease of testing
   const [timerRunning, setTimerRunning] = useState(false);
 
-  // Available add-ons for approval
+  // Available add-ons
   const [availableAddons, setAvailableAddons] = useState<AdditionalWorkItem[]>([
     { id: 'add-1', name: 'Inverter Run Capacitor (45µF)', cost: 450, approved: true },
     { id: 'add-2', name: 'High-Pressure Gas Leakage Testing', cost: 350, approved: false },
@@ -58,8 +62,14 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
 
   // Feedback form state
   const [rating, setRating] = useState(5);
-  const [selectedTags, setSelectedTags] = useState<string[]>(['Punctual & Polite', 'Accurate Diagnostics', 'Clean Worksite']);
-  const [feedbackComment, setFeedbackComment] = useState('Arrived within 25 minutes. Fixed the cooling issue cleanly with transparent billing.');
+  const [selectedTags, setSelectedTags] = useState<string[]>([
+    'Punctual & Polite',
+    'Accurate Diagnostics',
+    'Clean Worksite',
+  ]);
+  const [feedbackComment, setFeedbackComment] = useState(
+    'Arrived within 25 minutes. Fixed the cooling issue cleanly with transparent billing.'
+  );
   const [isPaid, setIsPaid] = useState(booking.status === 'paid');
   const [isReviewed, setIsReviewed] = useState(false);
 
@@ -74,10 +84,8 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
     return () => clearInterval(interval);
   }, [timerRunning]);
 
-  // Calculate actual hours worked (minimum 0.5 hr)
   const actualHoursWorked = Math.max(0.5, parseFloat((seconds / 3600).toFixed(2)));
 
-  // Post-service pricing calculation
   const finalPriceCalc = calculateFinalPrice(
     booking.worker.hourlyRate,
     actualHoursWorked,
@@ -93,18 +101,42 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   };
 
   const handleToggleTimer = () => {
-    setTimerRunning(!timerRunning);
+    const nextState = !timerRunning;
+    setTimerRunning(nextState);
+    showToast({
+      type: 'info',
+      title: nextState ? 'Timer Started' : 'Timer Paused',
+      message: nextState
+        ? 'Recording real-time labour execution.'
+        : `Paused at ${formatTime(seconds)}.`,
+    });
   };
 
   const handleToggleAddon = (id: string) => {
     setAvailableAddons((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, approved: !item.approved } : item))
+      prev.map((item) => {
+        if (item.id === id) {
+          const toggled = !item.approved;
+          showToast({
+            type: 'info',
+            title: toggled ? 'Spares Approved' : 'Spares Removed',
+            message: `${item.name} (${item.cost > 0 ? `₹${item.cost}` : ''})`,
+          });
+          return { ...item, approved: toggled };
+        }
+        return item;
+      })
     );
   };
 
   const handleAdvanceStatus = (nextStatus: Booking['status']) => {
     if (nextStatus === 'completed') {
       setTimerRunning(false);
+      showToast({
+        type: 'success',
+        title: 'Service Completed',
+        message: 'Final invoice generated with recorded timer hours.',
+      });
     }
     const updated: Booking = {
       ...booking,
@@ -120,7 +152,7 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
   const handleProcessPayment = (method: 'UPI' | 'Card' | 'Cash on Delivery') => {
     try {
       confetti({
-        particleCount: 80,
+        particleCount: 90,
         spread: 60,
         origin: { y: 0.7 },
       });
@@ -138,6 +170,12 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
       finalTotal: finalPriceCalc.finalTotal,
     };
     onUpdateBooking(updated);
+
+    showToast({
+      type: 'success',
+      title: 'Payment Confirmed',
+      message: `₹${finalPriceCalc.finalTotal} settled via ${method}.`,
+    });
   };
 
   const handleSubmitFeedback = () => {
@@ -152,32 +190,37 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
       },
     };
     onCompleteFeedbackLoop(completedBooking);
+    showToast({
+      type: 'success',
+      title: 'Feedback Recorded',
+      message: `Telemetry sent to WorkLink learning loop. Worker rating updated to ${rating}★.`,
+    });
   };
 
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Top Lifecycle Pipeline Stepper */}
-      <div className="apple-card p-6 bg-white border border-black/[0.06] shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+      <div className="card-premium p-6 bg-[#FFFFFF]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-black/5 gap-3">
           <div>
             <div className="flex items-center space-x-2">
-              <span className="badge-subtle bg-blue-50 text-blue-700 font-mono text-[11px] font-bold">
+              <Badge variant="accent" size="sm">
                 {booking.id}
-              </span>
-              <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+              </Badge>
+              <h2 className="text-lg sm:text-xl font-bold text-[#111111] tracking-tight">
                 Live Job Execution &amp; Working-Hour Tracking
               </h2>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-[#6E6E73] mt-0.5">
               WorkLink transparent lifecycle: Worker Acceptance &rarr; Execution &rarr; Timer Tracking &rarr; Final Invoice &rarr; Feedback Loop
             </p>
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="text-xs text-slate-500 font-medium">Current Status:</span>
-            <span className="badge-subtle bg-slate-900 text-white font-bold capitalize text-xs">
-              {booking.status.replace('_', ' ')}
-            </span>
+            <span className="text-xs text-[#86868B] font-medium">Lifecycle Status:</span>
+            <Badge variant="default" size="md">
+              {booking.status.replace('_', ' ').toUpperCase()}
+            </Badge>
           </div>
         </div>
 
@@ -200,16 +243,16 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
             return (
               <div
                 key={step.key}
-                className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between ${
+                className={`p-3 rounded-2xl border text-xs font-semibold flex items-center justify-between transition-all ${
                   isCurrent
-                    ? 'bg-blue-50 border-blue-300 text-blue-900 shadow-xs'
+                    ? 'bg-[rgba(0,113,227,0.06)] border-[#0071E3]/40 text-[#0071E3] shadow-xs'
                     : isDone
-                    ? 'bg-emerald-50/60 border-emerald-200 text-emerald-800'
-                    : 'bg-slate-50 border-slate-200 text-slate-400'
+                    ? 'bg-[rgba(52,199,89,0.08)] border-[rgba(52,199,89,0.22)] text-[#1B8738]'
+                    : 'bg-[#FBFBFD] border-black/5 text-[#86868B]'
                 }`}
               >
                 <span>{step.label}</span>
-                {isDone && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                {isDone && <CheckCircle2 className="w-3.5 h-3.5 text-[#34C759]" />}
               </div>
             );
           })}
@@ -218,24 +261,25 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
 
       {/* Main Execution Split View */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Col: Worker Dispatch & Working-Hour Timer */}
+        {/* Left: Worker Dispatch & Timer */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Worker card */}
-          <div className="apple-card p-6 bg-white border border-slate-200 shadow-sm">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+          {/* Worker Dispatch Card */}
+          <div className="card-premium p-6 bg-[#FFFFFF]">
+            <div className="flex items-center justify-between pb-4 border-b border-black/5">
               <div className="flex items-center space-x-3.5">
-                <img
+                <Avatar
                   src={booking.worker.avatar}
                   alt={booking.worker.name}
-                  className="w-14 h-14 rounded-2xl object-cover border border-slate-200"
+                  size="lg"
+                  isVerified={booking.worker.isVerified}
                 />
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">{booking.worker.name}</h3>
-                  <p className="text-xs text-slate-500 font-medium">
+                  <h3 className="text-base font-bold text-[#111111]">{booking.worker.name}</h3>
+                  <p className="text-xs text-[#6E6E73] font-medium">
                     {booking.worker.trade} • License: {booking.worker.licenseNumber}
                   </p>
-                  <div className="flex items-center space-x-2 mt-1 text-xs text-slate-600">
-                    <span className="font-semibold">★ {booking.worker.rating.toFixed(1)}</span>
+                  <div className="flex items-center space-x-2 mt-1 text-xs text-[#86868B]">
+                    <span className="font-semibold text-[#111111]">★ {booking.worker.rating.toFixed(1)}</span>
                     <span>•</span>
                     <span>{booking.worker.phone}</span>
                   </div>
@@ -243,10 +287,10 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
               </div>
 
               <div className="text-right">
-                <span className="badge-subtle bg-emerald-50 text-emerald-700 text-[11px] font-bold">
+                <Badge variant="accent" size="sm">
                   Dispatched
-                </span>
-                <span className="text-xs text-slate-400 block mt-1">
+                </Badge>
+                <span className="text-xs text-[#86868B] block mt-1">
                   {booking.worker.distanceKm.toFixed(1)} km away
                 </span>
               </div>
@@ -255,121 +299,112 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
             {/* Quick Dispatch Controls */}
             <div className="flex flex-wrap gap-2 mt-4">
               {booking.status === 'accepted' && (
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={() => handleAdvanceStatus('en_route')}
-                  className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-all"
                 >
                   Mark En Route (Simulate Worker Arrival)
-                </button>
+                </Button>
               )}
               {booking.status === 'en_route' && (
-                <button
+                <Button
+                  variant="accent"
+                  size="sm"
                   onClick={() => handleAdvanceStatus('in_progress')}
-                  className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-all"
                 >
-                  Worker Arrived &rarr; Start Working Timer
-                </button>
+                  Worker Arrived &rarr; Start Service Clock
+                </Button>
               )}
             </div>
           </div>
 
-          {/* Working-Hour Timer (Real-Time Service Clock) */}
-          <div className="apple-card p-6 md:p-8 bg-slate-900 text-white border border-slate-800 shadow-lg">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+          {/* Working-Hour Timer */}
+          <div className="card-premium p-6 md:p-8 bg-[#111111] text-white">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <div className="flex items-center space-x-2">
-                <Clock className="w-5 h-5 text-blue-400 animate-pulse" />
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-200">
+                <Clock className="w-5 h-5 text-[#0071E3] animate-pulse" />
+                <h3 className="text-sm font-bold uppercase tracking-wider text-white">
                   Live Working-Hour Timer
                 </h3>
               </div>
-              <span className="badge-subtle bg-slate-800 text-slate-300 text-[10px] font-mono">
+              <span className="text-xs text-[#86868B] font-mono">
                 Rate: ₹{booking.worker.hourlyRate}/hr
               </span>
             </div>
 
             {/* Time Readout */}
             <div className="my-6 text-center">
-              <div className="font-mono text-5xl md:text-6xl font-extrabold tracking-tight text-white">
+              <div className="font-mono text-5xl sm:text-6xl font-extrabold tracking-tight text-white">
                 {formatTime(seconds)}
               </div>
-              <p className="text-xs text-slate-400 mt-2 font-medium">
-                Actual Working Time: <span className="text-blue-400 font-bold">{actualHoursWorked} Hours</span>
+              <p className="text-xs text-[#86868B] mt-2 font-medium">
+                Actual Working Time: <span className="text-[#0071E3] font-bold">{actualHoursWorked} Hours</span>
               </p>
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-[#6E6E73] mt-1">
                 Live Labour Cost: ₹{Math.round(actualHoursWorked * booking.worker.hourlyRate)}
               </p>
             </div>
 
             {/* Timer Controls */}
             <div className="flex items-center justify-center space-x-3 pt-2">
-              <button
-                type="button"
+              <Button
+                variant={timerRunning ? 'warning' : 'accent'}
+                size="md"
                 onClick={handleToggleTimer}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold flex items-center space-x-2 transition-all shadow-sm ${
-                  timerRunning
-                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-950'
-                    : 'bg-emerald-500 hover:bg-emerald-600 text-slate-950'
-                }`}
+                leftIcon={timerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
               >
-                {timerRunning ? (
-                  <>
-                    <Pause className="w-4 h-4" />
-                    <span>Pause Timer</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4" />
-                    <span>{seconds === 0 ? 'Start Service Timer' : 'Resume Timer'}</span>
-                  </>
-                )}
-              </button>
+                {timerRunning ? 'Pause Timer' : seconds === 0 ? 'Start Timer' : 'Resume Timer'}
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="md"
                 onClick={() => setSeconds((s) => s + 900)}
-                className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all"
                 title="Add 15 minutes for simulation"
               >
                 +15 mins
-              </button>
+              </Button>
 
               {booking.status !== 'completed' && booking.status !== 'paid' && (
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
+                  size="md"
                   onClick={() => handleAdvanceStatus('completed')}
-                  className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 text-xs font-bold transition-all shadow-sm"
                 >
-                  Finish Service &rarr; Generate Bill
-                </button>
+                  Finish Service
+                </Button>
               )}
             </div>
           </div>
 
-          {/* Approved Additional Work Add-ons */}
-          <div className="apple-card p-6 bg-white border border-slate-200 shadow-sm">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          {/* Approved Additional Work & Spares */}
+          <div className="card-premium p-6 bg-[#FFFFFF]">
+            <div className="flex items-center justify-between pb-3 border-b border-black/5">
               <div className="flex items-center space-x-2">
-                <Wrench className="w-4 h-4 text-blue-600" />
-                <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+                <Wrench className="w-4 h-4 text-[#0071E3]" />
+                <h3 className="text-sm font-bold text-[#111111] tracking-tight">
                   Approved Additional Work &amp; Spares
                 </h3>
               </div>
-              <span className="text-xs text-slate-400">Customer Verified</span>
+              <Badge variant="accent" size="sm">
+                Customer Verified
+              </Badge>
             </div>
 
-            <p className="text-xs text-slate-500 my-2">
-              Per product rules, additional labour or spare parts must be explicitly approved before adding to the final amount.
+            <p className="text-xs text-[#6E6E73] my-2">
+              Additional labour or spare parts must be explicitly verified and approved before inclusion in the final billing amount.
             </p>
 
-            <div className="space-y-2.5 mt-3">
+            <div className="space-y-2 mt-3">
               {availableAddons.map((addon) => (
                 <div
                   key={addon.id}
                   onClick={() => handleToggleAddon(addon.id)}
                   className={`p-3 rounded-xl border flex items-center justify-between text-xs cursor-pointer transition-all ${
                     addon.approved
-                      ? 'bg-blue-50/70 border-blue-200 text-blue-900 font-semibold'
-                      : 'bg-slate-50 border-slate-200 text-slate-600'
+                      ? 'bg-[rgba(0,113,227,0.06)] border-[#0071E3]/30 text-[#111111] font-semibold'
+                      : 'bg-[#FBFBFD] border-black/5 text-[#6E6E73]'
                   }`}
                 >
                   <div className="flex items-center space-x-2.5">
@@ -377,63 +412,61 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
                       type="checkbox"
                       checked={addon.approved}
                       onChange={() => {}}
-                      className="rounded accent-blue-600"
+                      className="rounded accent-[#0071E3]"
                     />
                     <span>{addon.name}</span>
                   </div>
-                  <span className="font-bold text-slate-900">₹{addon.cost}</span>
+                  <span className="font-bold text-[#111111]">₹{addon.cost}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Right Col: Transparent Final Bill, Payment & Feedback */}
+        {/* Right: Transparent Billing & Feedback */}
         <div className="lg:col-span-5 space-y-6">
-          {/* Post-Service Final Amount Calculation Card */}
-          <div className="apple-card p-6 bg-white border border-slate-200 shadow-md">
-            <div className="flex items-center space-x-2 pb-4 border-b border-slate-100">
-              <Receipt className="w-4 h-4 text-emerald-600" />
-              <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+          {/* Post-Service Final Invoice */}
+          <div className="card-premium p-6 bg-[#FFFFFF]">
+            <div className="flex items-center space-x-2 pb-4 border-b border-black/5">
+              <Receipt className="w-4 h-4 text-[#34C759]" />
+              <h3 className="text-sm font-bold text-[#111111] tracking-tight">
                 Transparent Final Billing Breakdown
               </h3>
             </div>
 
-            <div className="space-y-2.5 py-4 text-xs border-b border-slate-100">
-              <div className="flex justify-between text-slate-700">
-                <span>
-                  Actual Labour ({actualHoursWorked} hrs @ ₹{booking.worker.hourlyRate}/hr)
-                </span>
-                <span className="font-semibold text-slate-900">₹{finalPriceCalc.actualLabour}</span>
+            <div className="space-y-2.5 py-4 text-xs border-b border-black/5">
+              <div className="flex justify-between text-[#111111]">
+                <span>Actual Labour ({actualHoursWorked} hrs @ ₹{booking.worker.hourlyRate}/hr)</span>
+                <span className="font-semibold">₹{finalPriceCalc.actualLabour}</span>
               </div>
 
-              <div className="flex justify-between text-slate-700">
+              <div className="flex justify-between text-[#111111]">
                 <div>
                   <span>Travel Expense ({booking.worker.distanceKm.toFixed(1)} km)</span>
-                  <span className="text-[10px] text-slate-400 block">
+                  <span className="text-[10px] text-[#86868B] block">
                     {booking.worker.distanceKm <= 5 ? 'Free within 5 km zone' : 'Configurable slab > 5 km'}
                   </span>
                 </div>
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold">
                   {finalPriceCalc.travelCharge === 0 ? (
-                    <span className="text-emerald-600">FREE</span>
+                    <span className="text-[#1B8738]">FREE</span>
                   ) : (
                     `₹${finalPriceCalc.travelCharge}`
                   )}
                 </span>
               </div>
 
-              <div className="flex justify-between text-slate-700">
+              <div className="flex justify-between text-[#111111]">
                 <span>Approved Spares &amp; Additional Work</span>
-                <span className="font-semibold text-slate-900">₹{finalPriceCalc.additionalWorkTotal}</span>
+                <span className="font-semibold">₹{finalPriceCalc.additionalWorkTotal}</span>
               </div>
 
-              <div className="flex justify-between text-slate-700">
+              <div className="flex justify-between text-[#111111]">
                 <span>WorkLink Platform Fee (8%)</span>
-                <span className="font-semibold text-slate-900">₹{finalPriceCalc.platformFee}</span>
+                <span className="font-semibold">₹{finalPriceCalc.platformFee}</span>
               </div>
 
-              <div className="flex justify-between text-emerald-600">
+              <div className="flex justify-between text-[#1B8738]">
                 <span>Promotional Discount</span>
                 <span className="font-semibold">-₹{finalPriceCalc.discount}</span>
               </div>
@@ -442,65 +475,70 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
             {/* Final Total Amount */}
             <div className="pt-3 pb-5 flex items-baseline justify-between">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#86868B] block">
                   Final Payable Amount
                 </span>
-                <span className="text-[11px] text-slate-400">All taxes included</span>
+                <span className="text-[11px] text-[#86868B]">All taxes included</span>
               </div>
-              <span className="text-3xl font-extrabold text-slate-900">
+              <span className="text-3xl font-extrabold text-[#111111]">
                 ₹{finalPriceCalc.finalTotal}
               </span>
             </div>
 
-            {/* Payment Section */}
+            {/* Payment Options */}
             {!isPaid ? (
-              <div className="pt-2 border-t border-slate-100">
-                <span className="text-xs font-bold text-slate-700 block mb-2">
+              <div className="pt-2 border-t border-black/5">
+                <span className="text-xs font-bold text-[#111111] block mb-2">
                   Select Payment Method:
                 </span>
                 <div className="grid grid-cols-3 gap-2">
-                  <button
+                  <Button
+                    variant="primary"
+                    size="sm"
                     onClick={() => handleProcessPayment('UPI')}
-                    className="py-2.5 px-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition-all shadow-xs"
                   >
                     Pay UPI
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => handleProcessPayment('Card')}
-                    className="py-2.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold transition-all"
                   >
-                    Credit Card
-                  </button>
-                  <button
+                    Card
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleProcessPayment('Cash on Delivery')}
-                    className="py-2.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold transition-all"
                   >
                     Cash
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center space-x-2 text-xs text-emerald-800 font-semibold">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Payment Settled ({booking.paymentMethod || 'UPI'}) • Ref: {booking.paymentReference || 'PAY-8912301'}</span>
+              <div className="p-3 bg-[rgba(52,199,89,0.08)] border border-[rgba(52,199,89,0.2)] rounded-2xl flex items-center space-x-2 text-xs text-[#1B8738] font-semibold">
+                <CheckCircle2 className="w-4 h-4 text-[#34C759] shrink-0" />
+                <span>
+                  Payment Settled ({booking.paymentMethod || 'UPI'}) • Ref: {booking.paymentReference || 'PAY-8912301'}
+                </span>
               </div>
             )}
           </div>
 
-          {/* Feedback & Review Form (Closes the Feedback Loop) */}
-          <div className="apple-card p-6 bg-white border border-slate-200 shadow-sm">
-            <div className="flex items-center space-x-2 pb-3 border-b border-slate-100">
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+          {/* Feedback & Review Form */}
+          <div className="card-premium p-6 bg-[#FFFFFF]">
+            <div className="flex items-center space-x-2 pb-3 border-b border-black/5">
+              <Sparkles className="w-4 h-4 text-[#FF9500]" />
+              <h3 className="text-sm font-bold text-[#111111] tracking-tight">
                 Rating, Review &amp; Learning Signal
               </h3>
             </div>
 
-            <p className="text-xs text-slate-500 my-2">
+            <p className="text-xs text-[#6E6E73] my-2">
               Your rating updates the worker's verified performance signal and refines WorkLink's future matching calibration.
             </p>
 
-            {/* Star selector */}
+            {/* Stars */}
             <div className="flex items-center space-x-2 my-3">
               {[1, 2, 3, 4, 5].map((s) => (
                 <button
@@ -511,15 +549,15 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
                 >
                   <Star
                     className={`w-6 h-6 ${
-                      s <= rating ? 'text-amber-500 fill-amber-500' : 'text-slate-300'
+                      s <= rating ? 'text-[#FF9500] fill-[#FF9500]' : 'text-[#E5E5EA]'
                     }`}
                   />
                 </button>
               ))}
-              <span className="text-xs font-bold text-slate-700 ml-2">{rating}.0 / 5.0</span>
+              <span className="text-xs font-bold text-[#111111] ml-2">{rating}.0 / 5.0</span>
             </div>
 
-            {/* Tag chips */}
+            {/* Tag Chips */}
             <div className="flex flex-wrap gap-1.5 mb-3">
               {[
                 'Punctual & Polite',
@@ -540,13 +578,10 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
                         setSelectedTags([...selectedTags, tag]);
                       }
                     }}
-                    className={`badge-subtle text-[11px] font-medium transition-all ${
-                      isSelected
-                        ? 'bg-blue-50 text-blue-800 border border-blue-200 font-semibold'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}
                   >
-                    {tag}
+                    <Badge variant={isSelected ? 'accent' : 'default'} size="sm">
+                      {tag}
+                    </Badge>
                   </button>
                 );
               })}
@@ -557,21 +592,22 @@ export const JobExecutionTracker: React.FC<JobExecutionTrackerProps> = ({
               rows={2}
               value={feedbackComment}
               onChange={(e) => setFeedbackComment(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none mb-3"
+              className="w-full p-3 bg-[#F5F5F7] border border-black/5 rounded-2xl text-xs text-[#111111] focus:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#0071E3] resize-none mb-3"
               placeholder="Share honest feedback about the work quality..."
             />
 
             {!isReviewed ? (
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="md"
                 onClick={handleSubmitFeedback}
-                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition-all shadow-sm"
+                rightIcon={<ArrowRight className="w-4 h-4" />}
+                className="w-full"
               >
-                <span>Submit Feedback &amp; Update System Prior</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+                Submit Feedback &amp; Update System Prior
+              </Button>
             ) : (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 font-medium">
+              <div className="p-3 bg-[rgba(0,113,227,0.06)] border border-[rgba(0,113,227,0.18)] rounded-2xl text-xs text-[#0071E3] font-medium">
                 ✓ Feedback recorded! Worker completion telemetry updated and logged into the learning loop.
               </div>
             )}
